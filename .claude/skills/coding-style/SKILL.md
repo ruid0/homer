@@ -1,11 +1,11 @@
 ---
-name: coding
-description: The owner's code style for this repo — functional and non-mutating, arrow functions, comments only for the ambiguous, ~600 LOC file ceiling, and UI labels that read like variable names. Use when writing, editing or reviewing any TypeScript, React or UI copy in Assistant.
+name: coding-style
+description: The owner's code style for this repo — functional and non-mutating, arrow functions, comments only for the ambiguous, ~600 LOC file ceiling, and UI labels that read like variable names. Use when writing, editing or reviewing any TypeScript, React or UI copy in this project.
 ---
 
 # Coding
 
-This skill is a reference for the owner's code style. It is not a general TypeScript or React style guide, and it does not cover every case. Use it when writing, editing or reviewing any TypeScript, React or UI copy in Assistant.
+This skill is a reference for the owner's code style. It is not a general TypeScript or React style guide, and it does not cover every case. Use it when writing, editing or reviewing any TypeScript, React or UI copy in this project.
 
 ## 1. Functional, not mutating
 
@@ -69,17 +69,3 @@ plain, a noun or verb phrase a person would say, in the domain's own words. No j
 | `IS_RECURRING`      | Repeats monthly |
 | `Submit Txn Record` | Save receipt    |
 | `Cat. Mgmt.`        | Categories      |
-
-## 7. Before you finish
-
-- Run `npm run typecheck` as well as `npm test`: vitest strips types and will not catch a narrowing
-  mistake.
-- Re-read the diff for any `let`, `push`, `function` or restating comment you added without a reason.
-
-## 8. Code lifecycle
-
-Follow TDD: Write tests before code to treat them as executable specifications of the System Under Test (SUT).  Follow the Red-Green-Refactor cycle: write a failing test, implement the minimal code to pass, then refactor while keeping tests green.  Focus on behavior, not implementation, avoiding tests that check internal methods or details that break during refactoring. 
-
-Structure tests using the Arrange-Act-Assert pattern with descriptive names that explain the expected outcome. Use TypeScript types in tests to ensure type safety and leverage interfaces for mocking dependencies, which isolates external services and improves test reliability.
-
-Maintain quality by keeping tests small and focused, testing both expected and edge cases, and automating checks via CI/CD pipelines. Use tools like Jest or Vitest with ts-jest for seamless TypeScript integration, and consider mutation testing (e.g., Stryker) to verify test effectiveness beyond simple coverage metrics.
