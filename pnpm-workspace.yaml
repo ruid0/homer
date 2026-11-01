@@ -6,6 +6,6 @@ allowBuilds:
   esbuild: true
 permissions:
   '@trpc/client':
-    skills: false
+    skills: true
   '@trpc/server':
-    skills: false
+    skills: true

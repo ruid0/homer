@@ -23,10 +23,10 @@ doing, and what's coming up. Runs entirely localy, no cloud, no accounts, no dat
 - **Docker** (optional, for the all-in-one compose setup)
 
 ### Pull the models
-
+s
 ```bash
 ollama pull qwen3-vl:8b     # vision / OCR
-ollama pull qwen3:8b        # chat + tool calling
+ollama pull qwen3.5:9b       # chat + tool calling
 ```
 If hardware allows use 
 
@@ -70,7 +70,7 @@ docker compose up -d
 | Scheduling | node-cron | Daily jobs |
 | LLM runtime | Ollama (`127.0.0.1:11434`) | Local only |
 | Vision model | `qwen3-vl:8b` | OCR, labels, receipts |
-| Chat/tools model | `qwen3:8b` or `home-3b` or `qwen3.8:27b-mlx` | Tool calling |
+| Chat/tools model | `qwen3.5:9b` or `qwen3.8:27b-mlx` | Tool calling |
 | Deployment | Docker Compose | web + api + ollama |```
 
 ## Repo layout
@@ -128,6 +128,11 @@ homer/
                                        ┌──────────────▼─────────────┐
                                        │          OLLAMA            │
                                        │  qwen3-vl:8b   (vision)    │
-                                       │  qwen3 / home-3b / (tools) │
+                                       │  qwen3.5:9b    (tools)     │
                                        └────────────────────────────┘
 ```
+
+## Remote access and notifications
+
+- For remote access the most streightforward way is to use `Tailscale` installed on both the server and a users devices
+- Notifications are implemented via `ntfy`

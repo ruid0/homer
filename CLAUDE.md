@@ -8,6 +8,8 @@ H.O.M.E.R. is a self-hosted, fully local household assistant: inventory, groceri
 
 **Early stage.** The pnpm workspace, package manifests, TypeScript configs and Claude Code tooling are in place. Each package has only a stub entry file (`export {};`); no features are built yet. "Architecture" below is the target design. Check the actual tree before relying on it, and update this file as code lands.
 
+**Product requirements:** `docs/PRD.md` defines scope, acceptance criteria and open questions. Read it during DEFINE and PLAN, and update it when scope changes.
+
 ## Commands
 
 ```bash
