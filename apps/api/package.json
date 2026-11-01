@@ -1,0 +1,30 @@
+{
+  "name": "@homer/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@homer/shared": "workspace:*",
+    "@hono/node-server": "^2.1.5",
+    "@hono/trpc-server": "^0.4.2",
+    "@trpc/server": "^11.22.1",
+    "better-sqlite3": "^13.0.3",
+    "dotenv": "^18.0.9",
+    "drizzle-orm": "^0.45.4",
+    "hono": "^4.13.14",
+    "node-cron": "^4.6.0",
+    "ollama": "^0.6.4",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^9.6.0",
+    "@types/node": "^26.6.6",
+    "drizzle-kit": "^0.31.11",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  },
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "db:migrate": "drizzle-kit migrate"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "name": "homer",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently -n api,web \"pnpm --filter @homer/api dev\" \"pnpm --filter @homer/web dev\"",
+    "test": "vitest run",
+    "db:migrate": "pnpm --filter @homer/api db:migrate"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "12.16.1",
+      "onFail": "download"
+    }
+  },
+  "packageManager": "pnpm@12.16.1",
+  "type": "module",
+  "devDependencies": {
+    "concurrently": "^10.0.6",
+    "fast-check": "^4.10.2",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.5"
+  }
+}
