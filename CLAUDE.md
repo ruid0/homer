@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 H.O.M.E.R. is a self-hosted, fully local household assistant: inventory, groceries, schedule, tasks, maintenance reminders, plus a local-LLM chat assistant.
 
-**Early stage.** The pnpm workspace, package manifests, TypeScript configs and Claude Code tooling are in place. **Slice 1 (items and days remaining) is built**: shared schemas and domain functions, `items`/`restocks` tables with a migration, the `inventory` tRPC router, and the Items page. Nothing else exists yet (no grocery list, tasks, assistant or jobs). The design is in `docs/design-slice-1-items.md`. "Architecture" below is the target design. Check the actual tree before relying on it, and update this file as code lands.
+**Early stage.** The pnpm workspace, package manifests, TypeScript configs and Claude Code tooling are in place. **Slice 1 (items and days remaining) is built**: shared schemas and domain functions, `items`/`restocks` tables with a migration, the `inventory` tRPC router, and the Items page. **Slice 2 (grocery list) is built** on its branch: `grocery_entries` table, `groceries` router, the sync between items and the list, and the Groceries page. Nothing else exists yet (no tasks, assistant or jobs). Designs are in `docs/design-slice-1-items.md` and `docs/design-slice-2-groceries.md`. "Architecture" below is the target design. Check the actual tree before relying on it, and update this file as code lands.
 
 **Product requirements:** `docs/PRD.md` defines scope, acceptance criteria and open questions. Read it during DEFINE and PLAN, and update it when scope changes.
 
