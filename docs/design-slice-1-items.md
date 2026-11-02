@@ -127,6 +127,6 @@ Then VERIFY (`pnpm typecheck`, `pnpm test`, run the app), REVIEW (the `reviewer`
 - **Usual restock amount** is the last restock quantity until slice 7.
 - **Native build:** `better-sqlite3` on Node 24 and pnpm 12 is checked first in step 2, because a failed build would block everything after it.
 - **Name uniqueness** is case-insensitive, so "Salt" and "salt" are one item. This also helps the assistant later.
-- **Config mismatch:** `.env.example` lists `qwen3.5:9b` but the PRD and CLAUDE.md say `qwen3:8b`. This doesn't affect slice 1 and should be reconciled before slice 5.
+- **Chat model:** `qwen3.5:9b` is the single chat and tool-calling model across `.env.example`, the PRD and CLAUDE.md. It doesn't affect slice 1.
 - **Decided (owner, 2026-11-02):** history is never deleted. Removing an item archives it and its restocks stay, so history can be shown later or asked for in chat.
 - **Open:** re-creating an item with an archived name starts a fresh item (new id, separate history). Restoring the archived one instead is a possible later feature.
