@@ -19,8 +19,8 @@ export const RestockDialog = ({ item, pending, serverError, onSave, onClose }: P
   const submit = (event: FormEvent) => {
     event.preventDefault();
     const parsed = restockInputSchema.safeParse({ itemId: item.id, quantity: Number(quantity) });
+    setError(parsed.success ? undefined : "Enter a quantity above 0.");
     if (parsed.success) onSave(parsed.data.quantity);
-    else setError("Enter a quantity above 0.");
   };
 
   return (

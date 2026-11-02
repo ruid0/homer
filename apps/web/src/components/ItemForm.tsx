@@ -43,6 +43,7 @@ export const ItemForm = ({ item, pending, serverError, onSave, onRemove, onClose
       daysPerUnit: toNumberOrNull(daysPerUnit),
       lowThresholdDays: toNumberOrNull(threshold),
     });
+    setError(undefined);
     if (parsed.success) return onSave(parsed.data);
     setError(`Fix these fields, then save again: ${invalidFields(parsed.error.issues)}.`);
   };
