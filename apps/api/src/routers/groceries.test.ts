@@ -34,6 +34,13 @@ describe("groceries.list", () => {
     expect(await api.groceries.list()).toMatchObject([{ itemId: id, usualRestock: 3, quantity: 3 }]);
   });
 
+  it("shows the current item name after a rename", async () => {
+    const { api } = setup();
+    const { id } = await api.inventory.create(milk);
+    await api.inventory.update({ id, ...milk, name: "Oat milk" });
+    expect(await api.groceries.list()).toMatchObject([{ itemId: id, text: "Oat milk" }]);
+  });
+
   it("lists automatic entries before manual ones, then oldest first", async () => {
     const { api } = setup();
     await api.groceries.add({ text: "charcoal" });
@@ -81,7 +88,7 @@ describe("groceries.add", () => {
     await api.groceries.add({ text: "milk" });
     const entries = await api.groceries.list();
     expect(entries).toHaveLength(1);
-    expect(entries[0]).toMatchObject({ itemId: id, quantity: 4, addedBy: "auto" });
+    expect(entries[0]).toMatchObject({ itemId: id, quantity: 4, addedBy: "manual" });
   });
 
   it("keeps a manual entry for an item that is not low", async () => {
@@ -89,6 +96,14 @@ describe("groceries.add", () => {
     const { id } = await api.inventory.create(rice);
     await api.groceries.add({ itemId: id });
     await api.inventory.update({ id, ...rice, quantity: 5 });
+    expect(await api.groceries.list()).toHaveLength(1);
+  });
+
+  it("keeps an entry a person added even when the item stops being low", async () => {
+    const { api } = setup();
+    const { id } = await api.inventory.create(milk);
+    await api.groceries.add({ itemId: id });
+    await api.inventory.update({ id, ...milk, quantity: 20 });
     expect(await api.groceries.list()).toHaveLength(1);
   });
 

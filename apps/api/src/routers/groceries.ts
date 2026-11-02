@@ -27,8 +27,13 @@ const findOpenEntry = (db: Pick<Db, "select">, id: number): EntryRow => {
 
 const withItemDetails = (db: Db, entry: EntryRow) => {
   if (entry.itemId === null) return { ...entry, unit: null, usualRestock: null };
-  const item = db.select({ unit: items.unit }).from(items).where(eq(items.id, entry.itemId)).get();
-  return { ...entry, unit: item?.unit ?? null, usualRestock: usualRestock(db, entry.itemId) };
+  const item = db.select({ name: items.name, unit: items.unit }).from(items).where(eq(items.id, entry.itemId)).get();
+  return {
+    ...entry,
+    text: item?.name ?? entry.text,
+    unit: item?.unit ?? null,
+    usualRestock: usualRestock(db, entry.itemId),
+  };
 };
 
 const addForItem = (db: Tx, item: ItemRow, quantity?: number): EntryRow => {
@@ -44,8 +49,12 @@ const addForItem = (db: Tx, item: ItemRow, quantity?: number): EntryRow => {
       .returning()
       .get();
   }
-  if (quantity === undefined) return open;
-  return db.update(groceryEntries).set({ quantity }).where(eq(groceryEntries.id, open.id)).returning().get();
+  return db
+    .update(groceryEntries)
+    .set({ addedBy: "manual", ...(quantity === undefined ? {} : { quantity }) })
+    .where(eq(groceryEntries.id, open.id))
+    .returning()
+    .get();
 };
 
 export const groceriesRouter = router({

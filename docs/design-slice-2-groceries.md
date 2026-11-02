@@ -31,7 +31,7 @@ Status: owner questions answered, ready to build · Owner: Igor Bondarenko · Da
 
 ### Decisions (owner, 2026-11-02)
 1. **Edited out of "low".** An auto-added entry comes off the list when an edit, such as a longer estimate or a bigger quantity, means the item is no longer low. Only auto entries are removed; manual entries stay until bought or removed.
-2. **Adding something already listed.** It reuses the existing entry and updates its quantity if one was given. There is no second line.
+2. **Adding something already listed.** It reuses the existing entry and updates its quantity if one was given. There is no second line. An auto entry that a person adds this way becomes a manual entry, so a later edit does not remove it. Entries for tracked items always show the current item name.
 3. **Staying fresh.** The list refetches when the app regains focus. The proposed 30-second timer was not confirmed, so it is not part of this design: a tablet left open and in focus on this page will not update by itself until someone touches it or reloads. A timer is a one-line addition if wanted later.
 4. **Removed rows.** Add a nullable `removed_at` column on `grocery_entries`, and never delete rows (same rule as item history).
 5. **Free text that matches an item.** The server links it to the tracked item (case-insensitive name match), so Bought it can restock it.
