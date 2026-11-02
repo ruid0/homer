@@ -147,3 +147,58 @@ describe("inventory.archive and history", () => {
     expect(quantities).toEqual([2, 1]);
   });
 });
+
+describe("inventory.findArchived", () => {
+  it("is null when no removed item has that name", async () => {
+    const api = setup();
+    await api.inventory.create(milk);
+    expect(await api.inventory.findArchived({ name: "Milk" })).toBeNull();
+    expect(await api.inventory.findArchived({ name: "Tea" })).toBeNull();
+  });
+
+  it("finds a removed item regardless of case", async () => {
+    const api = setup();
+    const { id } = await api.inventory.create(milk);
+    await api.inventory.archive({ id });
+    expect(await api.inventory.findArchived({ name: " MILK " })).toMatchObject({ id, name: "Milk" });
+  });
+
+  it("returns the most recently removed one when the name was removed twice", async () => {
+    const api = setup();
+    const first = await api.inventory.create(milk);
+    await api.inventory.archive({ id: first.id });
+    const second = await api.inventory.create(milk);
+    await api.inventory.archive({ id: second.id });
+    expect(await api.inventory.findArchived({ name: "Milk" })).toMatchObject({ id: second.id });
+  });
+});
+
+describe("inventory.restore", () => {
+  it("brings a removed item back with its history and the new values", async () => {
+    const api = setup();
+    const { id } = await api.inventory.create(milk);
+    await api.inventory.restock({ itemId: id, quantity: 4 });
+    await api.inventory.archive({ id });
+
+    await api.inventory.restore({ id, ...milk, quantity: 3, daysPerUnit: 5 });
+
+    const [item] = await api.inventory.list();
+    expect(item).toMatchObject({ id, quantity: 3, daysRemaining: 15, usualRestock: 4, archivedAt: null });
+    expect(await api.inventory.history({ id })).toHaveLength(1);
+  });
+
+  it("fails for an item that is not removed", async () => {
+    const api = setup();
+    const { id } = await api.inventory.create(milk);
+    await expect(api.inventory.restore({ id, ...milk })).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await expect(api.inventory.restore({ id: 99, ...milk })).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+
+  it("fails when an active item already has the name", async () => {
+    const api = setup();
+    const old = await api.inventory.create(milk);
+    await api.inventory.archive({ id: old.id });
+    await api.inventory.create(milk);
+    await expect(api.inventory.restore({ id: old.id, ...milk })).rejects.toMatchObject({ code: "CONFLICT" });
+  });
+});

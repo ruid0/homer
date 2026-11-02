@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { and, desc, eq, isNull, ne, sql } from "drizzle-orm";
+import { and, desc, eq, isNotNull, isNull, ne, sql } from "drizzle-orm";
 import { z } from "zod";
 import {
   daysRemaining,
@@ -7,6 +7,7 @@ import {
   idInputSchema,
   isRunningLow,
   itemInputSchema,
+  nameInputSchema,
   restockInputSchema,
   updateItemInputSchema,
 } from "@homer/shared";
@@ -39,6 +40,20 @@ const activeNameTaken = (db: Db, name: string, exceptId?: number): boolean =>
       ),
     )
     .get() !== undefined;
+
+const findArchivedByName = (db: Db, name: string): ItemRow | null =>
+  db
+    .select()
+    .from(items)
+    .where(and(sql`lower(${items.name}) = lower(${name})`, isNotNull(items.archivedAt)))
+    .orderBy(desc(items.archivedAt), desc(items.id))
+    .get() ?? null;
+
+const findArchived = (db: Db, id: number): ItemRow => {
+  const row = db.select().from(items).where(and(eq(items.id, id), isNotNull(items.archivedAt))).get();
+  if (!row) throw notFound();
+  return row;
+};
 
 const usualRestock = (db: Db, itemId: number): number | null =>
   db
@@ -105,6 +120,21 @@ export const inventoryRouter = router({
       tx.insert(restocks).values({ itemId: input.itemId, quantity: input.quantity }).run();
     }),
   ),
+
+  findArchived: publicProcedure
+    .input(nameInputSchema)
+    .query(({ ctx, input }) => findArchivedByName(ctx.db, input.name)),
+
+  restore: publicProcedure.input(updateItemInputSchema).mutation(({ ctx, input }) => {
+    findArchived(ctx.db, input.id);
+    if (activeNameTaken(ctx.db, input.name)) throw nameTaken(input.name);
+    return ctx.db
+      .update(items)
+      .set({ ...itemValues(input), archivedAt: null })
+      .where(eq(items.id, input.id))
+      .returning()
+      .get();
+  }),
 
   markOut: publicProcedure.input(idInputSchema).mutation(({ ctx, input }) => {
     findActive(ctx.db, input.id);

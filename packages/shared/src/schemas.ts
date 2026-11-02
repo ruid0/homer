@@ -20,6 +20,8 @@ export const itemInputSchema = z.object({
 
 export const idInputSchema = z.object({ id: z.number().int() });
 
+export const nameInputSchema = z.object({ name: text });
+
 export const updateItemInputSchema = itemInputSchema.extend(idInputSchema.shape);
 
 export const itemSchema = z.object({
