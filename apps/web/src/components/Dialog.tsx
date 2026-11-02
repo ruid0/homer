@@ -13,7 +13,7 @@ export const Dialog = ({ title, onClose, children }: Props) => {
     <dialog
       ref={ref}
       onClose={onClose}
-      className="m-auto w-[min(28rem,calc(100vw-2rem))] rounded-xl bg-white p-5 text-inherit backdrop:bg-black/50 dark:bg-stone-900"
+      className="m-auto max-h-[calc(100dvh-2rem)] w-[min(28rem,calc(100vw-2rem))] overflow-y-auto rounded-xl bg-white p-5 text-inherit backdrop:bg-black/50 dark:bg-stone-900"
     >
       <h2 className="mb-4 text-xl font-semibold">{title}</h2>
       {children}

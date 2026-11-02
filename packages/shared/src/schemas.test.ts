@@ -29,6 +29,9 @@ describe("itemInputSchema", () => {
     ["zero days per unit", { daysPerUnit: 0 }],
     ["negative days per unit", { daysPerUnit: -3 }],
     ["negative threshold", { lowThresholdDays: -1 }],
+    ["missing quantity", { quantity: null }],
+    ["quantity so large days would overflow", { quantity: 1e308 }],
+    ["days per unit so large days would overflow", { daysPerUnit: 1e308 }],
   ])("rejects %s", (_label, patch) => {
     expect(itemInputSchema.safeParse({ ...valid, ...patch }).success).toBe(false);
   });
@@ -39,7 +42,7 @@ describe("restockInputSchema", () => {
     expect(restockInputSchema.parse({ itemId: 1, quantity: 4 })).toEqual({ itemId: 1, quantity: 4 });
   });
 
-  it.each([0, -2])("rejects quantity %s", (quantity) => {
+  it.each([0, -2, 1e308])("rejects quantity %s", (quantity) => {
     expect(restockInputSchema.safeParse({ itemId: 1, quantity }).success).toBe(false);
   });
 });

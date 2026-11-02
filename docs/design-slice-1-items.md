@@ -128,5 +128,8 @@ Then VERIFY (`pnpm typecheck`, `pnpm test`, run the app), REVIEW (the `reviewer`
 - **Native build:** `better-sqlite3` on Node 24 and pnpm 12 is checked first in step 2, because a failed build would block everything after it.
 - **Name uniqueness** is case-insensitive, so "Salt" and "salt" are one item. This also helps the assistant later.
 - **Chat model:** `qwen3.5:9b` is the single chat and tool-calling model across `.env.example`, the PRD and CLAUDE.md. It doesn't affect slice 1.
+- **Name matching is ASCII-only:** SQLite's `lower()` folds only ASCII, so "Étagère" and "étagère" count as different names.
+- **Edit overwrites quantity:** the edit form sends the quantity it loaded, so a restock made on another tablet in the meantime can be overwritten. Accepted for one household in v1.
+- **Bounds:** quantity is capped at 100,000 and days per unit at 3,650, so days remaining always stays a finite number.
 - **Decided (owner, 2026-11-02):** history is never deleted. Removing an item archives it and its restocks stay, so history can be shown later or asked for in chat.
 - **Open:** re-creating an item with an archived name starts a fresh item (new id, separate history). Restoring the archived one instead is a possible later feature.

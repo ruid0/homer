@@ -14,14 +14,17 @@ type Props = {
 };
 
 const fieldLabels: Record<string, string> = {
-  name: "Name",
-  unit: "Unit",
-  quantity: "Quantity",
-  daysPerUnit: "Lasts",
-  lowThresholdDays: "Low at",
+  name: "Name (required)",
+  unit: "Unit (required)",
+  quantity: "Quantity (0 or more)",
+  daysPerUnit: "Lasts (a number above 0, or blank)",
+  lowThresholdDays: "Low at (0 or more)",
 };
 
 const toNumberOrNull = (text: string) => (text.trim() === "" ? null : Number(text));
+
+const invalidFields = (issues: readonly { path: readonly PropertyKey[] }[]) =>
+  [...new Set(issues.map((issue) => fieldLabels[String(issue.path[0])] ?? "Form"))].join(", ");
 
 export const ItemForm = ({ item, pending, serverError, onSave, onRemove, onClose }: Props) => {
   const [name, setName] = useState(item?.name ?? "");
@@ -36,13 +39,12 @@ export const ItemForm = ({ item, pending, serverError, onSave, onRemove, onClose
     const parsed = itemInputSchema.safeParse({
       name,
       unit,
-      quantity: Number(quantity),
+      quantity: toNumberOrNull(quantity),
       daysPerUnit: toNumberOrNull(daysPerUnit),
-      lowThresholdDays: Number(threshold),
+      lowThresholdDays: toNumberOrNull(threshold),
     });
     if (parsed.success) return onSave(parsed.data);
-    const issue = parsed.error.issues[0];
-    setError(`${fieldLabels[String(issue?.path[0])] ?? "Form"}: check this value and try again.`);
+    setError(`Fix these fields, then save again: ${invalidFields(parsed.error.issues)}.`);
   };
 
   return (

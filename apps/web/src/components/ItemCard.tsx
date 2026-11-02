@@ -4,17 +4,17 @@ import { primaryButton, secondaryButton } from "./ui";
 
 type Props = {
   item: ListItem;
+  busy: boolean;
   onBought: () => void;
   onOut: () => void;
   onEdit: () => void;
 };
 
-const estimateNote = (item: ListItem) =>
-  item.estimateSource === null ? null : item.estimateSource === "learned" ? "Learned from restocks" : "Entered by hand";
+const estimateNotes = { entered: "Entered by hand", learned: "Learned from restocks" } as const;
 
-export const ItemCard = ({ item, onBought, onOut, onEdit }: Props) => {
+export const ItemCard = ({ item, busy, onBought, onOut, onEdit }: Props) => {
   const urgent = item.runningLow || item.quantity === 0;
-  const note = estimateNote(item);
+  const note = item.estimateSource && estimateNotes[item.estimateSource];
 
   return (
     <li className="grid gap-3 rounded-xl border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900">
@@ -34,7 +34,7 @@ export const ItemCard = ({ item, onBought, onOut, onEdit }: Props) => {
       <div className="flex gap-3">
         <button type="button" className={`${primaryButton} flex-1`} onClick={onBought}>Bought it</button>
         {item.quantity > 0 && (
-          <button type="button" className={secondaryButton} onClick={onOut}>Out of it</button>
+          <button type="button" className={secondaryButton} onClick={onOut} disabled={busy}>Out of it</button>
         )}
       </div>
     </li>

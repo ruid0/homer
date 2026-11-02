@@ -72,7 +72,7 @@ describe("inventory.restock", () => {
     await api.inventory.restock({ itemId: id, quantity: 4 });
     const [item] = await api.inventory.list();
     expect(item).toMatchObject({ quantity: 5, daysRemaining: 10, usualRestock: 4 });
-    expect(await api.inventory.history({ itemId: id })).toHaveLength(1);
+    expect(await api.inventory.history({ id: id })).toHaveLength(1);
   });
 
   it("uses the latest restock as the usual amount", async () => {
@@ -88,13 +88,13 @@ describe("inventory.restock", () => {
     const api = setup();
     const { id } = await api.inventory.create(milk);
     await expect(api.inventory.restock({ itemId: id, quantity: 0 })).rejects.toMatchObject({ code: "BAD_REQUEST" });
-    expect(await api.inventory.history({ itemId: id })).toHaveLength(0);
+    expect(await api.inventory.history({ id: id })).toHaveLength(0);
   });
 
   it("fails for an unknown item and writes nothing", async () => {
     const api = setup();
     await expect(api.inventory.restock({ itemId: 99, quantity: 1 })).rejects.toMatchObject({ code: "NOT_FOUND" });
-    expect(await api.inventory.history({ itemId: 99 })).toHaveLength(0);
+    expect(await api.inventory.history({ id: 99 })).toHaveLength(0);
   });
 
   it("fails for an archived item", async () => {
@@ -126,7 +126,7 @@ describe("inventory.archive and history", () => {
     await api.inventory.restock({ itemId: id, quantity: 4 });
     await api.inventory.archive({ id });
     expect(await api.inventory.list()).toHaveLength(0);
-    expect(await api.inventory.history({ itemId: id })).toHaveLength(1);
+    expect(await api.inventory.history({ id: id })).toHaveLength(1);
   });
 
   it("lets a new item reuse an archived name with its own history", async () => {
@@ -135,7 +135,7 @@ describe("inventory.archive and history", () => {
     await api.inventory.archive({ id: old.id });
     const fresh = await api.inventory.create(milk);
     expect(fresh.id).not.toBe(old.id);
-    expect(await api.inventory.history({ itemId: fresh.id })).toHaveLength(0);
+    expect(await api.inventory.history({ id: fresh.id })).toHaveLength(0);
   });
 
   it("returns history newest first", async () => {
@@ -143,7 +143,7 @@ describe("inventory.archive and history", () => {
     const { id } = await api.inventory.create(milk);
     await api.inventory.restock({ itemId: id, quantity: 1 });
     await api.inventory.restock({ itemId: id, quantity: 2 });
-    const quantities = (await api.inventory.history({ itemId: id })).map((row) => row.quantity);
+    const quantities = (await api.inventory.history({ id: id })).map((row) => row.quantity);
     expect(quantities).toEqual([2, 1]);
   });
 });

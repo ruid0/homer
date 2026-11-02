@@ -4,18 +4,17 @@ import { z } from "zod";
 import {
   daysRemaining,
   effectiveEstimate,
+  idInputSchema,
   isRunningLow,
   itemInputSchema,
   restockInputSchema,
+  updateItemInputSchema,
 } from "@homer/shared";
 import type { Db } from "../db/client";
 import { items, restocks } from "../db/schema";
 import { publicProcedure, router } from "../trpc";
 
 type ItemRow = typeof items.$inferSelect;
-
-const idInput = z.object({ id: z.number().int() });
-const updateInput = itemInputSchema.extend(idInput.shape);
 
 const notFound = () => new TRPCError({ code: "NOT_FOUND", message: "That item doesn't exist. Refresh the list." });
 
@@ -85,13 +84,13 @@ export const inventoryRouter = router({
     return ctx.db.insert(items).values(itemValues(input)).returning().get();
   }),
 
-  update: publicProcedure.input(updateInput).mutation(({ ctx, input }) => {
+  update: publicProcedure.input(updateItemInputSchema).mutation(({ ctx, input }) => {
     findActive(ctx.db, input.id);
     if (activeNameTaken(ctx.db, input.name, input.id)) throw nameTaken(input.name);
     return ctx.db.update(items).set(itemValues(input)).where(eq(items.id, input.id)).returning().get();
   }),
 
-  archive: publicProcedure.input(idInput).mutation(({ ctx, input }) => {
+  archive: publicProcedure.input(idInputSchema).mutation(({ ctx, input }) => {
     findActive(ctx.db, input.id);
     ctx.db.update(items).set({ archivedAt: new Date().toISOString() }).where(eq(items.id, input.id)).run();
   }),
@@ -107,19 +106,17 @@ export const inventoryRouter = router({
     }),
   ),
 
-  markOut: publicProcedure.input(idInput).mutation(({ ctx, input }) => {
+  markOut: publicProcedure.input(idInputSchema).mutation(({ ctx, input }) => {
     findActive(ctx.db, input.id);
     ctx.db.update(items).set({ quantity: 0 }).where(eq(items.id, input.id)).run();
   }),
 
-  history: publicProcedure
-    .input(z.object({ itemId: z.number().int() }))
-    .query(({ ctx, input }) =>
-      ctx.db
-        .select()
-        .from(restocks)
-        .where(eq(restocks.itemId, input.itemId))
-        .orderBy(desc(restocks.restockedAt), desc(restocks.id))
-        .all(),
-    ),
+  history: publicProcedure.input(idInputSchema).query(({ ctx, input }) =>
+    ctx.db
+      .select()
+      .from(restocks)
+      .where(eq(restocks.itemId, input.id))
+      .orderBy(desc(restocks.restockedAt), desc(restocks.id))
+      .all(),
+  ),
 });
