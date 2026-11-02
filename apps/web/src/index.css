@@ -6,6 +6,10 @@ html {
   color-scheme: light dark;
 }
 
+html:has(dialog[open]) {
+  overflow: hidden;
+}
+
 body {
   @apply bg-stone-50 text-stone-900 dark:bg-stone-950 dark:text-stone-100;
 }
