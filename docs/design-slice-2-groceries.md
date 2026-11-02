@@ -1,6 +1,6 @@
 # Slice 2: Grocery list. Definition, technical plan and system design
 
-Status: draft, awaiting owner review · Owner: Igor Bondarenko · Date: 2026-11-02 · Source: PRD §3 goal 2, §4.1, §6, §8 (slice 2). Builds on `docs/design-slice-1-items.md`.
+Status: owner questions answered, ready to build · Owner: Igor Bondarenko · Date: 2026-11-02 · Source: PRD §3 goal 2, §4.1, §6, §8 (slice 2). Builds on `docs/design-slice-1-items.md`.
 
 ## 1. Definition (DEFINE)
 
@@ -29,12 +29,12 @@ Status: draft, awaiting owner review · Owner: Igor Bondarenko · Date: 2026-11-
 - Marking salt "Out of it" puts it on the list, even if salt has no usage estimate.
 - A person can add "charcoal" by hand and tick it off later.
 
-### Open questions for the owner (with the proposed answer)
-1. **Edited out of "low".** If an item is auto-added and then someone edits it so it is no longer low (for example a longer estimate), should the auto entry come off the list? *Proposed: yes, but only auto entries. Manual entries stay until bought or removed.*
-2. **Adding something already listed.** If someone adds "milk" and milk is already on the list, should it add a second line? *Proposed: no, it reuses the existing entry and updates its quantity if one was given.*
-3. **Staying fresh.** A kitchen tablet left open will show an old list while someone else ticks things off on a phone. *Proposed: refetch the list every 30 seconds and when the tab regains focus. It's a local network, so the cost is negligible.*
-4. **Removed rows.** The PRD's `grocery_entries` has no way to represent "taken off without buying". *Proposed: add a nullable `removed_at` column, and never delete rows (same rule as item history).*
-5. **Free text that matches an item.** Typing "milk" when milk is tracked. *Proposed: the server links it to the tracked item (case-insensitive name match), so Bought it can restock it.*
+### Decisions (owner, 2026-11-02)
+1. **Edited out of "low".** An auto-added entry comes off the list when an edit, such as a longer estimate or a bigger quantity, means the item is no longer low. Only auto entries are removed; manual entries stay until bought or removed.
+2. **Adding something already listed.** It reuses the existing entry and updates its quantity if one was given. There is no second line.
+3. **Staying fresh.** The list refetches when the app regains focus. The proposed 30-second timer was not confirmed, so it is not part of this design: a tablet left open and in focus on this page will not update by itself until someone touches it or reloads. A timer is a one-line addition if wanted later.
+4. **Removed rows.** Add a nullable `removed_at` column on `grocery_entries`, and never delete rows (same rule as item history).
+5. **Free text that matches an item.** The server links it to the tracked item (case-insensitive name match), so Bought it can restock it.
 
 ## 2. System overview
 
@@ -104,7 +104,7 @@ This adds `removed_at` and fixes the values of `added_by` compared with PRD §6.
   - A card per entry: the text, the quantity if known (with the unit), and a small "Added automatically" or "Added by hand" note. One primary action, "Bought it". Secondary: "Remove".
   - "Bought it" on a tracked entry opens the existing `RestockDialog` (default: entry quantity, else usual restock, else 1). On a free-text entry it acts immediately.
   - Empty state: "Nothing to buy. Items that run low show up here."
-  - Refetch every 30 seconds and on focus.
+  - Refetch when the app regains focus (TanStack Query's `refetchOnWindowFocus`).
 - **Items page:** a card whose item is on the list shows "On the grocery list".
 - Rules: `homer-ui` and `coding-style`; components stay small, files under about 600 lines.
 
@@ -140,5 +140,5 @@ Then VERIFY, REVIEW (the `reviewer` subagent) and SHIP.
 - **Auto entry quantity** is the last restock quantity, or empty. It is only a default, and the person confirms it in the dialog.
 - **Name matching is ASCII-only**, as in slice 1.
 - **Risk: two tablets, one tap.** Both tick "Bought it" on the same entry. The second gets "That entry is already off the list. Refresh the list." and the item is restocked once.
-- **Risk: stale tablet.** Mitigated by the 30-second refetch, not eliminated.
+- **Risk: stale tablet.** Mitigated only by refetching on focus. A tablet that stays in focus on this page will not update until someone touches it or reloads (see decision 3).
 - **No undo for Bought it** in this slice. It is a deliberate gap until slice 5.
