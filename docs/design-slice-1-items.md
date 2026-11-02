@@ -77,7 +77,9 @@ No Node or DOM types.
 - `trpc.ts`: tRPC init. `routers/inventory.ts` has these procedures:
   - `list`: active items only (`archived_at` is null), each with `daysRemaining`, `runningLow`, `estimateSource`, and `usualRestock` (the last restock quantity, used to prefill "Bought it")
   - `create`, `update`, `archive` (sets `archived_at`; never removes rows)
-  - `history({ itemId })`: restocks for an item, newest first, including archived items. No screen in slice 1; it is the read path the assistant tool will use later.
+  - `findArchived({ name })`: the most recently removed item with that name (case-insensitive), or null
+  - `restore({ id, ...itemInput })`: brings a removed item back with its history and the submitted values; keeps the original name; fails with CONFLICT if an active item already has that name
+  - `history({ id })`: restocks for an item, newest first, including archived items. No screen in slice 1; it is the read path the assistant tool will use later.
   - `restock({ itemId, quantity })`: in one transaction, adds to the quantity and inserts a `restocks` row
   - `markOut({ itemId })`: sets the quantity to 0
 - `routers/index.ts` exports `AppRouter`. `index.ts` mounts Hono, with tRPC at `/trpc`, and listens on `PORT`.
@@ -92,6 +94,9 @@ No Node or DOM types.
   - one primary action, "Bought it", which opens a restock dialog prefilled with the usual amount
   - a secondary "Out of it"
 - **Add and edit form:** name, unit, quantity, "Lasts (days per unit)", "Low at (days)".
+- **Re-adding a removed item:** on save, the page calls `findArchived`. If a removed item has that name, a dialog asks "Restore it" (same item, history kept, original name) or "Start a new item" (new id, empty history), with Cancel returning to the form with its values intact.
+- **Cards:** a flex column with the button row pinned to the bottom, so buttons line up across a row even when one card has no estimate note.
+- **Favicon:** `apps/web/public/favicon.svg`, linked from `index.html`, with a dark-mode variant.
 - Rules: `homer-ui` (44px targets, dark mode, Tailwind only, keyboard reachable, urgency in words) and `coding-style` (arrow functions, immutable, labels read like identifiers, files under about 600 lines).
 
 ## 7. Testing (red-green-refactor)
@@ -108,6 +113,8 @@ No Node or DOM types.
   - Invalid inputs are rejected.
   - Archiving an item hides it from `list` but keeps its restocks, and `history` still returns them.
   - Creating an item with the name of an archived one is allowed.
+  - `findArchived` matches case-insensitively and returns the most recently removed item.
+  - `restore` brings back an item with its history, and rejects an item that isn't removed or whose name is now taken.
 - **UI:** checked in the running app (VERIFY phase). Browser checks use the Playwright MCP (configured in `.mcp.json`).
 
 ## 8. Work order (one coherent commit each)
@@ -132,4 +139,4 @@ Then VERIFY (`pnpm typecheck`, `pnpm test`, run the app), REVIEW (the `reviewer`
 - **Edit overwrites quantity:** the edit form sends the quantity it loaded, so a restock made on another tablet in the meantime can be overwritten. Accepted for one household in v1.
 - **Bounds:** quantity is capped at 100,000 and days per unit at 3,650, so days remaining always stays a finite number.
 - **Decided (owner, 2026-11-02):** history is never deleted. Removing an item archives it and its restocks stay, so history can be shown later or asked for in chat.
-- **Open:** re-creating an item with an archived name starts a fresh item (new id, separate history). Restoring the archived one instead is a possible later feature.
+- **Decided (owner, 2026-11-02):** re-adding an item whose name was removed before asks in the UI whether to restore the old item (history kept) or start a new one.
