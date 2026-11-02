@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import fc from "fast-check";
-import { daysRemaining, effectiveEstimate, isRunningLow } from "./domain";
+import { daysRemaining, effectiveEstimate, groceryAction, isRunningLow, needsRestock } from "./domain";
 
 const positive = fc.double({ min: 0.01, max: 1000, noNaN: true });
 const nonNegative = fc.double({ min: 0, max: 1000, noNaN: true });
@@ -64,6 +64,81 @@ describe("isRunningLow", () => {
     fc.assert(
       fc.property(fc.integer({ min: 0, max: 365 }), fc.integer({ min: 0, max: 365 }), (days, threshold) => {
         expect(isRunningLow(days, threshold)).toBe(days <= threshold);
+      }),
+    );
+  });
+});
+
+describe("needsRestock", () => {
+  const stock = (quantity: number, daysRemaining: number | null, lowThresholdDays = 7) => ({
+    quantity,
+    daysRemaining,
+    lowThresholdDays,
+  });
+
+  it("is true for milk at 1 litre lasting 2 days per litre", () => {
+    expect(needsRestock(stock(1, 2))).toBe(true);
+  });
+
+  it("is true when out, even with no estimate", () => {
+    expect(needsRestock(stock(0, null))).toBe(true);
+  });
+
+  it("is false for stock with no estimate", () => {
+    expect(needsRestock(stock(3, null))).toBe(false);
+  });
+
+  it("is false when there is plenty left", () => {
+    expect(needsRestock(stock(1, 30))).toBe(false);
+  });
+
+  it("is always true when out, whatever the estimate or threshold", () => {
+    fc.assert(
+      fc.property(fc.option(fc.integer({ min: 0, max: 365 }), { nil: null }), fc.integer({ min: 0, max: 365 }), (days, threshold) => {
+        expect(needsRestock(stock(0, days, threshold))).toBe(true);
+      }),
+    );
+  });
+
+  it("flips exactly at the threshold when stock remains", () => {
+    fc.assert(
+      fc.property(positive, fc.integer({ min: 0, max: 365 }), fc.integer({ min: 0, max: 365 }), (quantity, days, threshold) => {
+        expect(needsRestock(stock(quantity, days, threshold))).toBe(days <= threshold);
+      }),
+    );
+  });
+});
+
+describe("groceryAction", () => {
+  const entries = [null, { addedBy: "auto" as const }, { addedBy: "manual" as const }];
+
+  it("adds a needed item that has no open entry", () => {
+    expect(groceryAction(true, null)).toBe("add");
+  });
+
+  it("keeps an open entry for a needed item", () => {
+    expect(groceryAction(true, { addedBy: "auto" })).toBe("keep");
+    expect(groceryAction(true, { addedBy: "manual" })).toBe("keep");
+  });
+
+  it("removes an auto entry once the item is no longer needed", () => {
+    expect(groceryAction(false, { addedBy: "auto" })).toBe("remove");
+  });
+
+  it("keeps a manual entry when the item is no longer needed", () => {
+    expect(groceryAction(false, { addedBy: "manual" })).toBe("keep");
+  });
+
+  it("does nothing when nothing is needed and nothing is open", () => {
+    expect(groceryAction(false, null)).toBe("keep");
+  });
+
+  it("never removes a manual entry and never adds a second open entry", () => {
+    fc.assert(
+      fc.property(fc.boolean(), fc.constantFrom(...entries), (needed, entry) => {
+        const action = groceryAction(needed, entry);
+        if (entry?.addedBy === "manual") expect(action).not.toBe("remove");
+        if (entry !== null) expect(action).not.toBe("add");
       }),
     );
   });

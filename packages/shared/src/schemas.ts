@@ -44,3 +44,31 @@ export const restockInputSchema = z.object({
 export type ItemInput = z.infer<typeof itemInputSchema>;
 export type Item = z.infer<typeof itemSchema>;
 export type RestockInput = z.infer<typeof restockInputSchema>;
+
+const groceryQuantity = z.number().positive().max(MAX_QUANTITY);
+
+export const grocerySourceSchema = z.enum(["auto", "manual"]);
+
+export const groceryAddInputSchema = z.union([
+  z.object({ itemId: z.number().int(), quantity: groceryQuantity.optional() }),
+  z.object({ text, quantity: groceryQuantity.optional() }),
+]);
+
+export const groceryBoughtInputSchema = z.object({
+  id: z.number().int(),
+  quantity: groceryQuantity.optional(),
+});
+
+export const groceryEntrySchema = z.object({
+  id: z.number().int(),
+  itemId: z.number().int().nullable(),
+  text,
+  quantity: groceryQuantity.nullable(),
+  addedBy: grocerySourceSchema,
+  createdAt: z.string(),
+  boughtAt: z.string().nullable(),
+  removedAt: z.string().nullable(),
+});
+
+export type GroceryAddInput = z.infer<typeof groceryAddInputSchema>;
+export type GroceryEntry = z.infer<typeof groceryEntrySchema>;
