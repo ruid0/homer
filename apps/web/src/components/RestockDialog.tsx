@@ -1,33 +1,34 @@
 import { useState, type SubmitEvent } from "react";
 import { restockInputSchema } from "@homer/shared";
-import type { ListItem } from "../trpc";
 import { Dialog } from "./Dialog";
 import { inputClass, primaryButton, secondaryButton } from "./ui";
 
 type Props = {
-  item: ListItem;
+  name: string;
+  unit: string;
+  initialQuantity: number;
   pending: boolean;
   serverError?: string;
   onSave: (quantity: number) => void;
   onClose: () => void;
 };
 
-export const RestockDialog = ({ item, pending, serverError, onSave, onClose }: Props) => {
-  const [quantity, setQuantity] = useState(String(item.usualRestock ?? 1));
+export const RestockDialog = ({ name, unit, initialQuantity, pending, serverError, onSave, onClose }: Props) => {
+  const [quantity, setQuantity] = useState(String(initialQuantity));
   const [error, setError] = useState<string>();
 
   const submit = (event: SubmitEvent) => {
     event.preventDefault();
-    const parsed = restockInputSchema.safeParse({ itemId: item.id, quantity: Number(quantity) });
+    const parsed = restockInputSchema.shape.quantity.safeParse(Number(quantity));
     setError(parsed.success ? undefined : "Enter a quantity above 0.");
-    if (parsed.success) onSave(parsed.data.quantity);
+    if (parsed.success) onSave(parsed.data);
   };
 
   return (
-    <Dialog title={`Bought ${item.name}`} onClose={onClose}>
+    <Dialog title={`Bought ${name}`} onClose={onClose}>
       <form onSubmit={submit} className="grid gap-4">
         <label className="grid gap-1">
-          <span>{`Quantity bought (${item.unit})`}</span>
+          <span>{`Quantity bought (${unit})`}</span>
           <input
             className={inputClass}
             type="number"

@@ -14,6 +14,8 @@ type Choice = { values: ItemInput; archived: ArchivedItem };
 export const ItemsPage = () => {
   const utils = trpc.useUtils();
   const items = trpc.inventory.list.useQuery();
+  const groceries = trpc.groceries.list.useQuery();
+  const listedIds = new Set((groceries.data ?? []).flatMap((entry) => (entry.itemId === null ? [] : [entry.itemId])));
   const [editing, setEditing] = useState<Editing>(null);
   const [restocking, setRestocking] = useState<ListItem | null>(null);
   const [choice, setChoice] = useState<Choice | null>(null);
@@ -22,7 +24,7 @@ export const ItemsPage = () => {
     setEditing(null);
     setRestocking(null);
     setChoice(null);
-    return utils.inventory.list.invalidate();
+    return Promise.all([utils.inventory.list.invalidate(), utils.groceries.list.invalidate()]);
   };
 
   const create = trpc.inventory.create.useMutation({ onSuccess: done });
@@ -78,6 +80,7 @@ export const ItemsPage = () => {
             key={item.id}
             item={item}
             busy={markOut.isPending}
+            onList={listedIds.has(item.id)}
             onBought={() => setRestocking(item)}
             onOut={() => markOut.mutate({ id: item.id })}
             onEdit={() => setEditing(item)}
@@ -118,7 +121,9 @@ export const ItemsPage = () => {
       )}
       {restocking && (
         <RestockDialog
-          item={restocking}
+          name={restocking.name}
+          unit={restocking.unit}
+          initialQuantity={restocking.usualRestock ?? 1}
           pending={restock.isPending}
           serverError={restock.error?.message}
           onSave={(quantity) => restock.mutate({ itemId: restocking.id, quantity })}
