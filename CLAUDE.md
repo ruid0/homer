@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 H.O.M.E.R. is a self-hosted, fully local household assistant: inventory, groceries, schedule, tasks, maintenance reminders, plus a local-LLM chat assistant.
 
-**Early stage.** The pnpm workspace, package manifests, TypeScript configs and Claude Code tooling are in place. Each package has only a stub entry file (`export {};`); no features are built yet. "Architecture" below is the target design. Check the actual tree before relying on it, and update this file as code lands.
+**Early stage.** The pnpm workspace, package manifests, TypeScript configs and Claude Code tooling are in place. **Slice 1 (items and days remaining) is built**: shared schemas and domain functions, `items`/`restocks` tables with a migration, the `inventory` tRPC router, and the Items page. Nothing else exists yet (no grocery list, tasks, assistant or jobs). The design is in `docs/design-slice-1-items.md`. "Architecture" below is the target design. Check the actual tree before relying on it, and update this file as code lands.
 
 **Product requirements:** `docs/PRD.md` defines scope, acceptance criteria and open questions. Read it during DEFINE and PLAN, and update it when scope changes.
 
@@ -18,7 +18,8 @@ pnpm typecheck     # tsc --noEmit in every package (pnpm -r)
 pnpm test          # vitest run (Vitest + fast-check)
 pnpm exec vitest related <file> --run   # tests touching one file
 pnpm dev           # web :3000, api :3001
-pnpm db:migrate    # Drizzle migrations (drizzle-kit); not configured yet
+pnpm db:generate   # new Drizzle migration from apps/api/src/db/schema.ts (run in apps/api)
+pnpm db:migrate    # apply migrations by hand; the api also applies them on boot
 ```
 
 Not set up yet: `docker-compose.yml` (`docker compose up -d`), CI, lint.
@@ -59,6 +60,6 @@ Every piece of work moves through six phases, in order. **Name the phase you are
 2. **PLAN**: the approach: files, schema or interface changes, risks, and the order of work.
    Output: a plan the owner approves or changes. Nothing is built before the plan is agreed.
 3. **BUILD**: implement the agreed plan in small, coherent commits, each one buildable. The post-edit hook typechecks and runs related tests automatically.
-4. **VERIFY**: evidence, not claims. Run `pnpm typecheck` and `pnpm test`, and for anything visual, check the running app with the DevTools MCP. Say what passed and what didn't.
+4. **VERIFY**: evidence, not claims. Run `pnpm typecheck` and `pnpm test`, and for anything visual, check the running app with the Playwright MCP. Say what passed and what didn't.
 5. **REVIEW**: run the `reviewer` subagent on the diff and address its Must fix items.
 6. **SHIP**: open a PR with `.github/pull_request_template.md` filled in, wait for CI (once it exists), merge, then rebuild with `docker compose up -d --build` (once compose exists).

@@ -1,0 +1,18 @@
+@import "tailwindcss";
+
+@custom-variant dark (@media (prefers-color-scheme: dark));
+
+html {
+  color-scheme: light dark;
+}
+
+body {
+  @apply bg-stone-50 text-stone-900 dark:bg-stone-950 dark:text-stone-100;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
