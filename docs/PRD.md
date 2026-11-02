@@ -127,7 +127,7 @@ Schemas live in `packages/shared/src/schemas.ts`; pure calculations (`daysRemain
 
 Each slice goes through DEFINE → SHIP (see CLAUDE.md) as its own PR.
 
-1. **Items and days remaining**: schema, `daysRemaining` with property tests, Items screen with forms. Restocks recorded from the start.
+1. **Items and days remaining** (built, see `docs/design-slice-1-items.md`): schema, `daysRemaining` with property tests, Items screen with forms. Restocks recorded from the start.
 2. **Grocery list**: auto-add when low, manual add, Bought it / Out of it.
 3. **People, tasks and events**: People setup page; create, assign, complete, repeat via `nextDueDate`; Today and Week views.
 4. **Dashboard**.
