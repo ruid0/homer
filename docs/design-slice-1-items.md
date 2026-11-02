@@ -1,6 +1,6 @@
 # Slice 1: Items and days remaining. Technical plan and system design
 
-Status: draft · Owner: Igor Bondarenko · Date: 2026-11-02 · Source: PRD §4.1, §6, §8 (slice 1)
+Status: DONE · Owner: Igor Bondarenko · Date: 2026-11-02 · Source: PRD §4.1, §6, §8 (slice 1)
 
 ## 1. Scope
 
