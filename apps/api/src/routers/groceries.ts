@@ -1,23 +1,21 @@
 import { TRPCError } from "@trpc/server";
-import { and, asc, eq, isNull } from "drizzle-orm";
+import { and, asc, eq } from "drizzle-orm";
 import { groceryAddInputSchema, groceryBoughtInputSchema, idInputSchema } from "@homer/shared";
 import type { Db } from "../db/client";
 import { groceryEntries, items } from "../db/schema";
+import { openEntries as isOpen, type GroceryTx } from "../groceries/open";
 import { syncGrocery } from "../groceries/sync";
 import { findActive, findActiveByName, type ItemRow } from "../inventory/lookup";
 import { applyRestock, usualRestock } from "../inventory/stock";
 import { publicProcedure, router } from "../trpc";
 
 type EntryRow = typeof groceryEntries.$inferSelect;
-type Tx = Pick<Db, "select" | "insert" | "update">;
 
 const entryClosed = () =>
   new TRPCError({ code: "NOT_FOUND", message: "That entry is already off the list. Refresh the list." });
 
 const quantityNeeded = () =>
   new TRPCError({ code: "BAD_REQUEST", message: "Enter how much you bought." });
-
-const isOpen = and(isNull(groceryEntries.boughtAt), isNull(groceryEntries.removedAt));
 
 const findOpenEntry = (db: Pick<Db, "select">, id: number): EntryRow => {
   const row = db.select().from(groceryEntries).where(and(eq(groceryEntries.id, id), isOpen)).get();
@@ -36,7 +34,7 @@ const withItemDetails = (db: Db, entry: EntryRow) => {
   };
 };
 
-const addForItem = (db: Tx, item: ItemRow, quantity?: number): EntryRow => {
+const addForItem = (db: GroceryTx, item: ItemRow, quantity?: number): EntryRow => {
   const open = db
     .select()
     .from(groceryEntries)

@@ -47,15 +47,16 @@ export const GroceriesPage = () => {
     <>
       <h1 className="mb-4 text-2xl font-semibold">Groceries</h1>
 
-      <form onSubmit={submit} className="mb-4 flex gap-3">
-        <input
-          className={inputClass}
-          aria-label="Add to the list"
-          placeholder="Add to the list"
-          list="tracked-names"
-          value={text}
-          onChange={(event) => setText(event.target.value)}
-        />
+      <form onSubmit={submit} className="mb-4 flex items-end gap-3">
+        <label className="grid flex-1 gap-1">
+          <span>Add to the list</span>
+          <input
+            className={inputClass}
+            list="tracked-names"
+            value={text}
+            onChange={(event) => setText(event.target.value)}
+          />
+        </label>
         <datalist id="tracked-names">
           {(items.data ?? []).map((item) => <option key={item.id} value={item.name} />)}
         </datalist>

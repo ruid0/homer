@@ -1,13 +1,9 @@
-import { and, eq, isNull } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { daysRemaining, effectiveEstimate, groceryAction, needsRestock } from "@homer/shared";
 import type { Db } from "../db/client";
 import { groceryEntries, items } from "../db/schema";
 import { usualRestock } from "../inventory/stock";
-
-type Tx = Pick<Db, "select" | "insert" | "update">;
-
-const isOpen = (itemId: number) =>
-  and(eq(groceryEntries.itemId, itemId), isNull(groceryEntries.boughtAt), isNull(groceryEntries.removedAt));
+import { openEntriesFor as isOpen, type GroceryTx } from "./open";
 
 const openEntryFor = (db: Pick<Db, "select">, itemId: number) =>
   db.select().from(groceryEntries).where(isOpen(itemId)).get();
@@ -19,7 +15,7 @@ const stockNeedsRestock = (item: typeof items.$inferSelect): boolean => {
 };
 
 // Call after any change to an item, inside the same transaction as that change.
-export const syncGrocery = (db: Tx, itemId: number): void => {
+export const syncGrocery = (db: GroceryTx, itemId: number): void => {
   const item = db.select().from(items).where(eq(items.id, itemId)).get();
   if (!item || item.archivedAt) return;
   const open = openEntryFor(db, itemId);
