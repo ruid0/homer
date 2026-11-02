@@ -108,7 +108,7 @@ No Node or DOM types.
   - Invalid inputs are rejected.
   - Archiving an item hides it from `list` but keeps its restocks, and `history` still returns them.
   - Creating an item with the name of an archived one is allowed.
-- **UI:** checked in the running app (VERIFY phase). The DevTools MCP failed to connect this session and needs a retry before then.
+- **UI:** checked in the running app (VERIFY phase). Browser checks use the Playwright MCP (configured in `.mcp.json`).
 
 ## 8. Work order (one coherent commit each)
 
