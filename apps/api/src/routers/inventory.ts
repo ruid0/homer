@@ -14,21 +14,12 @@ import {
 import type { Db } from "../db/client";
 import { items, restocks } from "../db/schema";
 import { closeOpenEntry, removeOpenEntries, syncGrocery } from "../groceries/sync";
+import { findActive, notFound, type ItemRow } from "../inventory/lookup";
 import { applyRestock, usualRestock } from "../inventory/stock";
 import { publicProcedure, router } from "../trpc";
 
-type ItemRow = typeof items.$inferSelect;
-
-const notFound = () => new TRPCError({ code: "NOT_FOUND", message: "That item doesn't exist. Refresh the list." });
-
 const nameTaken = (name: string) =>
   new TRPCError({ code: "CONFLICT", message: `${name} is already tracked. Edit that item instead.` });
-
-const findActive = (db: Pick<Db, "select">, id: number): ItemRow => {
-  const row = db.select().from(items).where(and(eq(items.id, id), isNull(items.archivedAt))).get();
-  if (!row) throw notFound();
-  return row;
-};
 
 const activeNameTaken = (db: Db, name: string, exceptId?: number): boolean =>
   db
