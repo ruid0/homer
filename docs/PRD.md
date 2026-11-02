@@ -69,7 +69,7 @@ One screen readable in about 3 seconds on a kitchen tablet: what's running out, 
 
 ### 4.4 Assistant
 
-A chat screen backed by a local model (Ollama, `qwen3:8b`) that can read and change everything in 4.1 and 4.2 through tools.
+A chat screen backed by a local model (Ollama, `qwen3.5:9b`) that can read and change everything in 4.1 and 4.2 through tools.
 
 **MVP tools**
 
@@ -102,7 +102,7 @@ A chat screen backed by a local model (Ollama, `qwen3:8b`) that can read and cha
 - **Installable.** PWA that can be added to a phone or tablet home screen.
 - **Usable on a tablet with busy hands.** 44px touch targets, readable from arm's length, dark mode.
 - **Responsive enough.** App screens feel instant on the home network. Assistant replies within a few seconds (target to be set once measured, see 7).
-- **Runs on the owner's MacBook (Apple M5, 48 GB).** Ollama runs natively on macOS so it can use the GPU; Docker on macOS can't, so Compose runs only web and api and points them at the host's Ollama. 48 GB leaves room to try a larger chat model than `qwen3:8b` if the eval shows it's worth it.
+- **Runs on the owner's MacBook (Apple M5, 48 GB).** Ollama runs natively on macOS so it can use the GPU; Docker on macOS can't, so Compose runs only web and api and points them at the host's Ollama. 48 GB leaves room to try a larger chat model than `qwen3.5:9b` if the eval shows it's worth it.
 - **Works without the assistant.** If Ollama is down, every screen still works and the chat shows a clear message.
 
 ## 6. Data model (first cut)
@@ -120,7 +120,7 @@ Schemas live in `packages/shared/src/schemas.ts`; pure calculations (`daysRemain
 ## 7. How we'll know it works
 
 - **Household use:** after a month, the family still uses it weekly, and nothing tracked has run out unnoticed.
-- **Assistant eval:** a set of at least 20 golden prompts (e.g. "we're out of salt" → `mark_out({ name: "salt" })`), run against the local model on every change to prompts, tools or model. Measures correct tool, correct arguments, and asks-when-ambiguous. Starting target: 90% correct on `qwen3:8b`, adjusted after the first baseline run.
+- **Assistant eval:** a set of at least 20 golden prompts (e.g. "we're out of salt" → `mark_out({ name: "salt" })`), run against the local model on every change to prompts, tools or model. Measures correct tool, correct arguments, and asks-when-ambiguous. Starting target: 90% correct on `qwen3.5:9b`, adjusted after the first baseline run.
 - **Latency:** measure assistant reply time on the owner's machine in the first baseline, then set a target.
 
 ## 8. Delivery slices

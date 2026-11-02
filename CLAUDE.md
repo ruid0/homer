@@ -23,7 +23,7 @@ pnpm db:migrate    # Drizzle migrations (drizzle-kit); not configured yet
 
 Not set up yet: `docker-compose.yml` (`docker compose up -d`), CI, lint.
 
-- Requires Node 24+, pnpm (pinned to `pnpm@12.16.1` via `packageManager`), and Ollama at `127.0.0.1:11434` with `qwen3-vl:8b` (vision/OCR) and `qwen3:8b` (chat + tool calling) pulled.
+- Requires Node 24+, pnpm (pinned to `pnpm@12.16.1` via `packageManager`), and Ollama at `127.0.0.1:11434` with `qwen3-vl:8b` (vision/OCR) and `qwen3.5:9b` (chat + tool calling) pulled.
 - TypeScript 7. Shared settings live in `tsconfig.base.json`; each package extends it. `packages/shared` loads no Node or DOM types on purpose, so domain code stays pure.
 
 ## Architecture
