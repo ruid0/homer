@@ -1,22 +1,27 @@
 import { useState } from "react";
+import type { ItemInput } from "@homer/shared";
 import { ItemCard } from "../components/ItemCard";
 import { ItemForm } from "../components/ItemForm";
 import { RestockDialog } from "../components/RestockDialog";
+import { RestoreChoiceDialog } from "../components/RestoreChoiceDialog";
 import { primaryButton } from "../components/ui";
 import { sortByUrgency } from "../lib/itemText";
-import { trpc, type ListItem } from "../trpc";
+import { trpc, type ArchivedItem, type ListItem } from "../trpc";
 
 type Editing = ListItem | "new" | null;
+type Choice = { values: ItemInput; archived: ArchivedItem };
 
 export const ItemsPage = () => {
   const utils = trpc.useUtils();
   const items = trpc.inventory.list.useQuery();
   const [editing, setEditing] = useState<Editing>(null);
   const [restocking, setRestocking] = useState<ListItem | null>(null);
+  const [choice, setChoice] = useState<Choice | null>(null);
 
   const done = () => {
     setEditing(null);
     setRestocking(null);
+    setChoice(null);
     return utils.inventory.list.invalidate();
   };
 
@@ -25,6 +30,18 @@ export const ItemsPage = () => {
   const archive = trpc.inventory.archive.useMutation({ onSuccess: done });
   const restock = trpc.inventory.restock.useMutation({ onSuccess: done });
   const markOut = trpc.inventory.markOut.useMutation({ onSuccess: done });
+  const restore = trpc.inventory.restore.useMutation({ onSuccess: done });
+
+  const submitNew = async (values: ItemInput) => {
+    const archived = await utils.inventory.findArchived.fetch({ name: values.name }).catch(() => null);
+    if (archived) setChoice({ values, archived });
+    else create.mutate(values);
+  };
+
+  const closeChoice = () => {
+    restore.reset();
+    setChoice(null);
+  };
 
   const removeItem = (item: ListItem) => {
     if (window.confirm(`Remove ${item.name}? Its restock history is kept.`)) archive.mutate({ id: item.id });
@@ -72,7 +89,7 @@ export const ItemsPage = () => {
         <ItemForm
           pending={create.isPending}
           serverError={create.error?.message}
-          onSave={(values) => create.mutate(values)}
+          onSave={submitNew}
           onClose={closeForm}
         />
       )}
@@ -84,6 +101,19 @@ export const ItemsPage = () => {
           onSave={(values) => update.mutate({ id: editing.id, ...values })}
           onRemove={() => removeItem(editing)}
           onClose={closeForm}
+        />
+      )}
+      {choice && (
+        <RestoreChoiceDialog
+          archived={choice.archived}
+          pending={restore.isPending || create.isPending}
+          serverError={restore.error?.message}
+          onRestore={() => restore.mutate({ ...choice.values, id: choice.archived.id, name: choice.archived.name })}
+          onCreateNew={() => {
+            create.mutate(choice.values);
+            setChoice(null);
+          }}
+          onClose={closeChoice}
         />
       )}
       {restocking && (

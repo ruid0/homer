@@ -6,7 +6,11 @@ import type { AppRouter } from "../../api/src/routers";
 
 export const trpc = createTRPCReact<AppRouter>();
 
-export type ListItem = inferRouterOutputs<AppRouter>["inventory"]["list"][number];
+type Outputs = inferRouterOutputs<AppRouter>["inventory"];
+
+export type ListItem = Outputs["list"][number];
+
+export type ArchivedItem = NonNullable<Outputs["findArchived"]>;
 
 export const queryClient = new QueryClient();
 
