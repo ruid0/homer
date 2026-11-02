@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useState, type SubmitEvent } from "react";
 import { restockInputSchema } from "@homer/shared";
 import type { ListItem } from "../trpc";
 import { Dialog } from "./Dialog";
@@ -16,7 +16,7 @@ export const RestockDialog = ({ item, pending, serverError, onSave, onClose }: P
   const [quantity, setQuantity] = useState(String(item.usualRestock ?? 1));
   const [error, setError] = useState<string>();
 
-  const submit = (event: FormEvent) => {
+  const submit = (event: SubmitEvent) => {
     event.preventDefault();
     const parsed = restockInputSchema.safeParse({ itemId: item.id, quantity: Number(quantity) });
     setError(parsed.success ? undefined : "Enter a quantity above 0.");

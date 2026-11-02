@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useState, type SubmitEvent } from "react";
 import { DEFAULT_LOW_THRESHOLD_DAYS, itemInputSchema, type ItemInput } from "@homer/shared";
 import type { ListItem } from "../trpc";
 import { Dialog } from "./Dialog";
@@ -34,7 +34,7 @@ export const ItemForm = ({ item, pending, serverError, onSave, onRemove, onClose
   const [threshold, setThreshold] = useState(String(item?.lowThresholdDays ?? DEFAULT_LOW_THRESHOLD_DAYS));
   const [error, setError] = useState<string>();
 
-  const submit = (event: FormEvent) => {
+  const submit = (event: SubmitEvent) => {
     event.preventDefault();
     const parsed = itemInputSchema.safeParse({
       name,
