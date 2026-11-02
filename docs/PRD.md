@@ -1,19 +1,19 @@
 # H.O.M.E.R. — Product Requirements
 
-Status: draft v0.1 · Owner: Igor Bondarenko · Last updated: 2026-11-01
+Status: draft v0.2 · Owner: Igor Bondarenko · Last updated: 2026-11-02
 
 ## 1. Problem
 
-Running a household means keeping track of many small things that nobody owns: what's about to run out, what needs buying, and what needs doing this week. Today that lives in people's heads, on a fridge note, or in apps that need accounts and send household data to the cloud. Things get missed: the salt runs out, the same item gets bought twice, a task slips.
+Maintaining a house with 3 people and a cat is a chore on itself, list of things that's needs to be done always slips somewhere or got forgoten. The errands got missed because someone forgets to put them into the calendar. Food runs out in the least expected moment, or you grill in not ready or missing some things like a fire starter or coals when you want to cook something and you have to run to the store. Slpliting responsibilities between family members, who does what for cleaning, maintaning, and other home related things.
 
-HOMER is a household assistant that runs entirely at home. It knows what's running low, keeps the grocery list, and tracks tasks and dates, and people can update it by tapping or by just saying what happened ("we're out of milk").
+H.O.M.E.R. is a hosehold assistant that remebers everything, when you staples runs out, it keeps the list of grocceries or other things. Shows what house maintananse is due, furnce filters, salt in the saftener etc. Reminders/Calendars of upcoming events you usually frget about, but not Homer. Everyone in household can add/update it tapping or by just saying what happened
 
 ## 2. Users
 
-Version 1 is built for **one household: the owner's family**. Other households may self-host it later, but v1 makes no effort to support them (no installer polish, no multi-household setup).
+Version 1 is built for just one hosehold. Other households may self-host it later, but v1 makes no effort to support them.
 
-- **Household members** check what's needed and what's due, tick things off, and tell the assistant what happened. Mostly on a phone, or a tablet in the kitchen.
-- **The owner** also sets HOMER up, runs it on a home machine, and backs up its single database file.
+- Family check what's needed and what's due, tick things off, and tell the assistant what happened. Mostly on a phone, or a tablet in the kitchen.
+- The owner also sets HOMER up, runs it on a home machine, and backs up its single database file.
 
 ## 3. Goals and non-goals
 
@@ -24,12 +24,11 @@ Version 1 is built for **one household: the owner's family**. Other households m
 4. Anything you can do with a form, you can also do by telling the assistant in plain words.
 5. No household data leaves the house.
 
-**Non-goals for v1**
-- Maintenance reminders (filters, softener salt, cleaning). Planned for v2, see section 9.
+**Goals for v2**
+- Maintenance reminders (filters, softener salt, cleaning).
 - Receipt or label photos (vision/OCR) and voice input. Planned for later.
-- User accounts, logins or per-person permissions. Everyone on the home network is trusted.
-- Sync with external calendars, shopping services or cloud storage.
-- Access from outside the home network.
+- Based on receipts and estimate search flyers for best deals 
+- Access from outside the home network?
 
 ## 4. MVP scope
 
@@ -37,7 +36,8 @@ Version 1 is built for **one household: the owner's family**. Other households m
 
 The household tracks consumables they care about running out of.
 
-- **Item**: name, unit (e.g. "bag", "litre"), current quantity, and how long one unit usually lasts.
+- **Item**: name, unit (e.g. "bag", "litre"), current quantity, and how long one unit usually lasts. One unit per item, no unit conversion.
+- **Usage is entered, then learned.** The person enters a starting estimate ("one bag lasts about 30 days"). Every restock is recorded, and once there is enough history HOMER updates the estimate from how long stock actually lasted. The item shows which estimate it uses: entered or learned.
 - HOMER estimates **days remaining** for each item from quantity and usage, and flags it as **running low** when below a threshold (default: 7 days, adjustable per item).
 - Running-low items are added to the **grocery list** automatically. People can also add anything by hand, tracked or not.
 - **Bought it** on a grocery item restocks it (asks for quantity, defaulting to the usual amount) and removes it from the list.
@@ -47,10 +47,12 @@ The household tracks consumables they care about running out of.
 - Given milk at 1 litre lasting 2 days per litre, the dashboard shows "Milk runs out in 2 days" and it's on the grocery list.
 - Marking milk "Bought it" with 4 litres removes it from the list and updates days remaining.
 - Days remaining never shows a negative number; an item with no usage set shows "No estimate" instead of a guess.
+- Salt entered as "one bag lasts 30 days" but restocked every 20 days over several restocks switches to a learned estimate near 20 days, and says it's learned.
 
 ### 4.2 Tasks and schedule
 
 - **Task**: title, optional due date, optional time, optional repeat (daily, weekly, monthly), optional person it's for, done or not.
+- **People**: a setup page lists the household's people by name. Tasks can be assigned to one of them. No accounts or logins: a person is a name to assign to, not a user.
 - **Event**: title, date, optional time. Something that happens rather than something to do (e.g. "Dentist").
 - **Today** view: overdue tasks first, then tasks and events for today.
 - **Week** view: tasks and events for the next 7 days.
@@ -59,6 +61,7 @@ The household tracks consumables they care about running out of.
 **Acceptance criteria**
 - A weekly task due Monday and completed on Wednesday comes back due the following Monday.
 - Overdue tasks stay at the top of Today until done or rescheduled.
+- Today can be filtered to one person's tasks.
 
 ### 4.3 Dashboard
 
@@ -83,7 +86,7 @@ A chat screen backed by a local model (Ollama, `qwen3:8b`) that can read and cha
 
 **Behavior**
 - Tool arguments are validated with the same Zod schemas as the app. Invalid calls are rejected and retried, never written.
-- After any change, the assistant states what it did in one line ("Marked salt as out and added it to groceries") and offers **Undo**.
+- After any change, the assistant states what it did in one line ("Marked salt as out and added it to groceries") and offers **Undo**. Undo stays available until the person closes it.
 - If a request matches more than one item or is unclear, it asks instead of guessing.
 - It never invents items, quantities or dates the person didn't give.
 
@@ -98,14 +101,17 @@ A chat screen backed by a local model (Ollama, `qwen3:8b`) that can read and cha
 - **One file to back up.** All data in a single SQLite file.
 - **Installable.** PWA that can be added to a phone or tablet home screen.
 - **Usable on a tablet with busy hands.** 44px touch targets, readable from arm's length, dark mode.
-- **Responsive enough.** App screens feel instant on the home network. Assistant replies within a few seconds on the owner's hardware (target to be set once measured, see 7).
+- **Responsive enough.** App screens feel instant on the home network. Assistant replies within a few seconds (target to be set once measured, see 7).
+- **Runs on the owner's MacBook (Apple M5, 48 GB).** Ollama runs natively on macOS so it can use the GPU; Docker on macOS can't, so Compose runs only web and api and points them at the host's Ollama. 48 GB leaves room to try a larger chat model than `qwen3:8b` if the eval shows it's worth it.
 - **Works without the assistant.** If Ollama is down, every screen still works and the chat shows a clear message.
 
 ## 6. Data model (first cut)
 
-- `items`: id, name, unit, quantity, units_per_day or days_per_unit, low_threshold_days, created_at
+- `items`: id, name, unit, quantity, days_per_unit_entered, days_per_unit_learned (nullable), low_threshold_days, created_at
+- `restocks`: id, item_id, quantity, restocked_at (history the learned estimate comes from)
+- `people`: id, name
 - `grocery_entries`: id, item_id (nullable), text, quantity, added_by (auto/person), created_at, bought_at
-- `tasks`: id, title, due_date, due_time, repeat, person, done_at
+- `tasks`: id, title, due_date, due_time, repeat, person_id (nullable), done_at
 - `events`: id, title, date, time
 - `assistant_actions`: id, tool, args, result, created_at, undone_at (for Undo and debugging)
 
@@ -121,25 +127,33 @@ Schemas live in `packages/shared/src/schemas.ts`; pure calculations (`daysRemain
 
 Each slice goes through DEFINE → SHIP (see CLAUDE.md) as its own PR.
 
-1. **Items and days remaining**: schema, `daysRemaining` with property tests, Items screen with forms.
+1. **Items and days remaining**: schema, `daysRemaining` with property tests, Items screen with forms. Restocks recorded from the start.
 2. **Grocery list**: auto-add when low, manual add, Bought it / Out of it.
-3. **Tasks and events**: create, complete, repeat via `nextDueDate`, Today and Week views.
+3. **People, tasks and events**: People setup page; create, assign, complete, repeat via `nextDueDate`; Today and Week views.
 4. **Dashboard**.
 5. **Assistant**: tool loop, MVP tools, Undo, eval harness with the first golden set.
-6. **PWA and Docker Compose** packaging.
+6. **PWA and Docker Compose** packaging (web and api; Ollama stays native).
+7. **Learned usage**: estimate from restock history, shown as entered or learned.
 
 ## 9. Later (not v1)
 
 - Maintenance schedules (filters, softener salt, cleaning), the M in HOMER.
 - Receipt and label photos with `qwen3-vl` to restock from a shopping trip.
 - Voice input from the kitchen tablet.
-- Learning usage rates from restock history instead of setting them by hand.
 - Daily 06:00 job that posts a morning summary.
 
-## 10. Open questions
+## 10. Decisions
 
-1. **Usage rates:** is "one bag lasts about N days" easy enough to enter, or should v1 learn from restock history from the start?
-2. **People:** should tasks be assignable to a named person in v1, and where does the list of people come from without accounts?
-3. **Hardware:** which machine runs HOMER, and is `qwen3:8b` fast enough on it, or do we need a smaller model for chat?
-4. **Units:** does anyone need unit conversion (grams vs kg), or is one unit per item enough?
-5. **Undo window:** how long should Undo stay available after an assistant action?
+Answered by the owner on 2026-11-02:
+
+1. **Usage rates:** entered by hand to start, then learned from restock history (4.1, slice 7).
+2. **People:** tasks are assigned to named people from a People setup page; no accounts (4.2).
+3. **Hardware:** the owner's MacBook, Apple M5 with 48 GB; Ollama native, not in Docker (5).
+4. **Units:** one unit per item, no conversion.
+5. **Undo window:** Undo stays available until the person closes it (4.4).
+
+## 11. Open questions
+
+1. **Learning threshold:** how many restocks before the learned estimate replaces the entered one, and should it blend the two at first?
+2. **Late Undo:** if an item changed after the assistant's action (e.g. someone restocked it by hand), what should Undo do: revert only the assistant's change, or refuse and explain?
+3. **Other devices:** phones and the kitchen tablet reach the MacBook over the home network. What happens when the MacBook is asleep or away from home?

@@ -71,7 +71,7 @@ docker compose up -d
 | LLM runtime | Ollama (`127.0.0.1:11434`) | Local only |
 | Vision model | `qwen3-vl:8b` | OCR, labels, receipts |
 | Chat/tools model | `qwen3.5:9b` or `qwen3.8:27b-mlx` | Tool calling |
-| Deployment | Docker Compose | web + api + ollama |```
+| Deployment | Docker Compose | web + api (Ollama runs natively on the Mac) |```
 
 ## Repo layout
 

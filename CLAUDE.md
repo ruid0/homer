@@ -40,7 +40,7 @@ Key design constraints:
 - **Everything local**: no cloud services, accounts, or outbound data. The LLM runs only via Ollama on localhost; the DB is one SQLite file.
 - The assistant router drives an Ollama tool-calling loop whose tools dispatch into the same domain/DB layer as the tRPC routers.
 - **Installable as an app**: the web app is a PWA that can be added to a phone or tablet home screen, even though it's a website.
-- Deployment: Docker Compose with web + api + ollama.
+- Deployment: Docker Compose with web + api; Ollama runs natively on the Mac host (Docker on macOS has no GPU access).
 
 ## Claude Code setup
 

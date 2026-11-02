@@ -1,17 +1,4 @@
 services:
-  ollama:
-    image: ollama/ollama:latest
-    restart: unless-stopped
-    ports:
-      - "127.0.0.1:11434:11434"
-    volumes:
-      - ollama:/root/.ollama
-    healthcheck:
-      test: ["CMD", "ollama", "list"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
   api:
     build:
       context: .
@@ -22,15 +9,15 @@ services:
         required: false
     environment:
       PORT: "3001"
-      OLLAMA_HOST: http://ollama:11434
+      # Ollama runs natively on the Mac so it can use the GPU; Docker on macOS can't.
+      OLLAMA_HOST: http://host.docker.internal:11434
       DATABASE_PATH: /data/homer.db
     ports:
       - "3001:3001"
     volumes:
       - homer-data:/data
-    depends_on:
-      ollama:
-        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   web:
     build:
@@ -43,5 +30,4 @@ services:
       - api
 
 volumes:
-  ollama:
   homer-data:
