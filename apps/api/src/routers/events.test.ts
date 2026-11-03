@@ -27,6 +27,37 @@ describe("events.add", () => {
   });
 });
 
+describe("events with a person", () => {
+  it("adds an event for a person", async () => {
+    const api = setup();
+    const sam = await api.people.add({ name: "Sam" });
+    const event = await api.events.add({ ...dentist, personId: sam.id });
+    expect(event).toMatchObject({ title: "Dentist", personId: sam.id });
+    expect(await api.events.add(dentist)).toMatchObject({ personId: null });
+  });
+
+  it("rejects a person that does not exist", async () => {
+    const api = setup();
+    await expect(api.events.add({ ...dentist, personId: 99 })).rejects.toMatchObject({
+      code: "NOT_FOUND",
+      message: messages.personNotFound,
+    });
+    const event = await api.events.add(dentist);
+    await expect(api.events.update({ id: event.id, ...dentist, personId: 99 })).rejects.toMatchObject({
+      code: "NOT_FOUND",
+      message: messages.personNotFound,
+    });
+  });
+
+  it("changes the person on update, and clears it when left out", async () => {
+    const api = setup();
+    const sam = await api.people.add({ name: "Sam" });
+    const event = await api.events.add(dentist);
+    expect(await api.events.update({ id: event.id, ...dentist, personId: sam.id })).toMatchObject({ personId: sam.id });
+    expect(await api.events.update({ id: event.id, ...dentist })).toMatchObject({ personId: null });
+  });
+});
+
 describe("events.update", () => {
   it("replaces the whole event, so a time left out is cleared", async () => {
     const api = setup();
@@ -102,11 +133,28 @@ describe("schedule.view with events", () => {
     expect(view.overdue).toEqual([]);
   });
 
-  it("does not filter events by person", async () => {
+  it("shows the person's name on their events", async () => {
     const api = setup();
     const sam = await api.people.add({ name: "Sam" });
-    await api.events.add(dentist);
-    const view = await api.schedule.view({ today: "2026-11-05", days: 1, personId: sam.id });
-    expect(view.days[0]?.events).toHaveLength(1);
+    await api.events.add({ ...dentist, personId: sam.id });
+    await api.events.add({ title: "Party", date: "2026-11-05" });
+    const view = await api.schedule.view({ today: "2026-11-05", days: 1 });
+    expect(view.days[0]?.events).toMatchObject([
+      { title: "Dentist", personName: "Sam" },
+      { title: "Party", personName: null },
+    ]);
+  });
+
+  it("filters events by person, leaving out events nobody is assigned to", async () => {
+    const api = setup();
+    const sam = await api.people.add({ name: "Sam" });
+    const alex = await api.people.add({ name: "Alex" });
+    await api.events.add({ ...dentist, personId: sam.id });
+    await api.events.add({ title: "Alex's", date: "2026-11-05", personId: alex.id });
+    await api.events.add({ title: "Party", date: "2026-11-05" });
+    const onlySam = await api.schedule.view({ today: "2026-11-05", days: 1, personId: sam.id });
+    expect(onlySam.days[0]?.events.map((event) => event.title)).toEqual(["Dentist"]);
+    const everyone = await api.schedule.view({ today: "2026-11-05", days: 1 });
+    expect(everyone.days[0]?.events).toHaveLength(3);
   });
 });

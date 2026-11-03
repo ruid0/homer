@@ -7,6 +7,7 @@ const common = {
   cancel: "Cancel",
   save: "Save",
   boughtIt: "Bought it",
+  nobody: "Nobody",
 };
 
 export const copy = {
@@ -42,6 +43,9 @@ export const copy = {
     relativeDay: (relative: string, name: string) => `${relative}, ${name}`,
     anytime: "Anytime",
     empty: "Nothing planned. Add a task or an event.",
+    nothingForPerson: (name: string) => `Nothing planned for ${name}.`,
+    thisPerson: "this person",
+    showEveryone: "Show everyone",
     done: "Done",
     edit: "Edit",
     editLabel: (title: string) => `Edit ${title}`,
@@ -59,7 +63,6 @@ export const copy = {
     noRepeat: "Doesn't repeat",
     repeatOptions: { daily: "Every day", weekly: "Every week", monthly: "Every month" },
     person: "Assigned to",
-    nobody: "Nobody",
     removeTask: "Remove task",
     confirmRemove: (title: string) => `Remove ${title}? It is hidden, and can't be brought back here.`,
     blankTitle: "Enter what needs doing.",
@@ -71,6 +74,7 @@ export const copy = {
     title: "What's happening",
     date: "Date",
     time: "Time (optional)",
+    person: "Assigned to",
     removeEvent: "Remove event",
     confirmRemove: (title: string) => `Remove ${title}? It is hidden, and can't be brought back here.`,
     blankTitle: "Enter what's happening.",

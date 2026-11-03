@@ -1,16 +1,18 @@
 import type { EventInput } from "@homer/shared";
-import { trpc, type ScheduleEvent } from "../trpc";
+import { trpc, type ListPerson, type ScheduleEvent } from "../trpc";
 import { EventDialog } from "./EventDialog";
 import { copy } from "../copy";
 
 type Props = {
   event?: ScheduleEvent;
+  people: readonly ListPerson[];
+  defaultPersonId: number | null;
   defaultDate: string;
   onSaved: () => void;
   onClose: () => void;
 };
 
-export const EventEditor = ({ event, defaultDate, onSaved, onClose }: Props) => {
+export const EventEditor = ({ event, people, defaultPersonId, defaultDate, onSaved, onClose }: Props) => {
   const add = trpc.events.add.useMutation({ onSuccess: onSaved });
   const update = trpc.events.update.useMutation({ onSuccess: onSaved });
   const remove = trpc.events.remove.useMutation({ onSuccess: onSaved });
@@ -24,6 +26,8 @@ export const EventEditor = ({ event, defaultDate, onSaved, onClose }: Props) => 
   return (
     <EventDialog
       event={event}
+      people={people}
+      defaultPersonId={defaultPersonId}
       defaultDate={defaultDate}
       pending={add.isPending || update.isPending || remove.isPending}
       serverError={(event ? update.error : add.error)?.message ?? remove.error?.message}

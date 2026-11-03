@@ -3,6 +3,7 @@ import { repeatValues, taskInputSchema, type TaskInput } from "@homer/shared";
 import type { ListPerson, ScheduleTask } from "../trpc";
 import { Dialog } from "./Dialog";
 import { Field } from "./Field";
+import { PersonField } from "./PersonField";
 import { inputClass, primaryButton, secondaryButton } from "./ui";
 import { copy } from "../copy";
 
@@ -64,14 +65,7 @@ export const TaskDialog = ({ task, people, defaultPersonId, pending, serverError
             ))}
           </select>
         </Field>
-        <Field label={copy.taskForm.person}>
-          <select className={inputClass} value={personId} onChange={(e) => setPersonId(e.target.value)}>
-            <option value="">{copy.taskForm.nobody}</option>
-            {people.map((person) => (
-              <option key={person.id} value={person.id}>{person.name}</option>
-            ))}
-          </select>
-        </Field>
+        <PersonField label={copy.taskForm.person} people={people} value={personId} onChange={setPersonId} />
         {(error ?? serverError) && <p role="alert" className="text-red-700 dark:text-red-400">{error ?? serverError}</p>}
         <div className="flex flex-wrap justify-end gap-3">
           {onRemove && (

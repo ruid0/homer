@@ -4,6 +4,7 @@ import { eventInputSchema, idInputSchema, updateEventInputSchema } from "@homer/
 import type { Db } from "../db/client";
 import { events } from "../db/schema";
 import { messages } from "../messages";
+import { requirePerson } from "../people/lookup";
 import { publicProcedure, router } from "../trpc";
 
 const removed = () => new TRPCError({ code: "NOT_FOUND", message: messages.eventRemoved });
@@ -15,14 +16,22 @@ const requireShown = (db: Pick<Db, "select">, id: number): void => {
   if (!found) throw removed();
 };
 
+const requireAssignee = (db: Pick<Db, "select">, personId: number | null) => {
+  if (personId !== null) requirePerson(db, personId);
+};
+
 export const eventsRouter = router({
-  add: publicProcedure
-    .input(eventInputSchema)
-    .mutation(({ ctx, input }) => ctx.db.insert(events).values(input).returning().get()),
+  add: publicProcedure.input(eventInputSchema).mutation(({ ctx, input }) =>
+    ctx.db.transaction((tx) => {
+      requireAssignee(tx, input.personId);
+      return tx.insert(events).values(input).returning().get();
+    }),
+  ),
 
   update: publicProcedure.input(updateEventInputSchema).mutation(({ ctx, input }) =>
     ctx.db.transaction((tx) => {
       requireShown(tx, input.id);
+      requireAssignee(tx, input.personId);
       const { id, ...fields } = input;
       return tx.update(events).set(fields).where(eq(events.id, id)).returning().get();
     }),
