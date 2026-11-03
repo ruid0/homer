@@ -5,6 +5,7 @@ import { primaryButton, secondaryButton } from "./ui";
 type Props = {
   item: ListItem;
   busy: boolean;
+  onList: boolean;
   onBought: () => void;
   onOut: () => void;
   onEdit: () => void;
@@ -12,7 +13,7 @@ type Props = {
 
 const estimateNotes = { entered: "Entered by hand", learned: "Learned from restocks" } as const;
 
-export const ItemCard = ({ item, busy, onBought, onOut, onEdit }: Props) => {
+export const ItemCard = ({ item, busy, onList, onBought, onOut, onEdit }: Props) => {
   const urgent = item.runningLow || item.quantity === 0;
   const note = item.estimateSource && estimateNotes[item.estimateSource];
 
@@ -30,6 +31,7 @@ export const ItemCard = ({ item, busy, onBought, onOut, onEdit }: Props) => {
       <p className={urgent ? "text-xl font-semibold text-amber-700 dark:text-amber-400" : "text-xl"}>
         {describeRunsOut(item)}
       </p>
+      {onList && <p className="-mt-2 text-sm font-medium">On the grocery list</p>}
       {note && <p className="-mt-2 text-sm text-stone-600 dark:text-stone-400">{note}</p>}
       <div className="mt-auto flex gap-3">
         <button type="button" className={`${primaryButton} flex-1`} onClick={onBought}>Bought it</button>

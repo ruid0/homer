@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 import { createDb } from "./client";
-import { items, restocks } from "./schema";
+import { groceryEntries, items, restocks } from "./schema";
 
 const salt = { name: "Salt", unit: "bag", quantity: 1 };
 
@@ -37,5 +37,46 @@ describe("database schema", () => {
     db.insert(restocks).values({ itemId: item!.id, quantity: 2 }).run();
     db.update(items).set({ archivedAt: new Date().toISOString() }).where(eq(items.id, item!.id)).run();
     expect(db.select().from(restocks).where(eq(restocks.itemId, item!.id)).all()).toHaveLength(1);
+  });
+});
+
+describe("grocery_entries", () => {
+  const withItem = () => {
+    const db = createDb(":memory:");
+    const [item] = db.insert(items).values(salt).returning().all();
+    return { db, itemId: item!.id };
+  };
+
+  it("applies defaults and leaves an entry open", () => {
+    const { db, itemId } = withItem();
+    const [row] = db.insert(groceryEntries).values({ itemId, text: "Salt", addedBy: "auto" }).returning().all();
+    expect(row).toMatchObject({ quantity: null, boughtAt: null, removedAt: null });
+    expect(row?.createdAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+  });
+
+  it("rejects a second open entry for the same item", () => {
+    const { db, itemId } = withItem();
+    db.insert(groceryEntries).values({ itemId, text: "Salt", addedBy: "auto" }).run();
+    expect(() => db.insert(groceryEntries).values({ itemId, text: "Salt", addedBy: "manual" }).run()).toThrow();
+  });
+
+  it("allows a new open entry once the old one is bought or removed", () => {
+    const { db, itemId } = withItem();
+    const [first] = db.insert(groceryEntries).values({ itemId, text: "Salt", addedBy: "auto" }).returning().all();
+    db.update(groceryEntries).set({ boughtAt: new Date().toISOString() }).where(eq(groceryEntries.id, first!.id)).run();
+    const [second] = db.insert(groceryEntries).values({ itemId, text: "Salt", addedBy: "auto" }).returning().all();
+    db.update(groceryEntries).set({ removedAt: new Date().toISOString() }).where(eq(groceryEntries.id, second!.id)).run();
+    expect(() => db.insert(groceryEntries).values({ itemId, text: "Salt", addedBy: "auto" }).run()).not.toThrow();
+  });
+
+  it("allows many open free-text entries", () => {
+    const db = createDb(":memory:");
+    db.insert(groceryEntries).values({ text: "charcoal", addedBy: "manual" }).run();
+    expect(() => db.insert(groceryEntries).values({ text: "candles", addedBy: "manual" }).run()).not.toThrow();
+  });
+
+  it("rejects an entry for an item that does not exist", () => {
+    const db = createDb(":memory:");
+    expect(() => db.insert(groceryEntries).values({ itemId: 99, text: "Ghost", addedBy: "auto" }).run()).toThrow();
   });
 });

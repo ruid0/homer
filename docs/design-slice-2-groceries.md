@@ -31,7 +31,7 @@ Status: owner questions answered, ready to build · Owner: Igor Bondarenko · Da
 
 ### Decisions (owner, 2026-11-02)
 1. **Edited out of "low".** An auto-added entry comes off the list when an edit, such as a longer estimate or a bigger quantity, means the item is no longer low. Only auto entries are removed; manual entries stay until bought or removed.
-2. **Adding something already listed.** It reuses the existing entry and updates its quantity if one was given. There is no second line.
+2. **Adding something already listed.** It reuses the existing entry and updates its quantity if one was given. There is no second line. An auto entry that a person adds this way becomes a manual entry, so a later edit does not remove it. Entries for tracked items always show the current item name.
 3. **Staying fresh.** The list refetches when the app regains focus. The proposed 30-second timer was not confirmed, so it is not part of this design: a tablet left open and in focus on this page will not update by itself until someone touches it or reloads. A timer is a one-line addition if wanted later.
 4. **Removed rows.** Add a nullable `removed_at` column on `grocery_entries`, and never delete rows (same rule as item history).
 5. **Free text that matches an item.** The server links it to the tracked item (case-insensitive name match), so Bought it can restock it.
@@ -69,13 +69,15 @@ An entry is **open** when `bought_at` and `removed_at` are both null.
 
 Index: `grocery_one_open_per_item` is a unique index on `item_id` where `item_id` is not null and the entry is open. It makes "no duplicate open entry per item" a database guarantee, so two tablets adding at once cannot create two lines.
 
-This adds `removed_at` and fixes the values of `added_by` compared with PRD §6. The PRD will be updated when this is built.
+This adds `removed_at` and fixes the values of `added_by` compared with PRD §6 (PRD updated).
+
+**Known behaviour.** If someone removes an auto entry for an item that is still low, it comes back only at the next change to that item (edit, restock, Out of it), because days remaining is static and there is no scheduler. Items that were already low or out before slice 2 shipped get an entry the same way: on their next change.
 
 ## 4. Shared package (`packages/shared/src`)
 
 - `domain.ts`
   - `needsRestock({ quantity, daysRemaining, lowThresholdDays })` is true when `quantity === 0` or `isRunningLow(daysRemaining, lowThresholdDays)`. The `quantity === 0` clause is what puts a no-estimate item on the list when it is out.
-  - `groceryAction(item, openEntry)` returns `"add" | "remove" | "keep"`: add when needed and nothing is open, remove when not needed and the open entry is `auto`, otherwise keep. Pure, so the whole decision table is property-tested.
+  - `groceryAction(needed, openEntry)` (needed comes from `needsRestock`) returns `"add" | "remove" | "keep"`: add when needed and nothing is open, remove when not needed and the open entry is `auto`, otherwise keep. Pure, so the whole decision table is property-tested.
 - `schemas.ts`
   - `groceryAddInputSchema`: either `{ itemId, quantity? }` or `{ text, quantity? }` (a union). Text is trimmed and non-empty.
   - `groceryBoughtInputSchema`: `{ id, quantity? }`, where quantity is required by the server only for tracked entries.

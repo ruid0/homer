@@ -35,3 +35,22 @@ export const restocks = sqliteTable(
   },
   (table) => [index("restocks_item_idx").on(table.itemId, table.restockedAt)],
 );
+
+export const groceryEntries = sqliteTable(
+  "grocery_entries",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    itemId: integer("item_id").references(() => items.id),
+    text: text("text").notNull(),
+    quantity: real("quantity"),
+    addedBy: text("added_by", { enum: ["auto", "manual"] }).notNull(),
+    createdAt: text("created_at").notNull().$defaultFn(now),
+    boughtAt: text("bought_at"),
+    removedAt: text("removed_at"),
+  },
+  (table) => [
+    uniqueIndex("grocery_one_open_per_item")
+      .on(table.itemId)
+      .where(sql`${table.itemId} is not null and ${table.boughtAt} is null and ${table.removedAt} is null`),
+  ],
+);

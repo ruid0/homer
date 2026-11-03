@@ -8,6 +8,13 @@
       "when": 1793645727041,
       "tag": "0000_friendly_wild_pack",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1793651562343,
+      "tag": "0001_real_amphibian",
+      "breakpoints": true
     }
   ]
 }
