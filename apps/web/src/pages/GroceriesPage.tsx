@@ -3,6 +3,7 @@ import { GroceryCard } from "../components/GroceryCard";
 import { RestockDialog } from "../components/RestockDialog";
 import { inputClass, primaryButton } from "../components/ui";
 import { trpc, type ListEntry } from "../trpc";
+import { copy } from "../copy";
 
 export const GroceriesPage = () => {
   const utils = trpc.useUtils();
@@ -45,11 +46,11 @@ export const GroceriesPage = () => {
 
   return (
     <>
-      <h1 className="mb-4 text-2xl font-semibold">Groceries</h1>
+      <h1 className="mb-4 text-2xl font-semibold">{copy.groceries.title}</h1>
 
       <form onSubmit={submit} className="mb-4 flex items-end gap-3">
         <label className="grid flex-1 gap-1">
-          <span>Add to the list</span>
+          <span>{copy.groceries.addLabel}</span>
           <input
             className={inputClass}
             list="tracked-names"
@@ -60,13 +61,13 @@ export const GroceriesPage = () => {
         <datalist id="tracked-names">
           {(items.data ?? []).map((item) => <option key={item.id} value={item.name} />)}
         </datalist>
-        <button type="submit" className={primaryButton} disabled={add.isPending}>Add</button>
+        <button type="submit" className={primaryButton} disabled={add.isPending}>{copy.groceries.add}</button>
       </form>
 
-      {entries.isPending && <p>Loading the list.</p>}
-      {entries.error && <p role="alert">Couldn't load the list. Check that the api is running, then refresh.</p>}
+      {entries.isPending && <p>{copy.groceries.loading}</p>}
+      {entries.error && <p role="alert">{copy.groceries.loadFailed}</p>}
       {actionError && <p role="alert" className="mb-4 text-red-700 dark:text-red-400">{actionError}</p>}
-      {entries.data?.length === 0 && <p>Nothing to buy. Items that run low show up here.</p>}
+      {entries.data?.length === 0 && <p>{copy.groceries.empty}</p>}
 
       <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {(entries.data ?? []).map((entry) => (
@@ -83,7 +84,7 @@ export const GroceriesPage = () => {
       {buying && (
         <RestockDialog
           name={buying.text}
-          unit={buying.unit ?? "units"}
+          unit={buying.unit ?? copy.groceries.defaultUnit}
           initialQuantity={buying.quantity ?? buying.usualRestock ?? 1}
           pending={bought.isPending}
           serverError={bought.error?.message}

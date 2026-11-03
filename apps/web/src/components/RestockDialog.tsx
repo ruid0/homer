@@ -2,6 +2,7 @@ import { useState, type SubmitEvent } from "react";
 import { restockInputSchema } from "@homer/shared";
 import { Dialog } from "./Dialog";
 import { inputClass, primaryButton, secondaryButton } from "./ui";
+import { copy } from "../copy";
 
 type Props = {
   name: string;
@@ -20,15 +21,15 @@ export const RestockDialog = ({ name, unit, initialQuantity, pending, serverErro
   const submit = (event: SubmitEvent) => {
     event.preventDefault();
     const parsed = restockInputSchema.shape.quantity.safeParse(Number(quantity));
-    setError(parsed.success ? undefined : "Enter a quantity above 0.");
+    setError(parsed.success ? undefined : copy.restockDialog.invalidQuantity);
     if (parsed.success) onSave(parsed.data);
   };
 
   return (
-    <Dialog title={`Bought ${name}`} onClose={onClose}>
+    <Dialog title={copy.restockDialog.title(name)} onClose={onClose}>
       <form onSubmit={submit} className="grid gap-4">
         <label className="grid gap-1">
-          <span>{`Quantity bought (${unit})`}</span>
+          <span>{copy.restockDialog.quantityBought(unit)}</span>
           <input
             className={inputClass}
             type="number"
@@ -42,8 +43,8 @@ export const RestockDialog = ({ name, unit, initialQuantity, pending, serverErro
         </label>
         {(error ?? serverError) && <p role="alert" className="text-red-700 dark:text-red-400">{error ?? serverError}</p>}
         <div className="flex justify-end gap-3">
-          <button type="button" className={secondaryButton} onClick={onClose}>Cancel</button>
-          <button type="submit" className={primaryButton} disabled={pending}>Save</button>
+          <button type="button" className={secondaryButton} onClick={onClose}>{copy.common.cancel}</button>
+          <button type="submit" className={primaryButton} disabled={pending}>{copy.common.save}</button>
         </div>
       </form>
     </Dialog>
