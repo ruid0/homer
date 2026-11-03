@@ -2,6 +2,7 @@ import { useState, type SubmitEvent } from "react";
 import { DEFAULT_LOW_THRESHOLD_DAYS, itemInputSchema, type ItemInput } from "@homer/shared";
 import type { ListItem } from "../trpc";
 import { Dialog } from "./Dialog";
+import { Field } from "./Field";
 import { inputClass, primaryButton, secondaryButton } from "./ui";
 import { copy } from "../copy";
 
@@ -73,13 +74,6 @@ export const ItemForm = ({ item, pending, serverError, onSave, onRemove, onClose
     </Dialog>
   );
 };
-
-const Field = ({ label, children }: { label: string; children: React.ReactNode }) => (
-  <label className="grid gap-1">
-    <span>{label}</span>
-    {children}
-  </label>
-);
 
 const NumberInput = ({ value, onChange }: { value: string; onChange: (value: string) => void }) => (
   <input

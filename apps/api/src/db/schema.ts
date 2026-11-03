@@ -83,3 +83,12 @@ export const tasks = sqliteTable("tasks", {
   doneAt: text("done_at"),
   removedAt: text("removed_at"),
 });
+
+export const events = sqliteTable("events", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  title: text("title").notNull(),
+  date: text("date").notNull(),
+  time: text("time"),
+  createdAt: text("created_at").notNull().$defaultFn(now),
+  removedAt: text("removed_at"),
+});

@@ -1,7 +1,8 @@
-import { useState, type ReactNode, type SubmitEvent } from "react";
+import { useState, type SubmitEvent } from "react";
 import { repeatValues, taskInputSchema, type TaskInput } from "@homer/shared";
 import type { ListPerson, ScheduleTask } from "../trpc";
 import { Dialog } from "./Dialog";
+import { Field } from "./Field";
 import { inputClass, primaryButton, secondaryButton } from "./ui";
 import { copy } from "../copy";
 
@@ -83,10 +84,3 @@ export const TaskDialog = ({ task, people, defaultPersonId, pending, serverError
     </Dialog>
   );
 };
-
-const Field = ({ label, children }: { label: string; children: ReactNode }) => (
-  <label className="grid gap-1">
-    <span>{label}</span>
-    {children}
-  </label>
-);

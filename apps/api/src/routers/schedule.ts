@@ -1,9 +1,11 @@
-import { and, eq, isNull } from "drizzle-orm";
+import { and, eq, inArray, isNull } from "drizzle-orm";
 import { addDays, compareSchedule, daysBetween, isOverdue, scheduleViewInputSchema } from "@homer/shared";
-import { people, tasks } from "../db/schema";
+import { events, people, tasks } from "../db/schema";
+import { isShown } from "./events";
 import { publicProcedure, router } from "../trpc";
 
 type TaskRow = typeof tasks.$inferSelect;
+type EventRow = typeof events.$inferSelect;
 type TaskView = TaskRow & { personName: string | null; daysOverdue: number };
 
 const byWhen = (today: string) => (a: TaskRow, b: TaskRow) => {
@@ -14,6 +16,11 @@ const byWhen = (today: string) => (a: TaskRow, b: TaskRow) => {
   });
   return compareSchedule(entry(a), entry(b)) || a.title.localeCompare(b.title) || a.id - b.id;
 };
+
+const entryOf = (event: { date: string; time: string | null }) => ({ ...event, overdue: false });
+
+const eventOrder = (a: EventRow, b: EventRow) =>
+  compareSchedule(entryOf(a), entryOf(b)) || a.title.localeCompare(b.title) || a.id - b.id;
 
 const toView = (today: string) => ({ task, personName }: { task: TaskRow; personName: string | null }): TaskView => ({
   ...task,
@@ -38,11 +45,19 @@ export const scheduleRouter = router({
       .all()
       .sort((a, b) => compare(a.task, b.task))
       .map(toView(today));
+    const dates = Array.from({ length: days }, (_, index) => addDays(today, index));
+    const shownEvents = ctx.db
+      .select()
+      .from(events)
+      .where(and(isShown, inArray(events.date, dates)))
+      .all()
+      .sort(eventOrder);
     return {
       overdue: views.filter((task) => task.daysOverdue > 0),
-      days: Array.from({ length: days }, (_, index) => addDays(today, index)).map((date) => ({
+      days: dates.map((date) => ({
         date,
         tasks: views.filter((task) => task.dueDate === date),
+        events: shownEvents.filter((event) => event.date === date),
       })),
       undated: views.filter((task) => task.dueDate === null),
     };

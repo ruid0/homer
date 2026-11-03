@@ -176,8 +176,8 @@ describe("schedule.view", () => {
     expect(await setup().schedule.view({ today, days: 2 })).toEqual({
       overdue: [],
       days: [
-        { date: "2026-11-03", tasks: [] },
-        { date: "2026-11-04", tasks: [] },
+        { date: "2026-11-03", tasks: [], events: [] },
+        { date: "2026-11-04", tasks: [], events: [] },
       ],
       undated: [],
     });
