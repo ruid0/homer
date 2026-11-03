@@ -81,7 +81,8 @@ const isRealDate = (value: string) => {
 
 export const dateSchema = z
   .string()
-  .regex(/^[1-9]\d{3}-\d{2}-\d{2}$/, schemaMessages.invalidDate)
+  // Years 1000 to 2999 keep date arithmetic far from the limits of Date.
+  .regex(/^[12]\d{3}-\d{2}-\d{2}$/, schemaMessages.invalidDate)
   .refine(isRealDate, schemaMessages.invalidDate);
 
 export const timeSchema = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, schemaMessages.invalidTime);
@@ -90,9 +91,9 @@ export const repeatSchema = z.enum(["daily", "weekly", "monthly"]);
 
 export const MAX_SCHEDULE_DAYS = 31;
 
-const personId = z.number().int();
+const personIdSchema = z.number().int();
 
-export const personInputSchema = z.object({ name: text });
+export const personInputSchema = nameInputSchema;
 
 export const personSchema = z.object({
   id: z.number().int(),
@@ -106,7 +107,7 @@ const taskFields = z.object({
   dueDate: dateSchema.nullable().default(null),
   dueTime: timeSchema.nullable().default(null),
   repeat: repeatSchema.nullable().default(null),
-  personId: personId.nullable().default(null),
+  personId: personIdSchema.nullable().default(null),
 });
 
 type TaskDates = { dueDate: string | null; dueTime: string | null; repeat: string | null };
@@ -130,7 +131,7 @@ export const taskSchema = z.object({
   dueDate: dateSchema.nullable(),
   dueTime: timeSchema.nullable(),
   repeat: repeatSchema.nullable(),
-  personId: personId.nullable(),
+  personId: personIdSchema.nullable(),
   createdAt: z.string(),
   doneAt: z.string().nullable(),
   removedAt: z.string().nullable(),
@@ -156,13 +157,16 @@ export const eventSchema = z.object({
 export const scheduleViewInputSchema = z.object({
   today: dateSchema,
   days: z.number().int().min(1).max(MAX_SCHEDULE_DAYS),
-  personId: personId.optional(),
+  personId: personIdSchema.optional(),
 });
 
 export type PersonInput = z.infer<typeof personInputSchema>;
 export type Person = z.infer<typeof personSchema>;
 export type TaskInput = z.infer<typeof taskInputSchema>;
+export type UpdateTaskInput = z.infer<typeof updateTaskInputSchema>;
+export type CompleteTaskInput = z.infer<typeof completeTaskInputSchema>;
 export type Task = z.infer<typeof taskSchema>;
 export type EventInput = z.infer<typeof eventInputSchema>;
+export type UpdateEventInput = z.infer<typeof updateEventInputSchema>;
 export type ScheduleEvent = z.infer<typeof eventSchema>;
 export type ScheduleViewInput = z.infer<typeof scheduleViewInputSchema>;

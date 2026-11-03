@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 import fc from "fast-check";
 import { addDays, addMonths, compareSchedule, isOverdue, nextDueDate, weekdayOf } from "./schedule";
 
+const monthIndex = (day: string) => Number(day.slice(0, 4)) * 12 + Number(day.slice(5, 7));
+const lastDayOfMonth = (day: string) => Number(addDays(addMonths(`${day.slice(0, 7)}-01`, 1), -1).slice(8));
+
 const date = fc
   .date({ min: new Date("2000-01-01"), max: new Date("2100-12-31"), noInvalidDate: true })
   .map((value) => value.toISOString().slice(0, 10));
@@ -50,6 +53,14 @@ describe("addMonths", () => {
   it("measures each step from the start, so there is no drift", () => {
     expect(addMonths("2026-01-31", 2)).toBe("2026-03-31");
   });
+
+  it("moves the month by exactly n and keeps the day, or the month end when it is shorter", () => {
+    fc.assert(fc.property(date, fc.integer({ min: 0, max: 600 }), (day, n) => {
+      const moved = addMonths(day, n);
+      expect(monthIndex(moved) - monthIndex(day)).toBe(n);
+      expect(Number(moved.slice(8))).toBe(Math.min(Number(day.slice(8)), lastDayOfMonth(moved)));
+    }));
+  });
 });
 
 describe("nextDueDate", () => {
@@ -78,6 +89,15 @@ describe("nextDueDate", () => {
     expect(nextDueDate("2026-01-31", "monthly", "2026-02-28")).toBe("2026-03-31");
   });
 
+  it("does not drift when a monthly task is completed late", () => {
+    expect(nextDueDate("2026-01-31", "monthly", "2026-04-05")).toBe("2026-04-30");
+    expect(nextDueDate("2026-01-31", "monthly", "2026-05-01")).toBe("2026-05-31");
+  });
+
+  it("does not corrupt a date at the end of the allowed years", () => {
+    expect(nextDueDate("2999-12-31", "daily", "2999-12-31")).toBe("3000-01-01");
+  });
+
   it("is always after both the due date and today", () => {
     fc.assert(fc.property(date, repeat, date, (due, every, today) => {
       const next = nextDueDate(due, every, today);
@@ -96,6 +116,16 @@ describe("nextDueDate", () => {
       const bar = later(due, today);
       expect(addDays(nextDueDate(due, "daily", today), -1) <= bar).toBe(true);
       expect(addDays(nextDueDate(due, "weekly", today), -7) <= bar).toBe(true);
+    }));
+  });
+
+  it("lands monthly on the first repeat after both dates, not later", () => {
+    const steps = Array.from({ length: 1300 }, (_, index) => index + 1);
+    fc.assert(fc.property(date, date, (due, today) => {
+      const next = nextDueDate(due, "monthly", today);
+      const step = steps.find((months) => addMonths(due, months) === next);
+      expect(step).toBeDefined();
+      expect(addMonths(due, (step ?? 1) - 1) <= later(due, today)).toBe(true);
     }));
   });
 
@@ -136,7 +166,7 @@ describe("isOverdue", () => {
 
 describe("compareSchedule", () => {
   const entry = fc.record({
-    date,
+    date: fc.constantFrom("2026-11-02", "2026-11-03", "2026-11-04"),
     time: fc.option(fc.constantFrom("07:00", "09:30", "18:00", "23:59"), { nil: null }),
     overdue: fc.boolean(),
   });

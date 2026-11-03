@@ -3,6 +3,7 @@ import {
   completeTaskInputSchema,
   dateSchema,
   eventInputSchema,
+  updateEventInputSchema,
   personInputSchema,
   scheduleViewInputSchema,
   taskInputSchema,
@@ -13,6 +14,12 @@ import {
 describe("dateSchema", () => {
   it.each(["2026-11-03", "2028-02-29", "2026-12-31"])("accepts %s", (value) => {
     expect(dateSchema.safeParse(value).success).toBe(true);
+  });
+
+  it("accepts years 1000 to 2999 only", () => {
+    expect(dateSchema.safeParse("2999-12-31").success).toBe(true);
+    expect(dateSchema.safeParse("3000-01-01").success).toBe(false);
+    expect(dateSchema.safeParse("0999-12-31").success).toBe(false);
   });
 
   it.each(["2026-02-30", "2027-02-29", "2026-13-01", "2026-1-3", "03-11-2026", "tomorrow", ""])(
@@ -80,6 +87,22 @@ describe("updateTaskInputSchema", () => {
     expect(updateTaskInputSchema.safeParse({ title: "Bins" }).success).toBe(false);
     expect(updateTaskInputSchema.safeParse({ id: 1, title: "Bins", repeat: "daily" }).success).toBe(false);
     expect(updateTaskInputSchema.parse({ id: 1, title: "Bins" })).toMatchObject({ id: 1, dueDate: null });
+  });
+});
+
+describe("updateTaskInputSchema when a field is left out", () => {
+  it("clears it, so forms must send the whole task", () => {
+    const parsed = updateTaskInputSchema.parse({ id: 1, title: "Bins" });
+    expect(parsed).toEqual({ id: 1, title: "Bins", dueDate: null, dueTime: null, repeat: null, personId: null });
+  });
+});
+
+describe("updateEventInputSchema", () => {
+  it("needs the id and applies the same rules", () => {
+    const event = { title: "Dentist", date: "2026-11-10" };
+    expect(updateEventInputSchema.safeParse(event).success).toBe(false);
+    expect(updateEventInputSchema.parse({ id: 4, ...event })).toEqual({ id: 4, ...event, time: null });
+    expect(updateEventInputSchema.safeParse({ id: 4, ...event, date: "2026-02-30" }).success).toBe(false);
   });
 });
 

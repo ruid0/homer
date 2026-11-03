@@ -1,6 +1,10 @@
-export type Repeat = "daily" | "weekly" | "monthly";
+import type { z } from "zod";
+import type { repeatSchema } from "./schemas";
+
+export type Repeat = z.infer<typeof repeatSchema>;
 
 const MS_PER_DAY = 86_400_000;
+// Sorts after every real time, so entries without a time come last.
 const NO_TIME = "99:99";
 
 const toDate = (date: string) => new Date(`${date}T00:00:00Z`);
