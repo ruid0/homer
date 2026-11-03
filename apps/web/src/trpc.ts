@@ -18,6 +18,8 @@ type ScheduleView = inferRouterOutputs<AppRouter>["schedule"]["view"];
 
 export type ScheduleTask = ScheduleView["overdue"][number];
 
+export type ScheduleEvent = ScheduleView["days"][number]["events"][number];
+
 export type ArchivedItem = NonNullable<Outputs["findArchived"]>;
 
 export const queryClient = new QueryClient();

@@ -1,4 +1,5 @@
 import { createCallerFactory, router } from "../trpc";
+import { eventsRouter } from "./events";
 import { groceriesRouter } from "./groceries";
 import { inventoryRouter } from "./inventory";
 import { peopleRouter } from "./people";
@@ -10,6 +11,7 @@ export const appRouter = router({
   groceries: groceriesRouter,
   people: peopleRouter,
   tasks: tasksRouter,
+  events: eventsRouter,
   schedule: scheduleRouter,
 });
 

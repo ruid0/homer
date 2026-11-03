@@ -1,13 +1,15 @@
 import { useState } from "react";
-import type { TaskInput } from "@homer/shared";
+import { EventCard } from "../components/EventCard";
+import { EventEditor } from "../components/EventEditor";
 import { TaskCard } from "../components/TaskCard";
-import { TaskDialog } from "../components/TaskDialog";
-import { inputClass, primaryButton } from "../components/ui";
+import { TaskEditor } from "../components/TaskEditor";
+import { inputClass, primaryButton, secondaryButton } from "../components/ui";
+import { dayItems } from "../lib/dayItems";
 import { useToday } from "../lib/useToday";
-import { trpc, type ScheduleTask } from "../trpc";
+import { trpc, type ScheduleEvent, type ScheduleTask } from "../trpc";
 import { copy } from "../copy";
 
-type Editing = ScheduleTask | "new" | null;
+type Editing = { kind: "task"; task?: ScheduleTask } | { kind: "event"; event?: ScheduleEvent } | null;
 
 export const SchedulePage = () => {
   const utils = trpc.useUtils();
@@ -24,37 +26,24 @@ export const SchedulePage = () => {
     setEditing(null);
     return refresh();
   };
-
-  const add = trpc.tasks.add.useMutation({ onSuccess: saved });
-  const update = trpc.tasks.update.useMutation({ onSuccess: saved });
   const complete = trpc.tasks.complete.useMutation({ onSuccess: refresh });
-  const remove = trpc.tasks.remove.useMutation({ onSuccess: saved });
 
-  const save = (values: TaskInput) => {
-    if (editing === "new") add.mutate(values);
-    else if (editing) update.mutate({ ...values, id: editing.id });
-  };
-
-  const removeTask = (task: ScheduleTask) => {
-    if (window.confirm(copy.taskForm.confirmRemove(task.title))) remove.mutate({ id: task.id });
-  };
-
-  const closeDialog = () => {
-    add.reset();
-    update.reset();
-    remove.reset();
-    setEditing(null);
-  };
-
-  const sections = [
-    { heading: copy.schedule.overdue, tasks: view.data?.overdue ?? [] },
-    { heading: copy.schedule.today, tasks: view.data?.days[0]?.tasks ?? [] },
-    { heading: copy.schedule.anytime, tasks: view.data?.undated ?? [] },
-  ];
-  const empty = sections.every((section) => section.tasks.length === 0);
-  const busy = complete.isPending;
+  const todayView = view.data?.days[0];
+  const todayItems = dayItems(todayView?.tasks ?? [], todayView?.events ?? []);
+  const overdue = view.data?.overdue ?? [];
+  const anytime = view.data?.undated ?? [];
+  const empty = overdue.length === 0 && todayItems.length === 0 && anytime.length === 0;
   const actionError = editing ? undefined : complete.error?.message;
-  const dialogError = (editing === "new" ? add.error : update.error)?.message ?? remove.error?.message;
+
+  const taskCard = (task: ScheduleTask) => (
+    <TaskCard
+      key={`task-${task.id}`}
+      task={task}
+      busy={complete.isPending}
+      onDone={() => complete.mutate({ id: task.id, today })}
+      onEdit={() => setEditing({ kind: "task", task })}
+    />
+  );
 
   return (
     <>
@@ -70,9 +59,14 @@ export const SchedulePage = () => {
             ))}
           </select>
         </label>
-        <button type="button" className={`${primaryButton} ml-auto`} onClick={() => setEditing("new")}>
-          {copy.schedule.addTask}
-        </button>
+        <div className="ml-auto flex flex-wrap gap-3">
+          <button type="button" className={secondaryButton} onClick={() => setEditing({ kind: "event" })}>
+            {copy.schedule.addEvent}
+          </button>
+          <button type="button" className={primaryButton} onClick={() => setEditing({ kind: "task" })}>
+            {copy.schedule.addTask}
+          </button>
+        </div>
       </div>
 
       {view.isPending && <p role="status">{copy.schedule.loading}</p>}
@@ -80,38 +74,53 @@ export const SchedulePage = () => {
       {actionError && <p role="alert" className="mb-4 text-red-700 dark:text-red-400">{actionError}</p>}
       {view.data && empty && <p>{copy.schedule.empty}</p>}
 
-      {sections.map(({ heading, tasks }) =>
-        tasks.length === 0 ? null : (
-          <section key={heading} className="mb-6">
-            <h2 className="mb-3 text-xl font-semibold">{heading}</h2>
-            <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {tasks.map((task) => (
-                <TaskCard
-                  key={task.id}
-                  task={task}
-                  busy={busy}
-                  onDone={() => complete.mutate({ id: task.id, today })}
-                  onEdit={() => setEditing(task)}
-                />
-              ))}
-            </ul>
-          </section>
-        ),
-      )}
+      <Section heading={copy.schedule.overdue} count={overdue.length}>
+        {overdue.map(taskCard)}
+      </Section>
+      <Section heading={copy.schedule.today} count={todayItems.length}>
+        {todayItems.map((item) =>
+          item.kind === "task" ? (
+            taskCard(item.value)
+          ) : (
+            <EventCard
+              key={`event-${item.value.id}`}
+              event={item.value}
+              onEdit={() => setEditing({ kind: "event", event: item.value })}
+            />
+          ),
+        )}
+      </Section>
+      <Section heading={copy.schedule.anytime} count={anytime.length}>
+        {anytime.map(taskCard)}
+      </Section>
 
-      {editing && (
-        <TaskDialog
-          key={editing === "new" ? "new" : editing.id}
-          task={editing === "new" ? undefined : editing}
+      {editing?.kind === "task" && (
+        <TaskEditor
+          key={editing.task?.id ?? 0}
+          task={editing.task}
           people={people.data ?? []}
           defaultPersonId={personId ?? null}
-          pending={add.isPending || update.isPending || remove.isPending}
-          serverError={dialogError}
-          onSave={save}
-          onRemove={editing === "new" ? undefined : () => removeTask(editing)}
-          onClose={closeDialog}
+          onSaved={saved}
+          onClose={() => setEditing(null)}
+        />
+      )}
+      {editing?.kind === "event" && (
+        <EventEditor
+          key={editing.event?.id ?? 0}
+          event={editing.event}
+          defaultDate={today}
+          onSaved={saved}
+          onClose={() => setEditing(null)}
         />
       )}
     </>
   );
 };
+
+const Section = ({ heading, count, children }: { heading: string; count: number; children: React.ReactNode }) =>
+  count === 0 ? null : (
+    <section className="mb-6">
+      <h2 className="mb-3 text-xl font-semibold">{heading}</h2>
+      <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{children}</ul>
+    </section>
+  );

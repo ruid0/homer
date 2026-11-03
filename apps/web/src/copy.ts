@@ -25,12 +25,14 @@ export const copy = {
     loading: "Loading the schedule.",
     loadFailed: "Couldn't load the schedule. Check that the api is running, then refresh.",
     addTask: "Add task",
+    addEvent: "Add event",
+    eventLabel: "Event",
     person: "Person",
     everyone: "Everyone",
     overdue: "Overdue",
     today: "Today",
     anytime: "Anytime",
-    empty: "Nothing planned. Add a task.",
+    empty: "Nothing planned. Add a task or an event.",
     done: "Done",
     edit: "Edit",
     editLabel: (title: string) => `Edit ${title}`,
@@ -52,6 +54,17 @@ export const copy = {
     removeTask: "Remove task",
     confirmRemove: (title: string) => `Remove ${title}? It is hidden, and can't be brought back here.`,
     blankTitle: "Enter what needs doing.",
+  },
+
+  eventForm: {
+    addTitle: "Add event",
+    editTitle: (title: string) => `Edit ${title}`,
+    title: "What's happening",
+    date: "Date",
+    time: "Time (optional)",
+    removeEvent: "Remove event",
+    confirmRemove: (title: string) => `Remove ${title}? It is hidden, and can't be brought back here.`,
+    blankTitle: "Enter what's happening.",
   },
 
   people: {
