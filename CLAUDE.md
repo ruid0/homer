@@ -60,6 +60,7 @@ Every piece of work moves through six phases, in order. **Name the phase you are
 2. **PLAN**: the approach: files, schema or interface changes, risks, and the order of work.
    Output: a plan the owner approves or changes. Nothing is built before the plan is agreed.
 3. **BUILD**: implement the agreed plan in small, coherent commits, each one buildable. The post-edit hook typechecks and runs related tests automatically.
+   **Ship in small PRs, not whole slices.** When a meaningful part is done, testable and works by itself (for example the shared domain code, or an api router with its tests, or one page), run VERIFY, REVIEW and SHIP for that part before starting the next. A slice is usually several PRs. Each PR must leave `main` working: typecheck and tests pass, and nothing half-wired is visible in the app. The PLAN names the PR boundaries up front.
 4. **VERIFY**: evidence, not claims. Run `pnpm typecheck` and `pnpm test`, and for anything visual, check the running app with the Playwright MCP. Say what passed and what didn't.
 5. **REVIEW**: run the `reviewer` subagent on the diff and address its Must fix items.
 6. **SHIP**: open a PR with `.github/pull_request_template.md` filled in, wait for CI (once it exists), merge, then rebuild with `docker compose up -d --build` (once compose exists).
