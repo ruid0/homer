@@ -31,7 +31,7 @@ Status: owner decisions recorded, ready to build · Owner: Igor Bondarenko · Da
 
 ### Decisions (owner, 2026-11-03)
 
-1. **Removed rows are kept and hidden.** People, tasks and events get an `archived_at` or `removed_at` timestamp and are never deleted (same rule as items and grocery entries). Done tasks stay as history. A removed person's old tasks keep their name.
+1. **Removed rows are kept and hidden.** Tasks and events get a `removed_at` timestamp and are never deleted (same rule as items and grocery entries). Done tasks stay as history. **People are not removed:** this household does not need it, so there is no Remove for people (decision 2026-11-03).
 2. **A late repeat lands after today.** Completing a repeating task steps forward from its due date in whole repeats until the date is after today, so the next task is not born overdue. A weekly task due Monday and completed three weeks later comes back on the first Monday after today. It stays on the original weekday.
 3. **Navigation:** one Schedule page with a Today and Week switch, plus a People page. The links become Items, Groceries, Schedule, People.
 4. **Monthly drift is accepted for v1.** The next date is built from the current due date, so a task due on the 31st goes to 28 Feb, then 28 Mar. Keeping the 31st would need a stored anchor day.
@@ -60,9 +60,9 @@ Three new tables, each added by the PR that needs it (migrations `0002` to `0004
 | column | type | notes |
 |---|---|---|
 | id | integer pk | |
-| name | text not null | unique ignoring case among active people |
+| name | text not null | unique ignoring case (rows with `archived_at` set are ignored) |
 | created_at | text (ISO-8601 UTC) | |
-| archived_at | text null | set by Remove |
+| archived_at | text null | not used: people are not removed |
 
 `tasks`
 | column | type | notes |
@@ -89,7 +89,7 @@ A task is **open** when `done_at` and `removed_at` are both null.
 | created_at | text | |
 | removed_at | text null | set by Remove |
 
-This changes PRD §6: `people` gets `created_at` and `archived_at`, `tasks` gets `created_at` and `removed_at`, and `events` gets `created_at` and `removed_at`. The PRD is updated by the PR that adds each table.
+This changes PRD §6: `people` gets `created_at` (and an unused `archived_at`), `tasks` gets `created_at` and `removed_at`, and `events` gets `created_at` and `removed_at`. The PRD is updated by the PR that adds each table.
 
 ## 4. Shared package (`packages/shared/src`)
 
@@ -110,10 +110,9 @@ No Node or DOM types.
 
 ## 5. API (`apps/api/src`)
 
-- `routers/people.ts`: `list`, `add`, `rename`, `archive`. A name that is already taken by an active person is a conflict.
+- `routers/people.ts`: `list`, `add`, `rename`. A name that another person already has is a conflict.
 - `routers/tasks.ts`: `add`, `update` (also reschedules), `complete`, `remove`, with `list` for the task list itself.
   - `complete({ id, today })` runs in one transaction. It marks the task done and, for a repeating task, inserts the next one from `nextDueDate`. Completing a task that is already done fails with "That task is already done. Refresh the list.", so two tablets cannot create two next tasks.
-  - A task assigned to an archived person is rejected on add and update.
 - `routers/events.ts`: `add`, `update`, `remove`.
 - `routers/schedule.ts`: `view({ today, days, personId? })` returns the overdue open tasks, then each day from `today` for `days` days with its tasks and events in `compareSchedule` order. Today is `days: 1` and Week is `days: 7`. Events are not filtered by person, because they have none.
 - Error text goes in `apps/api/src/messages.ts`.
@@ -128,7 +127,7 @@ No Node or DOM types.
   - Each task has one primary action, "Done", and a secondary Edit that holds reschedule and Remove. Events have Edit.
   - Add task and Add event buttons open dialogs. The empty state says "Nothing planned. Add a task or an event."
   - The page refetches when the app regains focus, as on Groceries.
-- **People page** (`pages/PeoplePage.tsx`): a list of names with an add field, rename and Remove.
+- **People page** (`pages/PeoplePage.tsx`): a list of names with an add field and rename.
 - Rules: `homer-ui` and `coding-style`, including §7. Components stay small, and `copy.ts` is split by page when it nears the 600-line ceiling.
 
 ## 7. Testing (red-green-refactor)
@@ -138,8 +137,8 @@ No Node or DOM types.
 - **Routers, on in-memory SQLite:**
   - Complete creates the next task for a repeating task and none otherwise. It fails the second time, with one next task only.
   - A late repeat lands after today.
-  - A task with a time or repeat and no due date is rejected. An archived person cannot be assigned.
-  - Archiving a person keeps their tasks. Remove hides a task and an event but keeps the row.
+  - A task with a time or repeat and no due date is rejected.
+  - Remove hides a task and an event but keeps the row.
   - `schedule.view` puts overdue first, filters by person, and groups by day.
 - **UI:** checked in the running app with the Playwright MCP at phone and tablet width and in dark mode: add a person, add tasks with and without date, time, repeat and person, complete a weekly task, overdue ordering, the person filter, Week grouping, and the empty states.
 

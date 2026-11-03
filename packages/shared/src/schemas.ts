@@ -95,6 +95,8 @@ const personIdSchema = z.number().int();
 
 export const personInputSchema = nameInputSchema;
 
+export const renamePersonInputSchema = nameInputSchema.extend(idInputSchema.shape);
+
 export const personSchema = z.object({
   id: z.number().int(),
   name: text,

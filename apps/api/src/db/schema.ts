@@ -54,3 +54,19 @@ export const groceryEntries = sqliteTable(
       .where(sql`${table.itemId} is not null and ${table.boughtAt} is null and ${table.removedAt} is null`),
   ],
 );
+
+export const people = sqliteTable(
+  "people",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    name: text("name").notNull(),
+    createdAt: text("created_at").notNull().$defaultFn(now),
+    // Not used: people are not removed in this household. Kept so the applied migration stays as it is.
+    archivedAt: text("archived_at"),
+  },
+  (table) => [
+    uniqueIndex("people_active_name_unique")
+      .on(sql`lower(${table.name})`)
+      .where(sql`${table.archivedAt} is null`),
+  ],
+);

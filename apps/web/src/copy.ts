@@ -16,6 +16,20 @@ export const copy = {
     label: "Main",
     items: "Items",
     groceries: "Groceries",
+    people: "People",
+  },
+
+  people: {
+    title: "People",
+    addLabel: "Add a person",
+    add: "Add",
+    loading: "Loading people.",
+    loadFailed: "Couldn't load people. Check that the api is running, then refresh.",
+    empty: "No one yet. Add the people in your household.",
+    rename: "Rename",
+    renameLabel: (name: string) => `Rename ${name}`,
+    nameLabel: "Name",
+    blankName: "Enter a name.",
   },
 
   stock: {

@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 import { createDb } from "./client";
-import { groceryEntries, items, restocks } from "./schema";
+import { groceryEntries, items, people, restocks } from "./schema";
 
 const salt = { name: "Salt", unit: "bag", quantity: 1 };
 
@@ -78,5 +78,11 @@ describe("grocery_entries", () => {
   it("rejects an entry for an item that does not exist", () => {
     const db = createDb(":memory:");
     expect(() => db.insert(groceryEntries).values({ itemId: 99, text: "Ghost", addedBy: "auto" }).run()).toThrow();
+  });
+
+  it("rejects two people whose names differ only by case", () => {
+    const db = createDb(":memory:");
+    db.insert(people).values({ name: "Sam" }).run();
+    expect(() => db.insert(people).values({ name: "sam" }).run()).toThrow();
   });
 });
