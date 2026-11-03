@@ -22,18 +22,12 @@ export const PeoplePage = () => {
       return done();
     },
   });
-  const refresh = () => utils.people.list.invalidate();
-  const rename = trpc.people.rename.useMutation({ onSuccess: done, onError: refresh });
-  const archive = trpc.people.archive.useMutation({ onSuccess: done, onError: refresh });
+  const rename = trpc.people.rename.useMutation({ onSuccess: done, onError: () => utils.people.list.invalidate() });
 
   const submit = (event: SubmitEvent) => {
     event.preventDefault();
     setBlank(!name.trim());
     if (name.trim()) add.mutate({ name });
-  };
-
-  const remove = (person: ListPerson) => {
-    if (window.confirm(copy.people.confirmRemove(person.name))) archive.mutate({ id: person.id });
   };
 
   const closeRename = () => {
@@ -48,7 +42,10 @@ export const PeoplePage = () => {
       <form onSubmit={submit} className="mb-4 flex items-end gap-3">
         <label className="grid flex-1 gap-1">
           <span>{copy.people.addLabel}</span>
-          <input className={inputClass} value={name} onChange={(event) => {
+          <input
+            className={inputClass}
+            value={name}
+            onChange={(event) => {
               setName(event.target.value);
               setBlank(false);
               add.reset();
@@ -65,7 +62,6 @@ export const PeoplePage = () => {
           {blank ? copy.people.blankName : add.error?.message}
         </p>
       )}
-      {archive.error && <p role="alert" className="mb-4 text-red-700 dark:text-red-400">{archive.error.message}</p>}
       {people.data?.length === 0 && <p>{copy.people.empty}</p>}
 
       <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -75,25 +71,14 @@ export const PeoplePage = () => {
             className="flex items-center justify-between gap-3 rounded-xl border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900"
           >
             <h2 className="text-lg font-semibold">{person.name}</h2>
-            <div className="flex gap-3">
-              <button
-                type="button"
-                className={secondaryButton}
-                onClick={() => setRenaming(person)}
-                aria-label={copy.people.renameLabel(person.name)}
-              >
-                {copy.people.rename}
-              </button>
-              <button
-                type="button"
-                className={secondaryButton}
-                onClick={() => remove(person)}
-                disabled={archive.isPending}
-                aria-label={copy.people.removeLabel(person.name)}
-              >
-                {copy.people.remove}
-              </button>
-            </div>
+            <button
+              type="button"
+              className={secondaryButton}
+              onClick={() => setRenaming(person)}
+              aria-label={copy.people.renameLabel(person.name)}
+            >
+              {copy.people.rename}
+            </button>
           </li>
         ))}
       </ul>

@@ -30,9 +30,6 @@ export const copy = {
     renameLabel: (name: string) => `Rename ${name}`,
     nameLabel: "Name",
     blankName: "Enter a name.",
-    remove: "Remove",
-    removeLabel: (name: string) => `Remove ${name}`,
-    confirmRemove: (name: string) => `Remove ${name} from the household?`,
   },
 
   stock: {

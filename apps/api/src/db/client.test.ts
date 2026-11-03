@@ -80,11 +80,9 @@ describe("grocery_entries", () => {
     expect(() => db.insert(groceryEntries).values({ itemId: 99, text: "Ghost", addedBy: "auto" }).run()).toThrow();
   });
 
-  it("rejects two active people whose names differ only by case, but allows a removed name again", () => {
+  it("rejects two people whose names differ only by case", () => {
     const db = createDb(":memory:");
-    const [first] = db.insert(people).values({ name: "Sam" }).returning().all();
+    db.insert(people).values({ name: "Sam" }).run();
     expect(() => db.insert(people).values({ name: "sam" }).run()).toThrow();
-    db.update(people).set({ archivedAt: new Date().toISOString() }).where(eq(people.id, first!.id)).run();
-    expect(() => db.insert(people).values({ name: "sam" }).run()).not.toThrow();
   });
 });

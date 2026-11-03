@@ -61,6 +61,7 @@ export const people = sqliteTable(
     id: integer("id").primaryKey({ autoIncrement: true }),
     name: text("name").notNull(),
     createdAt: text("created_at").notNull().$defaultFn(now),
+    // Not used: people are not removed in this household. Kept so the applied migration stays as it is.
     archivedAt: text("archived_at"),
   },
   (table) => [
