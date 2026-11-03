@@ -8,6 +8,7 @@ export const PeoplePage = () => {
   const utils = trpc.useUtils();
   const people = trpc.people.list.useQuery();
   const [name, setName] = useState("");
+  const [blank, setBlank] = useState(false);
   const [renaming, setRenaming] = useState<ListPerson | null>(null);
 
   const done = () => {
@@ -21,11 +22,13 @@ export const PeoplePage = () => {
       return done();
     },
   });
-  const rename = trpc.people.rename.useMutation({ onSuccess: done });
-  const archive = trpc.people.archive.useMutation({ onSuccess: done });
+  const refresh = () => utils.people.list.invalidate();
+  const rename = trpc.people.rename.useMutation({ onSuccess: done, onError: refresh });
+  const archive = trpc.people.archive.useMutation({ onSuccess: done, onError: refresh });
 
   const submit = (event: SubmitEvent) => {
     event.preventDefault();
+    setBlank(!name.trim());
     if (name.trim()) add.mutate({ name });
   };
 
@@ -45,17 +48,24 @@ export const PeoplePage = () => {
       <form onSubmit={submit} className="mb-4 flex items-end gap-3">
         <label className="grid flex-1 gap-1">
           <span>{copy.people.addLabel}</span>
-          <input className={inputClass} value={name} onChange={(event) => setName(event.target.value)} />
+          <input className={inputClass} value={name} onChange={(event) => {
+              setName(event.target.value);
+              setBlank(false);
+              add.reset();
+            }}
+          />
         </label>
         <button type="submit" className={primaryButton} disabled={add.isPending}>{copy.people.add}</button>
       </form>
 
       {people.isPending && <p>{copy.people.loading}</p>}
-      {people.error && <p role="alert">{copy.people.loadFailed}</p>}
-      {add.error && <p role="alert" className="mb-4 text-red-700 dark:text-red-400">{add.error.message}</p>}
-      {archive.error && (
-        <p role="alert" className="mb-4 text-red-700 dark:text-red-400">{copy.people.actionFailed(archive.error.message)}</p>
+      {people.error && <p role="alert" className="text-red-700 dark:text-red-400">{copy.people.loadFailed}</p>}
+      {(blank || add.error) && (
+        <p role="alert" className="mb-4 text-red-700 dark:text-red-400">
+          {blank ? copy.people.blankName : add.error?.message}
+        </p>
       )}
+      {archive.error && <p role="alert" className="mb-4 text-red-700 dark:text-red-400">{archive.error.message}</p>}
       {people.data?.length === 0 && <p>{copy.people.empty}</p>}
 
       <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">

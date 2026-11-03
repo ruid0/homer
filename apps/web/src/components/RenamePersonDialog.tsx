@@ -25,7 +25,7 @@ export const RenamePersonDialog = ({ person, pending, serverError, onSave, onClo
   };
 
   return (
-    <Dialog title={copy.people.renameTitle(person.name)} onClose={onClose}>
+    <Dialog title={copy.people.renameLabel(person.name)} onClose={onClose}>
       <form onSubmit={submit} className="grid gap-4">
         <label className="grid gap-1">
           <span>{copy.people.nameLabel}</span>

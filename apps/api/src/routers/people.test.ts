@@ -56,6 +56,25 @@ describe("people.rename", () => {
     await expect(api.people.rename({ id, name: "alex" })).rejects.toMatchObject({ code: "CONFLICT" });
   });
 
+  it("trims the new name", async () => {
+    const api = setup();
+    const { id } = await api.people.add({ name: "Sam" });
+    await api.people.rename({ id, name: "  Alex  " });
+    expect(await api.people.list()).toMatchObject([{ name: "Alex" }]);
+  });
+
+  it("allows the name of a removed person, and says which name is taken otherwise", async () => {
+    const api = setup();
+    const old = await api.people.add({ name: "Alex" });
+    await api.people.archive({ id: old.id });
+    await api.people.add({ name: "Kim" });
+    const { id } = await api.people.add({ name: "Sam" });
+    await api.people.rename({ id, name: "alex" });
+    await expect(api.people.rename({ id, name: "kim" })).rejects.toMatchObject({
+      message: messages.personNameTaken("kim"),
+    });
+  });
+
   it("fails for an unknown or removed person", async () => {
     const api = setup();
     await expect(api.people.rename({ id: 99, name: "Sam" })).rejects.toMatchObject({

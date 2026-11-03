@@ -28,13 +28,11 @@ export const copy = {
     empty: "No one yet. Add the people in your household.",
     rename: "Rename",
     renameLabel: (name: string) => `Rename ${name}`,
-    renameTitle: (name: string) => `Rename ${name}`,
     nameLabel: "Name",
     blankName: "Enter a name.",
     remove: "Remove",
     removeLabel: (name: string) => `Remove ${name}`,
     confirmRemove: (name: string) => `Remove ${name} from the household?`,
-    actionFailed: (message: string) => `${message} Refresh the list and try again.`,
   },
 
   stock: {
