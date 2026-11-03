@@ -71,7 +71,7 @@ Index: `grocery_one_open_per_item` is a unique index on `item_id` where `item_id
 
 This adds `removed_at` and fixes the values of `added_by` compared with PRD §6 (PRD updated).
 
-**Known behaviour.** If someone removes an auto entry for an item that is still low, it comes back only at the next change to that item (edit, restock, Out of it), because days remaining is static and there is no scheduler. Items that were already low or out before slice 2 shipped get an entry the same way: on their next change.
+**Known behaviour.** If someone removes an auto entry for an item that is still low, it comes back only at the next change to that item (edit, restock, Out of it), because days remaining is static and there is no scheduler. Items that were already low or out before slice 2 shipped get their first entry from a one-time backfill (`groceries/backfill.ts`), which runs at the first api start after the upgrade. SQLite's `user_version` records that it ran, so an entry someone removes later is not brought back by a restart.
 
 ## 4. Shared package (`packages/shared/src`)
 
