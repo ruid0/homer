@@ -1,4 +1,5 @@
 import { sql } from "drizzle-orm";
+import { repeatValues } from "@homer/shared";
 import { index, integer, real, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 
 const now = () => new Date().toISOString();
@@ -70,3 +71,15 @@ export const people = sqliteTable(
       .where(sql`${table.archivedAt} is null`),
   ],
 );
+
+export const tasks = sqliteTable("tasks", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  title: text("title").notNull(),
+  dueDate: text("due_date"),
+  dueTime: text("due_time"),
+  repeat: text("repeat", { enum: repeatValues }),
+  personId: integer("person_id").references(() => people.id),
+  createdAt: text("created_at").notNull().$defaultFn(now),
+  doneAt: text("done_at"),
+  removedAt: text("removed_at"),
+});

@@ -11,7 +11,7 @@ const toDate = (date: string) => new Date(`${date}T00:00:00Z`);
 
 const format = (date: Date) => date.toISOString().slice(0, 10);
 
-const daysBetween = (from: string, to: string) =>
+export const daysBetween = (from: string, to: string): number =>
   Math.round((toDate(to).getTime() - toDate(from).getTime()) / MS_PER_DAY);
 
 const monthsBetween = (from: string, to: string) => {

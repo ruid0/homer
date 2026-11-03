@@ -111,7 +111,7 @@ A chat screen backed by a local model (Ollama, `qwen3.5:9b`) that can read and c
 - `restocks`: id, item_id, quantity, restocked_at (history the learned estimate comes from)
 - `people`: id, name, created_at (and an unused archived_at: people are not removed)
 - `grocery_entries`: id, item_id (nullable), text, quantity, added_by (auto/manual), created_at, bought_at, removed_at (never delete rows)
-- `tasks`: id, title, due_date, due_time, repeat, person_id (nullable), done_at
+- `tasks`: id, title, due_date, due_time, repeat, person_id (nullable), created_at, done_at, removed_at
 - `events`: id, title, date, time
 - `assistant_actions`: id, tool, args, result, created_at, undone_at (for Undo and debugging)
 
