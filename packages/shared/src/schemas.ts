@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { schemaMessages } from "./copy";
 
 export const DEFAULT_LOW_THRESHOLD_DAYS = 7;
 
@@ -72,3 +73,96 @@ export const groceryEntrySchema = z.object({
 
 export type GroceryAddInput = z.infer<typeof groceryAddInputSchema>;
 export type GroceryEntry = z.infer<typeof groceryEntrySchema>;
+
+const isRealDate = (value: string) => {
+  const parsed = Date.parse(`${value}T00:00:00Z`);
+  return !Number.isNaN(parsed) && new Date(parsed).toISOString().slice(0, 10) === value;
+};
+
+export const dateSchema = z
+  .string()
+  .regex(/^[1-9]\d{3}-\d{2}-\d{2}$/, schemaMessages.invalidDate)
+  .refine(isRealDate, schemaMessages.invalidDate);
+
+export const timeSchema = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, schemaMessages.invalidTime);
+
+export const repeatSchema = z.enum(["daily", "weekly", "monthly"]);
+
+export const MAX_SCHEDULE_DAYS = 31;
+
+const personId = z.number().int();
+
+export const personInputSchema = z.object({ name: text });
+
+export const personSchema = z.object({
+  id: z.number().int(),
+  name: text,
+  createdAt: z.string(),
+  archivedAt: z.string().nullable(),
+});
+
+const taskFields = z.object({
+  title: text,
+  dueDate: dateSchema.nullable().default(null),
+  dueTime: timeSchema.nullable().default(null),
+  repeat: repeatSchema.nullable().default(null),
+  personId: personId.nullable().default(null),
+});
+
+type TaskDates = { dueDate: string | null; dueTime: string | null; repeat: string | null };
+
+const hasDueDateWhenNeeded = ({ dueDate, dueTime, repeat }: TaskDates) =>
+  dueDate !== null || (dueTime === null && repeat === null);
+
+const dueDateRule = { error: schemaMessages.dueDateNeeded, path: ["dueDate"] };
+
+export const taskInputSchema = taskFields.refine(hasDueDateWhenNeeded, dueDateRule);
+
+export const updateTaskInputSchema = taskFields
+  .extend(idInputSchema.shape)
+  .refine(hasDueDateWhenNeeded, dueDateRule);
+
+export const completeTaskInputSchema = z.object({ id: z.number().int(), today: dateSchema });
+
+export const taskSchema = z.object({
+  id: z.number().int(),
+  title: text,
+  dueDate: dateSchema.nullable(),
+  dueTime: timeSchema.nullable(),
+  repeat: repeatSchema.nullable(),
+  personId: personId.nullable(),
+  createdAt: z.string(),
+  doneAt: z.string().nullable(),
+  removedAt: z.string().nullable(),
+});
+
+export const eventInputSchema = z.object({
+  title: text,
+  date: dateSchema,
+  time: timeSchema.nullable().default(null),
+});
+
+export const updateEventInputSchema = eventInputSchema.extend(idInputSchema.shape);
+
+export const eventSchema = z.object({
+  id: z.number().int(),
+  title: text,
+  date: dateSchema,
+  time: timeSchema.nullable(),
+  createdAt: z.string(),
+  removedAt: z.string().nullable(),
+});
+
+export const scheduleViewInputSchema = z.object({
+  today: dateSchema,
+  days: z.number().int().min(1).max(MAX_SCHEDULE_DAYS),
+  personId: personId.optional(),
+});
+
+export type PersonInput = z.infer<typeof personInputSchema>;
+export type Person = z.infer<typeof personSchema>;
+export type TaskInput = z.infer<typeof taskInputSchema>;
+export type Task = z.infer<typeof taskSchema>;
+export type EventInput = z.infer<typeof eventInputSchema>;
+export type ScheduleEvent = z.infer<typeof eventSchema>;
+export type ScheduleViewInput = z.infer<typeof scheduleViewInputSchema>;
