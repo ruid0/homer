@@ -1,10 +1,12 @@
+import { copy } from "../copy";
+
 type Stock = { quantity: number; daysRemaining: number | null };
 
 export const describeRunsOut = ({ quantity, daysRemaining }: Stock): string => {
-  if (quantity === 0) return "Out of it";
-  if (daysRemaining === null) return "No estimate";
-  if (daysRemaining === 0) return "Runs out today";
-  return `Runs out in ${daysRemaining} ${daysRemaining === 1 ? "day" : "days"}`;
+  if (quantity === 0) return copy.stock.outOfIt;
+  if (daysRemaining === null) return copy.stock.noEstimate;
+  if (daysRemaining === 0) return copy.stock.runsOutToday;
+  return copy.stock.runsOutIn(daysRemaining);
 };
 
 const urgency = ({ quantity, daysRemaining }: Stock): number => {

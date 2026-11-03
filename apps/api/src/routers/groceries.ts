@@ -7,15 +7,16 @@ import { openEntries as isOpen, type GroceryTx } from "../groceries/open";
 import { syncGrocery } from "../groceries/sync";
 import { findActive, findActiveByName, type ItemRow } from "../inventory/lookup";
 import { applyRestock, usualRestock } from "../inventory/stock";
+import { messages } from "../messages";
 import { publicProcedure, router } from "../trpc";
 
 type EntryRow = typeof groceryEntries.$inferSelect;
 
 const entryClosed = () =>
-  new TRPCError({ code: "NOT_FOUND", message: "That entry is already off the list. Refresh the list." });
+  new TRPCError({ code: "NOT_FOUND", message: messages.entryClosed });
 
 const quantityNeeded = () =>
-  new TRPCError({ code: "BAD_REQUEST", message: "Enter how much you bought." });
+  new TRPCError({ code: "BAD_REQUEST", message: messages.quantityNeeded });
 
 const findOpenEntry = (db: Pick<Db, "select">, id: number): EntryRow => {
   const row = db.select().from(groceryEntries).where(and(eq(groceryEntries.id, id), isOpen)).get();

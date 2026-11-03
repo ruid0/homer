@@ -3,6 +3,7 @@ import { DEFAULT_LOW_THRESHOLD_DAYS, itemInputSchema, type ItemInput } from "@ho
 import type { ListItem } from "../trpc";
 import { Dialog } from "./Dialog";
 import { inputClass, primaryButton, secondaryButton } from "./ui";
+import { copy } from "../copy";
 
 type Props = {
   item?: ListItem;
@@ -13,18 +14,12 @@ type Props = {
   onClose: () => void;
 };
 
-const fieldLabels: Record<string, string> = {
-  name: "Name (required)",
-  unit: "Unit (required)",
-  quantity: "Quantity (0 or more)",
-  daysPerUnit: "Lasts (a number above 0, or blank)",
-  lowThresholdDays: "Low at (0 or more)",
-};
+const fieldLabels: Readonly<Record<string, string | undefined>> = copy.itemForm.invalidFields;
 
 const toNumberOrNull = (text: string) => (text.trim() === "" ? null : Number(text));
 
 const invalidFields = (issues: readonly { path: readonly PropertyKey[] }[]) =>
-  [...new Set(issues.map((issue) => fieldLabels[String(issue.path[0])] ?? "Form"))].join(", ");
+  [...new Set(issues.map((issue) => fieldLabels[String(issue.path[0])] ?? copy.itemForm.wholeForm))].join(", ");
 
 export const ItemForm = ({ item, pending, serverError, onSave, onRemove, onClose }: Props) => {
   const [name, setName] = useState(item?.name ?? "");
@@ -45,34 +40,34 @@ export const ItemForm = ({ item, pending, serverError, onSave, onRemove, onClose
     });
     setError(undefined);
     if (parsed.success) return onSave(parsed.data);
-    setError(`Fix these fields, then save again: ${invalidFields(parsed.error.issues)}.`);
+    setError(copy.itemForm.fixFields(invalidFields(parsed.error.issues)));
   };
 
   return (
-    <Dialog title={item ? `Edit ${item.name}` : "Add item"} onClose={onClose}>
+    <Dialog title={item ? copy.itemForm.editTitle(item.name) : copy.itemForm.addTitle} onClose={onClose}>
       <form onSubmit={submit} className="grid gap-4">
-        <Field label="Name">
+        <Field label={copy.itemForm.name}>
           <input className={inputClass} value={name} onChange={(e) => setName(e.target.value)} autoFocus />
         </Field>
-        <Field label="Unit (bag, litre)">
+        <Field label={copy.itemForm.unit}>
           <input className={inputClass} value={unit} onChange={(e) => setUnit(e.target.value)} />
         </Field>
-        <Field label="Quantity">
+        <Field label={copy.itemForm.quantity}>
           <NumberInput value={quantity} onChange={setQuantity} />
         </Field>
-        <Field label="Lasts (days per unit, blank if unknown)">
+        <Field label={copy.itemForm.daysPerUnit}>
           <NumberInput value={daysPerUnit} onChange={setDaysPerUnit} />
         </Field>
-        <Field label="Low at (days left)">
+        <Field label={copy.itemForm.lowThresholdDays}>
           <NumberInput value={threshold} onChange={setThreshold} />
         </Field>
         {(error ?? serverError) && <p role="alert" className="text-red-700 dark:text-red-400">{error ?? serverError}</p>}
         <div className="flex flex-wrap justify-end gap-3">
           {onRemove && (
-            <button type="button" className={`${secondaryButton} mr-auto`} onClick={onRemove}>Remove item</button>
+            <button type="button" className={`${secondaryButton} mr-auto`} onClick={onRemove}>{copy.itemForm.removeItem}</button>
           )}
-          <button type="button" className={secondaryButton} onClick={onClose}>Cancel</button>
-          <button type="submit" className={primaryButton} disabled={pending}>Save</button>
+          <button type="button" className={secondaryButton} onClick={onClose}>{copy.common.cancel}</button>
+          <button type="submit" className={primaryButton} disabled={pending}>{copy.common.save}</button>
         </div>
       </form>
     </Dialog>

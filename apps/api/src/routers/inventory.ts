@@ -16,10 +16,11 @@ import { items, restocks } from "../db/schema";
 import { closeOpenEntry, removeOpenEntries, syncGrocery } from "../groceries/sync";
 import { findActive, notFound, type ItemRow } from "../inventory/lookup";
 import { applyRestock, usualRestock } from "../inventory/stock";
+import { messages } from "../messages";
 import { publicProcedure, router } from "../trpc";
 
 const nameTaken = (name: string) =>
-  new TRPCError({ code: "CONFLICT", message: `${name} is already tracked. Edit that item instead.` });
+  new TRPCError({ code: "CONFLICT", message: messages.nameTaken(name) });
 
 const activeNameTaken = (db: Db, name: string, exceptId?: number): boolean =>
   db

@@ -7,6 +7,7 @@ import { RestoreChoiceDialog } from "../components/RestoreChoiceDialog";
 import { primaryButton } from "../components/ui";
 import { sortByUrgency } from "../lib/itemText";
 import { trpc, type ArchivedItem, type ListItem } from "../trpc";
+import { copy } from "../copy";
 
 type Editing = ListItem | "new" | null;
 type Choice = { values: ItemInput; archived: ArchivedItem };
@@ -46,7 +47,7 @@ export const ItemsPage = () => {
   };
 
   const removeItem = (item: ListItem) => {
-    if (window.confirm(`Remove ${item.name}? Its restock history is kept.`)) archive.mutate({ id: item.id });
+    if (window.confirm(copy.items.confirmRemove(item.name))) archive.mutate({ id: item.id });
   };
 
   const closeForm = () => {
@@ -65,14 +66,14 @@ export const ItemsPage = () => {
   return (
     <>
       <header className="mb-4 flex items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">Items</h1>
-        <button type="button" className={primaryButton} onClick={() => setEditing("new")}>Add item</button>
+        <h1 className="text-2xl font-semibold">{copy.items.title}</h1>
+        <button type="button" className={primaryButton} onClick={() => setEditing("new")}>{copy.items.addItem}</button>
       </header>
 
-      {items.isPending && <p>Loading items.</p>}
-      {items.error && <p role="alert">Couldn't load items. Check that the api is running, then refresh.</p>}
-      {actionError && <p role="alert" className="mb-4 text-red-700 dark:text-red-400">{actionError} Refresh the list and try again.</p>}
-      {items.data?.length === 0 && <p>No items yet. Add something you don't want to run out of.</p>}
+      {items.isPending && <p>{copy.items.loading}</p>}
+      {items.error && <p role="alert">{copy.items.loadFailed}</p>}
+      {actionError && <p role="alert" className="mb-4 text-red-700 dark:text-red-400">{copy.items.actionFailed(actionError)}</p>}
+      {items.data?.length === 0 && <p>{copy.items.empty}</p>}
 
       <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {sortByUrgency(items.data ?? []).map((item) => (
