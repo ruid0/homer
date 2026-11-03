@@ -16,7 +16,7 @@ Design for a quick read, not exploration.
 - Responsive and mobile and tablet first. Use a single column on small screens, and a grid on larger ones.
 
 ## Copy
-Follow the UI naming rules in the coding-style skill. Errors say what happened and
+Follow the UI naming and copy-file rules (§6, §7) in the coding-style skill. Errors say what happened and
 what to do; no apologies.
 
 ## Stack

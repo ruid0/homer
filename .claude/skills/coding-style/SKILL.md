@@ -69,3 +69,19 @@ plain, a noun or verb phrase a person would say, in the domain's own words. No j
 | `IS_RECURRING`      | Repeats monthly |
 | `Submit Txn Record` | Save receipt    |
 | `Cat. Mgmt.`        | Categories      |
+
+## 7. User-facing text lives in copy files
+
+Every label, heading, button, placeholder, confirm prompt and error message is a named constant in a copy
+file (`apps/web/src/copy.ts`, `apps/api/src/messages.ts`, `packages/shared/src/copy.ts`), never an inline
+literal in a component, router or schema. A string that includes a value is a small function.
+
+```ts
+// avoid
+<button>Remove item</button>
+throw new TRPCError({ code: "CONFLICT", message: `${name} is already tracked. Edit that item instead.` });
+
+// prefer
+<button>{copy.items.removeItem}</button>
+throw new TRPCError({ code: "CONFLICT", message: messages.nameTaken(name) });
+```
