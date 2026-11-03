@@ -5,4 +5,5 @@ export const messages = {
   quantityNeeded: "Enter how much you bought.",
   personNameTaken: (name: string) => `${name} is already in the household. Use another name.`,
   personNotFound: "That person doesn't exist. Refresh the list.",
+  taskClosed: "That task is already done or removed. Refresh the list.",
 };

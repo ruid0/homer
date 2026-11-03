@@ -147,9 +147,10 @@ No Node or DOM types.
 0. This design doc (docs only).
 1. **Shared:** date and task schemas, `nextDueDate`, `isOverdue`, `compareSchedule` and helpers, with property tests. No UI.
 2. **People:** `people` table and migration `0002`, router with tests, People page, nav link.
-3. **Tasks and Today:** `tasks` table and migration `0003`, router with tests, `schedule.view`, the Schedule page with the Today view, add, edit, reschedule, complete, repeat and the person filter, and the nav link.
-4. **Events:** `events` table and migration `0004`, router with tests, the event form, events shown in Today.
-5. **Week view:** the Week side of the switch, grouped by day.
+3. **Tasks API:** `tasks` table and migration `0003`, the `tasks` router (add, update, complete, remove) and `schedule.view`, with tests. No UI. Open tasks without a due date are returned as `undated`, so they are not invisible.
+4. **Schedule page:** the Today view with add, edit, reschedule, complete, repeat, the person filter, an "Anytime" section for undated tasks, and the nav link.
+5. **Events:** `events` table and migration `0004`, router with tests, the event form, events shown in Today.
+6. **Week view:** the Week side of the switch, grouped by day.
 
 Each PR runs VERIFY and REVIEW before it is opened. A PR is only merged after the previous one, and each leaves `main` working with nothing half-wired in the app. PRD §6 and `CLAUDE.md` status are updated by the PR that changes them.
 
