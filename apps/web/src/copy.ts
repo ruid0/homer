@@ -1,3 +1,8 @@
+import type { ItemInput } from "@homer/shared";
+
+const addItem = "Add item";
+const editItem = (name: string) => `Edit ${name}`;
+
 const common = {
   cancel: "Cancel",
   save: "Save",
@@ -22,7 +27,7 @@ export const copy = {
 
   items: {
     title: "Items",
-    addItem: "Add item",
+    addItem,
     loading: "Loading items.",
     loadFailed: "Couldn't load items. Check that the api is running, then refresh.",
     actionFailed: (message: string) => `${message} Refresh the list and try again.`,
@@ -30,13 +35,13 @@ export const copy = {
     confirmRemove: (name: string) => `Remove ${name}? Its restock history is kept.`,
     onGroceryList: "On the grocery list",
     edit: "Edit",
-    editLabel: (name: string) => `Edit ${name}`,
+    editLabel: editItem,
     estimateSource: { entered: "Entered by hand", learned: "Learned from restocks" },
   },
 
   itemForm: {
-    addTitle: "Add item",
-    editTitle: (name: string) => `Edit ${name}`,
+    addTitle: addItem,
+    editTitle: editItem,
     name: "Name",
     unit: "Unit (bag, litre)",
     quantity: "Quantity",
@@ -51,7 +56,7 @@ export const copy = {
       quantity: "Quantity (0 or more)",
       daysPerUnit: "Lasts (a number above 0, or blank)",
       lowThresholdDays: "Low at (0 or more)",
-    } as Record<string, string>,
+    } satisfies Record<keyof ItemInput, string>,
   },
 
   restockDialog: {

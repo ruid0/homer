@@ -14,10 +14,12 @@ type Props = {
   onClose: () => void;
 };
 
+const fieldLabels: Readonly<Record<string, string | undefined>> = copy.itemForm.invalidFields;
+
 const toNumberOrNull = (text: string) => (text.trim() === "" ? null : Number(text));
 
 const invalidFields = (issues: readonly { path: readonly PropertyKey[] }[]) =>
-  [...new Set(issues.map((issue) => copy.itemForm.invalidFields[String(issue.path[0])] ?? copy.itemForm.wholeForm))].join(", ");
+  [...new Set(issues.map((issue) => fieldLabels[String(issue.path[0])] ?? copy.itemForm.wholeForm))].join(", ");
 
 export const ItemForm = ({ item, pending, serverError, onSave, onRemove, onClose }: Props) => {
   const [name, setName] = useState(item?.name ?? "");

@@ -73,8 +73,10 @@ plain, a noun or verb phrase a person would say, in the domain's own words. No j
 ## 7. User-facing text lives in copy files
 
 Every label, heading, button, placeholder, confirm prompt and error message is a named constant in a copy
-file (`apps/web/src/copy.ts`, `apps/api/src/messages.ts`, `packages/shared/src/copy.ts`), never an inline
-literal in a component, router or schema. A string that includes a value is a small function.
+file, never an inline literal in a component, router or schema. A string that includes a value is a small
+function. Files: `apps/web/src/copy.ts`, `apps/api/src/messages.ts`, and `packages/shared/src/copy.ts`
+(created when a schema or domain function first needs a message). The one exception is the brand name in
+`apps/web/index.html`. `apps/web/src/copy.test.ts` guards this, with a heuristic scan.
 
 ```ts
 // avoid
