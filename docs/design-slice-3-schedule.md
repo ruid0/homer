@@ -60,7 +60,7 @@ Three new tables, each added by the PR that needs it (migrations `0002` to `0004
 | column | type | notes |
 |---|---|---|
 | id | integer pk | |
-| name | text not null | unique ignoring case among active people |
+| name | text not null | unique ignoring case (rows with `archived_at` set are ignored) |
 | created_at | text (ISO-8601 UTC) | |
 | archived_at | text null | not used: people are not removed |
 

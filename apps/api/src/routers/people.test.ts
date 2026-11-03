@@ -1,5 +1,7 @@
+import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 import { createDb } from "../db/client";
+import { people } from "../db/schema";
 import { messages } from "../messages";
 import { createCaller } from "./index";
 
@@ -66,10 +68,42 @@ describe("people.rename", () => {
     });
   });
 
-  it("fails for an unknown person", async () => {
-    await expect(setup().people.rename({ id: 99, name: "Sam" })).rejects.toMatchObject({
+  it("fails for an unknown person, even when the new name is taken", async () => {
+    const api = setup();
+    await api.people.add({ name: "Alex" });
+    await expect(api.people.rename({ id: 99, name: "Sam" })).rejects.toMatchObject({
       code: "NOT_FOUND",
       message: messages.personNotFound,
     });
+    await expect(api.people.rename({ id: 99, name: "alex" })).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+});
+
+describe("people hidden by an earlier build", () => {
+  const setupWithHidden = async () => {
+    const db = createDb(":memory:");
+    const api = createCaller({ db });
+    const { id } = await api.people.add({ name: "Old" });
+    db.update(people).set({ archivedAt: new Date().toISOString() }).where(eq(people.id, id)).run();
+    return { api, id };
+  };
+
+  it("stay out of the list", async () => {
+    const { api } = await setupWithHidden();
+    expect(await api.people.list()).toEqual([]);
+  });
+
+  it("do not block their name, in add or rename", async () => {
+    const { api } = await setupWithHidden();
+    const { id } = await api.people.add({ name: "Sam" });
+    await api.people.add({ name: "old" });
+    await api.people.rename({ id, name: "OLD2" });
+    const names = (await api.people.list()).map((person) => person.name);
+    expect(names.sort()).toEqual(["OLD2", "old"]);
+  });
+
+  it("cannot be renamed", async () => {
+    const { api, id } = await setupWithHidden();
+    await expect(api.people.rename({ id, name: "Back" })).rejects.toMatchObject({ code: "NOT_FOUND" });
   });
 });

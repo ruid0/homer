@@ -13,7 +13,7 @@ const nameTaken = (name: string) => new TRPCError({ code: "CONFLICT", message: m
 // Nothing removes people now, but rows hidden by an earlier build must stay hidden.
 const isActive = isNull(people.archivedAt);
 
-const nameInUse = (db: Pick<Db, "select">, name: string, exceptId: number | undefined = undefined): boolean =>
+const nameInUse = (db: Pick<Db, "select">, name: string, exceptId?: number): boolean =>
   db
     .select({ id: people.id })
     .from(people)
@@ -38,15 +38,11 @@ export const peopleRouter = router({
 
   rename: publicProcedure.input(renamePersonInputSchema).mutation(({ ctx, input }) =>
     ctx.db.transaction((tx) => {
+      if (!tx.select({ id: people.id }).from(people).where(and(eq(people.id, input.id), isActive)).get()) {
+        throw notFound();
+      }
       if (nameInUse(tx, input.name, input.id)) throw nameTaken(input.name);
-      const renamed = tx
-        .update(people)
-        .set({ name: input.name })
-        .where(and(eq(people.id, input.id), isActive))
-        .returning()
-        .get();
-      if (!renamed) throw notFound();
-      return renamed;
+      return tx.update(people).set({ name: input.name }).where(eq(people.id, input.id)).returning().get();
     }),
   ),
 });
