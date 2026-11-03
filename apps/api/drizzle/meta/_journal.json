@@ -15,6 +15,13 @@
       "when": 1793651562343,
       "tag": "0001_real_amphibian",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1793741860061,
+      "tag": "0002_cynical_magma",
+      "breakpoints": true
     }
   ]
 }

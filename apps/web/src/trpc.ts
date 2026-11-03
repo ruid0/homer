@@ -12,6 +12,8 @@ export type ListItem = Outputs["list"][number];
 
 export type ListEntry = inferRouterOutputs<AppRouter>["groceries"]["list"][number];
 
+export type ListPerson = inferRouterOutputs<AppRouter>["people"]["list"][number];
+
 export type ArchivedItem = NonNullable<Outputs["findArchived"]>;
 
 export const queryClient = new QueryClient();

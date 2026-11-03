@@ -16,6 +16,25 @@ export const copy = {
     label: "Main",
     items: "Items",
     groceries: "Groceries",
+    people: "People",
+  },
+
+  people: {
+    title: "People",
+    addLabel: "Add a person",
+    add: "Add",
+    loading: "Loading people.",
+    loadFailed: "Couldn't load people. Check that the api is running, then refresh.",
+    empty: "No one yet. Add the people in your household.",
+    rename: "Rename",
+    renameLabel: (name: string) => `Rename ${name}`,
+    renameTitle: (name: string) => `Rename ${name}`,
+    nameLabel: "Name",
+    blankName: "Enter a name.",
+    remove: "Remove",
+    removeLabel: (name: string) => `Remove ${name}`,
+    confirmRemove: (name: string) => `Remove ${name} from the household?`,
+    actionFailed: (message: string) => `${message} Refresh the list and try again.`,
   },
 
   stock: {
