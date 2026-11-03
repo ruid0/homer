@@ -26,6 +26,12 @@ describe("findInlineText", () => {
     ["<input aria-label='Name' />", true],
     ["<input aria-label={`Edit ${name}`} />", true],
     ['<p>{"Hi there"}</p>', true],
+    ['window.confirm("remove it?")', false],
+    ['window.alert("it broke")', false],
+    ['setError("enter a quantity")', false],
+    ['throw new TRPCError({ code: "CONFLICT", message: "name taken" })', false],
+    ['const unit = x ?? "units"', false],
+    ['const unit = x ?? `units`', false],
     ['window.confirm("Remove it?")', false],
     ['setError("Enter a quantity")', false],
     ['const unit = x ?? "Units"', false],
@@ -42,6 +48,9 @@ describe("findInlineText", () => {
     "const code = { code: \"NOT_FOUND\" };",
     "// Note: Hello there",
     "const sorted = items.map((item) => item.name);",
+    'const label = x ?? ""',
+    'setError(undefined)',
+    'const source = row.addedBy === "auto" ? "auto" : "manual";',
   ])("ignores %j", (source) => {
     expect(findInlineText(source, true)).toEqual([]);
   });
