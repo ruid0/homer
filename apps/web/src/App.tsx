@@ -2,6 +2,7 @@ import { NavLink, Route, Routes } from "react-router-dom";
 import { GroceriesPage } from "./pages/GroceriesPage";
 import { ItemsPage } from "./pages/ItemsPage";
 import { PeoplePage } from "./pages/PeoplePage";
+import { SchedulePage } from "./pages/SchedulePage";
 import { copy } from "./copy";
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
@@ -11,14 +12,16 @@ const linkClass = ({ isActive }: { isActive: boolean }) =>
 
 export const App = () => (
   <main className="mx-auto max-w-5xl p-4 sm:p-6">
-    <nav aria-label={copy.nav.label} className="mb-4 flex gap-2">
+    <nav aria-label={copy.nav.label} className="mb-4 flex flex-wrap gap-2">
       <NavLink to="/" end className={linkClass}>{copy.nav.items}</NavLink>
       <NavLink to="/groceries" className={linkClass}>{copy.nav.groceries}</NavLink>
+      <NavLink to="/schedule" className={linkClass}>{copy.nav.schedule}</NavLink>
       <NavLink to="/people" className={linkClass}>{copy.nav.people}</NavLink>
     </nav>
     <Routes>
       <Route path="/" element={<ItemsPage />} />
       <Route path="/groceries" element={<GroceriesPage />} />
+      <Route path="/schedule" element={<SchedulePage />} />
       <Route path="/people" element={<PeoplePage />} />
     </Routes>
   </main>

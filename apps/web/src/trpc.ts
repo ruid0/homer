@@ -14,6 +14,10 @@ export type ListEntry = inferRouterOutputs<AppRouter>["groceries"]["list"][numbe
 
 export type ListPerson = inferRouterOutputs<AppRouter>["people"]["list"][number];
 
+type ScheduleView = inferRouterOutputs<AppRouter>["schedule"]["view"];
+
+export type ScheduleTask = ScheduleView["overdue"][number];
+
 export type ArchivedItem = NonNullable<Outputs["findArchived"]>;
 
 export const queryClient = new QueryClient();
