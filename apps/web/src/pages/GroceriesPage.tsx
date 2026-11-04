@@ -1,5 +1,5 @@
 import { useState, type SubmitEvent } from "react";
-import { GroceryCard } from "../components/GroceryCard";
+import { GroceryRow } from "../components/GroceryRow";
 import { RestockDialog } from "../components/RestockDialog";
 import { inputClass, primaryButton } from "../components/ui";
 import { trpc, type ListEntry } from "../trpc";
@@ -69,17 +69,21 @@ export const GroceriesPage = () => {
       {actionError && <p role="alert" className="mb-4 text-late">{actionError}</p>}
       {entries.data?.length === 0 && <p>{copy.groceries.empty}</p>}
 
-      <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {(entries.data ?? []).map((entry) => (
-          <GroceryCard
-            key={entry.id}
-            entry={entry}
-            busy={busy}
-            onBought={() => buy(entry)}
-            onRemove={() => remove.mutate({ id: entry.id })}
-          />
-        ))}
-      </ul>
+      {entries.data && entries.data.length > 0 && (
+        <section className="rounded-2xl border border-line bg-card px-5 pb-2">
+          <ul className="[&>li:first-child]:border-t-0">
+            {entries.data.map((entry) => (
+              <GroceryRow
+                key={entry.id}
+                entry={entry}
+                busy={busy}
+                onBought={() => buy(entry)}
+                onRemove={() => remove.mutate({ id: entry.id })}
+              />
+            ))}
+          </ul>
+        </section>
+      )}
 
       {buying && (
         <RestockDialog
