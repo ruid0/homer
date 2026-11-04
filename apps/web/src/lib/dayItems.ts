@@ -6,7 +6,7 @@ export type DayItem<Task, Event> =
   | { kind: "task"; value: Task }
   | { kind: "event"; value: Event };
 
-const timeOf = <Task extends { dueTime: string | null }, Event extends Timed>(item: DayItem<Task, Event>) =>
+export const timeOf = <Task extends { dueTime: string | null }, Event extends Timed>(item: DayItem<Task, Event>) =>
   item.kind === "task" ? item.value.dueTime : item.value.time;
 
 // Both lists are for one day, so the date is a placeholder and only the time orders them.

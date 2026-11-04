@@ -13,7 +13,7 @@ Status: draft, revised for the timeline design (direction D in the UI rethink) Â
   - **Your day:** a timeline, in this order:
     1. overdue tasks, oldest first, each with how many days late;
     2. a **Now** marker with the current time;
-    3. today's events and tasks. Timed events come first, in time order, and tasks follow as "Any time" (tasks have no time yet).
+    3. today's events and tasks. Timed events and tasks are in time order (a task has an optional due time), and anything without a time follows as "Any time".
   - **Running out:** items that are running low or out, most urgent first, in plain words ("Milk runs out in 2 days"), with "On the grocery list" when they are on it.
 - Both cards **scroll inside themselves**, so the page never grows. A row is cut off at the bottom edge and a soft fade sits over it while more rows remain, which tells you there is more. The Now marker stays in view as you scroll.
 - **Done** on an overdue or today task, and **Bought it** on an item, work from Home. Bought it opens the restock sheet prefilled with the usual amount.
@@ -24,7 +24,7 @@ Status: draft, revised for the timeline design (direction D in the UI rethink) Â
 **Out of scope**
 - A person filter (this is a household screen; Schedule has one).
 - Undo after Done or Bought it. The toast only confirms.
-- Task times. Every task shows "Any time" until tasks get a time field.
+- Adding or editing task times. Home only shows the due time a task already has.
 - The assistant ask bar (direction E), the grocery list, the Week view, editing from Home, charts and notifications.
 
 **Done when**
@@ -44,7 +44,7 @@ Status: draft, revised for the timeline design (direction D in the UI rethink) Â
 4. **"Running out" counts items already on the grocery list.** It describes stock, not whether someone has noted it down.
 5. **No Undo for now.**
 6. **A breakpoint for big touchscreens** at 1920px, with larger type and touch targets.
-7. **"Any time" for every task** for now.
+7. **"Any time" for items without a time.** The owner chose "Any time for now" believing tasks had no time; they do have an optional `dueTime`, so Home shows it and no new field is built.
 8. **Pull requests go one at a time.** The next PR starts after the previous one is merged.
 
 ## 2. System overview
@@ -97,6 +97,6 @@ Each PR runs VERIFY and REVIEW before it is opened, and leaves `main` working wi
 ## 7. Decisions and risks
 
 - **Two queries feed two cards.** Running out needs `inventory.list` and `groceries.list`, while the timeline needs one `schedule.view` call. Each card loads on its own and, if its query fails, shows a short calm error line (what happened, then refresh), never a blank card.
-- **The timeline is sparse until tasks have times.** Most rows will be "Any time" tasks after the events. A time field on tasks is a later change.
+- **The timeline can be sparse.** Tasks with no due time all read "Any time" and sit after the timed rows.
 - **Wall display refetch.** A fixed interval is simple and enough for one household. A push channel is not worth it.
 - **Bookmarks to `/`** that used to open Items now open Home. This is harmless while the PWA is not built.
