@@ -1,7 +1,8 @@
 import { useState } from "react";
 import type { ItemInput } from "@homer/shared";
-import { ItemCard } from "../components/ItemCard";
+import { ItemRow } from "../components/ItemRow";
 import { ItemForm } from "../components/ItemForm";
+import { ListCard } from "../components/ListCard";
 import { RestockDialog } from "../components/RestockDialog";
 import { RestoreChoiceDialog } from "../components/RestoreChoiceDialog";
 import { primaryButton } from "../components/ui";
@@ -75,19 +76,21 @@ export const ItemsPage = () => {
       {actionError && <p role="alert" className="mb-4 text-late">{copy.items.actionFailed(actionError)}</p>}
       {items.data?.length === 0 && <p>{copy.items.empty}</p>}
 
-      <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {sortByUrgency(items.data ?? []).map((item) => (
-          <ItemCard
-            key={item.id}
-            item={item}
-            busy={markOut.isPending}
-            onList={listedIds.has(item.id)}
-            onBought={() => setRestocking(item)}
-            onOut={() => markOut.mutate({ id: item.id })}
-            onEdit={() => setEditing(item)}
-          />
-        ))}
-      </ul>
+      {items.data && items.data.length > 0 && (
+        <ListCard>
+          {sortByUrgency(items.data).map((item) => (
+            <ItemRow
+              key={item.id}
+              item={item}
+              busy={markOut.isPending}
+              onList={listedIds.has(item.id)}
+              onBought={() => setRestocking(item)}
+              onOut={() => markOut.mutate({ id: item.id })}
+              onEdit={() => setEditing(item)}
+            />
+          ))}
+        </ListCard>
+      )}
 
       {editing === "new" && (
         <ItemForm
