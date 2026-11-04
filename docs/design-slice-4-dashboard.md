@@ -1,6 +1,6 @@
 # Slice 4: Home. Definition, technical plan and system design
 
-Status: draft, revised for the timeline design (direction D in the UI rethink) · Owner: Igor Bondarenko · Date: 2026-11-03 · Source: PRD §3, §4.3, §8 (slice 4). Builds on `docs/design-slice-1-items.md`, `docs/design-slice-2-groceries.md`, `docs/design-slice-3-schedule.md` and `docs/design-ui-pass.md`.
+Status: built, following the timeline design (direction D in the UI rethink) · Owner: Igor Bondarenko · Date: 2026-11-03 · Source: PRD §3, §4.3, §8 (slice 4). Builds on `docs/design-slice-1-items.md`, `docs/design-slice-2-groceries.md`, `docs/design-slice-3-schedule.md` and `docs/design-ui-pass.md`.
 
 ## 1. Definition (DEFINE)
 
@@ -84,7 +84,7 @@ No change. Nothing new is defined outside `packages/shared/src/schemas.ts`: the 
 
 ## 6. Work order (one PR at a time; the next starts after the previous is merged)
 
-Until PR 4 lands, `/` redirects to Items and the nav has four links; the Home lines above describe the finished slice. The 1920px breakpoint is `120rem`, which is 1920px at the default 16px root.
+The 1920px breakpoint is `120rem`, which is 1920px at the default 16px root.
 
 1. **Design doc** (merged earlier).
 2. **App shell:** rail, bottom bar, `/items` route move, the 1920px breakpoint, and this doc revised for the timeline.

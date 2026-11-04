@@ -6,7 +6,7 @@ const relativeName = (date: string, today: string): string | null => {
   return date === addDays(today, 1) ? copy.schedule.tomorrow : null;
 };
 
-const dateName = (date: string): string => {
+export const dateName = (date: string): string => {
   const parsed = new Date(`${date}T00:00:00Z`);
   const weekday = copy.schedule.weekdays[parsed.getUTCDay()] ?? "";
   const month = copy.schedule.months[parsed.getUTCMonth()] ?? "";
