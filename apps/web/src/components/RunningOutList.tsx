@@ -18,7 +18,7 @@ export const RunningOutList = ({ rows, onBought }: Props) => (
         <button
           type="button"
           className={`${secondaryButton} shrink-0 px-5`}
-          aria-label={copy.home.boughtLabel(item.name)}
+          aria-label={copy.common.boughtLabel(item.name)}
           onClick={() => onBought(item)}
         >
           {copy.common.boughtIt}

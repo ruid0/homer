@@ -12,7 +12,7 @@ type Props = {
 
 const rowClass = "flex min-h-20 items-center gap-4 border-t border-line py-3";
 const timeClass = "w-24 shrink-0 text-title font-semibold tabular-nums";
-const subline = (parts: (string | null)[]) => parts.filter(Boolean).join(copy.home.separator);
+const subline = (parts: (string | null)[]) => parts.filter(Boolean).join(copy.common.separator);
 
 const DoneButton = ({ task, busy, onDone }: { task: ScheduleTask; busy: boolean; onDone: (task: ScheduleTask) => void }) => (
   <button
