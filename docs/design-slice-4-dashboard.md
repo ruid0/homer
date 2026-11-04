@@ -1,51 +1,60 @@
-# Slice 4: Dashboard. Definition, technical plan and system design
+# Slice 4: Home. Definition, technical plan and system design
 
-Status: draft · Owner: Igor Bondarenko · Date: 2026-11-03 · Source: PRD §3, §4.3, §8 (slice 4). Builds on `docs/design-slice-1-items.md`, `docs/design-slice-2-groceries.md` and `docs/design-slice-3-schedule.md`.
+Status: draft, revised for the timeline design (direction D in the UI rethink) · Owner: Igor Bondarenko · Date: 2026-11-03 · Source: PRD §3, §4.3, §8 (slice 4). Builds on `docs/design-slice-1-items.md`, `docs/design-slice-2-groceries.md`, `docs/design-slice-3-schedule.md` and `docs/design-ui-pass.md`.
 
 ## 1. Definition (DEFINE)
 
 **Problem.** The state of the house is spread over three pages: Items, Groceries and Schedule. Nobody can see at a glance what is running out, what is overdue and what is on today.
 
-**For whom.** Everyone in the household, mostly a tablet in the kitchen or a phone.
+**For whom.** Everyone in the household. The main screens are a touchscreen bigger than a tablet (a wall or desk screen) and a phone.
 
 **In scope**
-- A Home page at `/`, readable in about 3 seconds, with three blocks in this order:
+- A Home page at `/` with two cards:
+  - **Your day:** a timeline, in this order:
+    1. overdue tasks, oldest first, each with how many days late;
+    2. a **Now** marker with the current time;
+    3. today's events and tasks. Timed events come first, in time order, and tasks follow as "Any time" (tasks have no time yet).
   - **Running out:** items that are running low or out, most urgent first, in plain words ("Milk runs out in 2 days"), with "On the grocery list" when they are on it.
-  - **Overdue:** overdue open tasks, with how many days late.
-  - **Today:** today's tasks and events in time order, with the person's name when there is one.
-- Each block shows at most 5 rows. When there are more, it ends with a link to the full page. Overdue and Today say "See all N" and link to Schedule, whose Today view lists exactly those rows. Running out says "See all items" with no count and links to Items, because that page lists every item, not only the running-out ones.
-- **Done** on an overdue or today task works from the Home page.
-- Empty blocks stay on screen with a calm line ("Nothing running out.", "Nothing overdue.", "Nothing planned today.").
-- The page follows a new day and a tab coming back into view, as the Schedule page does.
+- Both cards **scroll inside themselves**, so the page never grows. A row is cut off at the bottom edge and a soft fade sits over it while more rows remain, which tells you there is more. The Now marker stays in view as you scroll.
+- **Done** on an overdue or today task, and **Bought it** on an item, work from Home. Bought it opens the restock sheet prefilled with the usual amount.
+- Empty cards stay on screen with a calm line ("Nothing running out.", "Nothing overdue.", "Nothing planned today.").
+- The page follows the clock (the Now marker, a new day, a tab coming back into view) and refetches on an interval so a wall display stays current.
+- The new app shell: a left rail on tablet and wall widths and a bottom bar on phones, plus a breakpoint for big touchscreens (1920px and wider, root font size 150%).
 
 **Out of scope**
 - A person filter (this is a household screen; Schedule has one).
-- The grocery list, the Week view, editing from the Home page, charts, notifications and the assistant.
-- Undated ("Anytime") tasks: they stay on the Schedule page.
+- Undo after Done or Bought it. The toast only confirms.
+- Task times. Every task shows "Any time" until tasks get a time field.
+- The assistant ask bar (direction E), the grocery list, the Week view, editing from Home, charts and notifications.
 
 **Done when**
 - Milk at 1 litre lasting 2 days per litre shows "Milk runs out in 2 days" and "On the grocery list" (PRD §4.1).
 - An overdue task shows with how many days late, and Done removes it.
-- Today's tasks and events show in time order.
-- After midnight, or when the tab comes back into view, the blocks show the new day (the same `useToday` the Schedule page uses).
-- The screen is readable at tablet and phone width, in light and dark, with no console errors.
+- Today's events show in time order, with tasks after them.
+- With more rows than fit, both cards scroll and show the cut-off row and fade.
+- After midnight, or when the tab comes back into view, the cards show the new day (the same `useToday` the Schedule page uses).
+- The screen is readable at phone, tablet and 1920px width, in light and dark, with no console errors.
 - `pnpm typecheck` and `pnpm test` pass.
 
 ### Decisions (owner, 2026-11-03)
 
-1. **No person filter** on the Home page.
-2. **Five rows per block** to start. The cap is a single constant, so it can change after seeing it on the tablet.
-3. **Home is `/`.** Items moves to `/items`. The links become Home, Items, Groceries, Schedule, People.
-4. **"Running out" counts items already on the grocery list.** It describes stock, not whether someone has noted it down. The row carries the "On the grocery list" tag.
-5. **Pull requests go one at a time.** The next PR starts after the previous one is merged.
+1. **No person filter** on Home.
+2. **No row cap.** Both cards scroll, and the position of the rows hints that there is more.
+3. **Direction D (Timeline)** from the UI rethink, with a left rail and a bottom bar. Home is `/`, Items moves to `/items`. The links become Home, Items, Groceries, Schedule, People.
+4. **"Running out" counts items already on the grocery list.** It describes stock, not whether someone has noted it down.
+5. **No Undo for now.**
+6. **A breakpoint for big touchscreens** at 1920px, with larger type and touch targets.
+7. **"Any time" for every task** for now.
+8. **Pull requests go one at a time.** The next PR starts after the previous one is merged.
 
 ## 2. System overview
 
 ```
  Home page ──► inventory.list ───────────┐
            ──► groceries.list            ├─ existing routers, unchanged
-           ──► schedule.view(days: 1) ───┘
-           ──► tasks.complete   (Done)
+           ──► schedule.view(days: 1) ───┤
+           ──► tasks.complete   (Done)   │
+           ──► inventory.restock (Bought it)
 ```
 
 No new router, no schema change and no migration. The page reads what the other pages already read.
@@ -56,39 +65,38 @@ No change. Nothing new is defined outside `packages/shared/src/schemas.ts`: the 
 
 ## 4. Web (`apps/web/src`)
 
-- `lib/dashboardRows.ts`, pure and tested. `DASHBOARD_ROW_LIMIT = 5` lives here.
-  - `runningOut(items, listedIds)`: items with `runningLow` or quantity 0, ordered by the existing `sortByUrgency`, each with an `onList` flag. `listedIds` is the set of item ids on the grocery list, built from `groceries.list` the same way `ItemsPage` does it, because `inventory.list` does not return it.
-  - `limitRows(rows, max)`: returns the rows to show and how many are hidden.
+- **Shell (PR 1).** `components/Nav.tsx` has the rail (from `md` up, sticky, icon above label) and the bottom bar (below `md`, fixed, safe-area aware). `App.tsx` lays them out. `index.css` adds `--breakpoint-wall: 100rem` and a 150% root font size at that width, so everything in rem grows together. Until Home exists, `/` redirects to `/items` and the nav has four links.
+- `lib/timeline.ts`, pure and tested (PR 2):
+  - `timelineRows(overdue, dayItems, now)`: overdue rows, then today's rows, split at the Now marker so past timed events sit above it. Reuses `lib/dayItems.ts` and its `compareSchedule` order.
+  - `runningOut(items, listedIds)`: items with `runningLow` or quantity 0, ordered by the existing `sortByUrgency`, each with an `onList` flag. `listedIds` is built from `groceries.list` the same way `ItemsPage` does it, because `inventory.list` does not return it.
+- `components/ScrollCard.tsx` (PR 4): a card whose body scrolls, with a bottom fade that shows only while more rows remain below.
+- `pages/HomePage.tsx` (PR 4): the two cards. Side by side on tablet and wall, stacked on a phone.
 - **Wording.** Rows reuse `describeRunsOut`, so an item still in stock reads "Runs out in 2 days" and an item at 0 reads "Out of it". Overdue rows reuse `copy.schedule.overdueBy`.
-- **Order.**
-  - Overdue is the `overdue` list as `schedule.view` returns it, oldest first, so the cap keeps the most overdue.
-  - Today reuses `lib/dayItems.ts` (tasks and events merged in `compareSchedule` order), and the cap applies to that merged list.
-- `components/DashboardBlock.tsx`: heading, rows, empty line, a calm error line when its query fails, and the link to the full page.
-- `pages/DashboardPage.tsx`: the three blocks. On a tablet they sit side by side, and on a phone they stack.
-- Rows are compact, not full cards. Urgent text uses the same amber as the Items page. Done is a secondary button, so the screen does not fill with primary buttons, but it keeps a 44px touch target (homer-ui).
-- **Done.** It calls `tasks.complete` with today's date, is disabled while the call is pending, shows the "already done, refresh" error inline as the Schedule page does, and invalidates `schedule.view` afterwards, because the next task of a repeating one can appear in a block.
+- **Done and Bought it.** Done calls `tasks.complete` with today's date, is disabled while the call is pending, shows the "already done, refresh" error inline as the Schedule page does, and invalidates `schedule.view`, because the next task of a repeating one can appear. Bought it reuses `RestockDialog`.
 - All strings are in `copy.ts` (coding-style §7).
-- `App.tsx` routes `/` to Home and `/items` to Items. The Home `NavLink` takes `end`, so it is not marked active on every page.
 
 ## 5. Testing (red-green-refactor)
 
 - Unit tests are written first, for the helpers:
   - `runningOut`: an item with no estimate is left out (not low), an item at quantity 0 comes first and reads "Out of it", an item in stock reads "Runs out in N days", and `onList` follows `listedIds`.
-  - `limitRows`: the cap boundary (exactly 5, and 6), and an empty list.
-  - PR 3 adds tests for the Overdue and Today selection and the cap on the merged Today list.
-- The web app has no component tests, so the page itself is checked in the running app.
-- Checked in the running app with Playwright at 390px and 1024px, light and dark: the milk example, an overdue task being completed, an empty block, more than 5 rows.
+  - `timelineRows`: overdue first, oldest first; timed events split around `now`; tasks last; empty inputs.
+- The web app has no component tests, so the shell and the page are checked in the running app with Playwright at 390px, 1024px and 1920px, light and dark: the milk example, an overdue task being completed, an empty card, more rows than fit.
 
 ## 6. Work order (one PR at a time; the next starts after the previous is merged)
 
-1. **Design doc** (this file).
-2. **Home page with the Running out block:** the `/items` route move, the navigation link, the helpers with tests, and a page that works by itself.
-3. **Overdue and Today blocks,** with Done. Marks slice 4 built in this doc and the PRD §8 list, and updates the `CLAUDE.md` project status and its page list (Home, Items, Groceries, Schedule, People).
+Until PR 4 lands, `/` redirects to Items and the nav has four links; the Home lines above describe the finished slice. The 1920px breakpoint is `120rem`, which is 1920px at the default 16px root.
+
+1. **Design doc** (merged earlier).
+2. **App shell:** rail, bottom bar, `/items` route move, the 1920px breakpoint, and this doc revised for the timeline.
+3. **Shared logic:** `timelineRows` and `runningOut`, with tests.
+4. **Home page:** the scrolling timeline with the Now marker, Running out, Bought it and Done with a confirming toast, and the Home nav link and route. Marks slice 4 built in this doc and the PRD §8 list, and updates the `CLAUDE.md` project status and its page list (Home, Items, Groceries, Schedule, People).
+5. **Restyle the other pages** to the new shell and touch sizes (may be two PRs).
 
 Each PR runs VERIFY and REVIEW before it is opened, and leaves `main` working with nothing half-wired.
 
 ## 7. Decisions and risks
 
-- **Two queries feed three blocks.** Running out needs `inventory.list` and `groceries.list`, while Overdue and Today share one `schedule.view` call. Those two blocks load together and Running out loads separately, so each block has its own loading line. If a query fails, its block shows a short calm error line (what happened, then refresh), never a blank block.
-- **Capped lists hide rows.** "See all N" is the way out, and the cap can be raised.
+- **Two queries feed two cards.** Running out needs `inventory.list` and `groceries.list`, while the timeline needs one `schedule.view` call. Each card loads on its own and, if its query fails, shows a short calm error line (what happened, then refresh), never a blank card.
+- **The timeline is sparse until tasks have times.** Most rows will be "Any time" tasks after the events. A time field on tasks is a later change.
+- **Wall display refetch.** A fixed interval is simple and enough for one household. A push channel is not worth it.
 - **Bookmarks to `/`** that used to open Items now open Home. This is harmless while the PWA is not built.
