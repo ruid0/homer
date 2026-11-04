@@ -19,7 +19,7 @@ Status: draft, revised for the timeline design (direction D in the UI rethink) ย
 - **Done** on an overdue or today task, and **Bought it** on an item, work from Home. Bought it opens the restock sheet prefilled with the usual amount.
 - Empty cards stay on screen with a calm line ("Nothing running out.", "Nothing overdue.", "Nothing planned today.").
 - The page follows the clock (the Now marker, a new day, a tab coming back into view) and refetches on an interval so a wall display stays current.
-- The new app shell: a left rail on tablet and wall widths and a bottom bar on phones, plus a breakpoint for big touchscreens (1600px and wider, root font size 150%).
+- The new app shell: a left rail on tablet and wall widths and a bottom bar on phones, plus a breakpoint for big touchscreens (1920px and wider, root font size 150%).
 
 **Out of scope**
 - A person filter (this is a household screen; Schedule has one).
@@ -43,7 +43,7 @@ Status: draft, revised for the timeline design (direction D in the UI rethink) ย
 3. **Direction D (Timeline)** from the UI rethink, with a left rail and a bottom bar. Home is `/`, Items moves to `/items`. The links become Home, Items, Groceries, Schedule, People.
 4. **"Running out" counts items already on the grocery list.** It describes stock, not whether someone has noted it down.
 5. **No Undo for now.**
-6. **A breakpoint for big touchscreens** at 1600px, with larger type and touch targets.
+6. **A breakpoint for big touchscreens** at 1920px, with larger type and touch targets.
 7. **"Any time" for every task** for now.
 8. **Pull requests go one at a time.** The next PR starts after the previous one is merged.
 
@@ -84,10 +84,10 @@ No change. Nothing new is defined outside `packages/shared/src/schemas.ts`: the 
 
 ## 6. Work order (one PR at a time; the next starts after the previous is merged)
 
-Until PR 4 lands, `/` redirects to Items and the nav has four links; the Home lines above describe the finished slice. The 1600px breakpoint is `100rem`, which is 1600px at the default 16px root.
+Until PR 4 lands, `/` redirects to Items and the nav has four links; the Home lines above describe the finished slice. The 1920px breakpoint is `120rem`, which is 1920px at the default 16px root.
 
 1. **Design doc** (merged earlier).
-2. **App shell:** rail, bottom bar, `/items` route move, the 1600px breakpoint, and this doc revised for the timeline.
+2. **App shell:** rail, bottom bar, `/items` route move, the 1920px breakpoint, and this doc revised for the timeline.
 3. **Shared logic:** `timelineRows` and `runningOut`, with tests.
 4. **Home page:** the scrolling timeline with the Now marker, Running out, Bought it and Done with a confirming toast, and the Home nav link and route. Marks slice 4 built in this doc and the PRD ยง8 list, and updates the `CLAUDE.md` project status and its page list (Home, Items, Groceries, Schedule, People).
 5. **Restyle the other pages** to the new shell and touch sizes (may be two PRs).

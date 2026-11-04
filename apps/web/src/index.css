@@ -48,8 +48,8 @@
   --color-late: var(--late);
   --color-scrim: var(--scrim);
 
-  /* 1600px at the default 16px root; the wall: variant is available for layout changes. */
-  --breakpoint-wall: 100rem;
+  /* 1920px at the default 16px root; the wall: variant is available for layout changes. */
+  --breakpoint-wall: 120rem;
 
   --font-sans: "Atkinson Hyperlegible Next Variable", ui-sans-serif, system-ui, sans-serif;
 
@@ -78,7 +78,7 @@ html {
 }
 
 /* A big wall or desk touchscreen: bigger again, so the room can read it. Keep in step with --breakpoint-wall. */
-@media (min-width: 100rem) {
+@media (min-width: 120rem) {
   html {
     font-size: 150%;
   }

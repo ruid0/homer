@@ -35,8 +35,8 @@ const linkClass = (layout: string) => ({ isActive }: { isActive: boolean }) =>
     isActive ? "bg-primary text-on-primary" : "hover:bg-hover"
   }`;
 
-// The rail is w-32, which fits "Groceries" at text-title; a longer label needs a wider rail.
-const railLink =linkClass("gap-2 rounded-2xl py-4 text-title");
+// The rail is w-32, which fits "Groceries" at text-base; a longer label needs a wider rail.
+const railLink = linkClass("gap-1.5 rounded-2xl py-3 text-base");
 const barLink = linkClass("min-h-14 gap-0.5 rounded-xl text-meta");
 
 export const RailNav = ({ header }: { header: React.ReactNode }) => (
@@ -47,7 +47,7 @@ export const RailNav = ({ header }: { header: React.ReactNode }) => (
     <div className="flex justify-center pb-6 pt-2">{header}</div>
     {navItems.map((item) => (
       <NavLink key={item.to} to={item.to} className={railLink}>
-        <NavIcon path={item.icon} className="size-8" />
+        <NavIcon path={item.icon} className="size-7" />
         {item.label}
       </NavLink>
     ))}
