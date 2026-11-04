@@ -104,3 +104,13 @@ export const assistantActions = sqliteTable("assistant_actions", {
   createdAt: text("created_at").notNull().$defaultFn(now),
   undoneAt: text("undone_at"),
 });
+
+// The chat people see. Clearing sets clearedAt, so rows are never deleted.
+export const assistantMessages = sqliteTable("assistant_messages", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  role: text("role", { enum: ["user", "assistant"] }).notNull(),
+  text: text("text").notNull(),
+  actionIds: text("action_ids", { mode: "json" }).$type<number[]>().notNull(),
+  createdAt: text("created_at").notNull().$defaultFn(now),
+  clearedAt: text("cleared_at"),
+});
