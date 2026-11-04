@@ -135,6 +135,7 @@ export const copy = {
     empty: "No items yet. Add something you don't want to run out of.",
     confirmRemove: (name: string) => `Remove ${name}? Its restock history is kept.`,
     onGroceryList: "On the grocery list",
+    outLabel: (name: string) => `Out of it: ${name}`,
     edit: "Edit",
     editLabel: editItem,
     estimateSource: { entered: "Entered by hand", learned: "Learned from restocks" },

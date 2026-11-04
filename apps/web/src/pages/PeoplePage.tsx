@@ -1,4 +1,6 @@
 import { useState, type SubmitEvent } from "react";
+import { ListCard } from "../components/ListCard";
+import { ListRow } from "../components/ListRow";
 import { RenamePersonDialog } from "../components/RenamePersonDialog";
 import { inputClass, primaryButton, secondaryButton } from "../components/ui";
 import { copy } from "../copy";
@@ -64,24 +66,27 @@ export const PeoplePage = () => {
       )}
       {people.data?.length === 0 && <p>{copy.people.empty}</p>}
 
-      <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        {(people.data ?? []).map((person) => (
-          <li
-            key={person.id}
-            className="flex items-center justify-between gap-3 rounded-xl border border-line bg-card p-4"
-          >
-            <h2 className="text-title font-semibold">{person.name}</h2>
-            <button
-              type="button"
-              className={secondaryButton}
-              onClick={() => setRenaming(person)}
-              aria-label={copy.people.renameLabel(person.name)}
-            >
-              {copy.people.rename}
-            </button>
-          </li>
-        ))}
-      </ul>
+      {people.data && people.data.length > 0 && (
+        <ListCard>
+          {people.data.map((person) => (
+            <ListRow
+              key={person.id}
+              title={person.name}
+              details={[]}
+              actions={
+                <button
+                  type="button"
+                  className={secondaryButton}
+                  onClick={() => setRenaming(person)}
+                  aria-label={copy.people.renameLabel(person.name)}
+                >
+                  {copy.people.rename}
+                </button>
+              }
+            />
+          ))}
+        </ListCard>
+      )}
 
       {renaming && (
         <RenamePersonDialog

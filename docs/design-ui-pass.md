@@ -68,7 +68,11 @@ Groceries becomes a tick-off checklist with large rows, and People a plain list.
 
 One compact row for Today/Week and Person, with Add event and Add task grouped together.
 
-## 6. Risks
+## 6. What replaced PRs 2 to 4
+
+The timeline rethink (`docs/design-slice-4-dashboard.md`) superseded the planned navigation, lists and Schedule controls PRs. What shipped instead: a left rail and a bottom bar, a 1920px breakpoint, the Home page, and compact rows in one card on Schedule, Groceries, Items and People (shared `ListRow` and `ListCard`). In those rows every button is secondary or quiet, and the page-level Add button is the one primary action. This replaces the earlier "Bought it is the primary action" idea, because a list of rows with a black button each is too heavy. Names are plain text rather than headings, so heading navigation is not offered on those pages.
+
+## 7. Risks
 
 - **The zero.** A slashed zero reads as technical in times like "09:00". If it bothers the household, a different face is a one-line change in `index.css`.
 - **Scaling at 1024px and wider** also applies to a laptop browser. That seems fine, and it is one line to change.

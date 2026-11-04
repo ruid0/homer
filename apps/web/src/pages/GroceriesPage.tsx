@@ -1,5 +1,6 @@
 import { useState, type SubmitEvent } from "react";
 import { GroceryRow } from "../components/GroceryRow";
+import { ListCard } from "../components/ListCard";
 import { RestockDialog } from "../components/RestockDialog";
 import { inputClass, primaryButton } from "../components/ui";
 import { trpc, type ListEntry } from "../trpc";
@@ -70,19 +71,17 @@ export const GroceriesPage = () => {
       {entries.data?.length === 0 && <p>{copy.groceries.empty}</p>}
 
       {entries.data && entries.data.length > 0 && (
-        <section className="rounded-2xl border border-line bg-card px-5 pb-2">
-          <ul className="[&>li:first-child]:border-t-0">
-            {entries.data.map((entry) => (
-              <GroceryRow
-                key={entry.id}
-                entry={entry}
-                busy={busy}
-                onBought={() => buy(entry)}
-                onRemove={() => remove.mutate({ id: entry.id })}
-              />
-            ))}
-          </ul>
-        </section>
+        <ListCard>
+          {entries.data.map((entry) => (
+            <GroceryRow
+              key={entry.id}
+              entry={entry}
+              busy={busy}
+              onBought={() => buy(entry)}
+              onRemove={() => remove.mutate({ id: entry.id })}
+            />
+          ))}
+        </ListCard>
       )}
 
       {buying && (
