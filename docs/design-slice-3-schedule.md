@@ -11,7 +11,7 @@ Status: built (PRs 0 to 6) · Owner: Igor Bondarenko · Date: 2026-11-03 · Sour
 **In scope**
 - **People:** a setup page lists the household's people by name. A person is a name to assign to, not a login.
 - **Tasks:** title, optional due date and time, optional repeat (daily, weekly, monthly), optional person, done or not. Add, edit, reschedule, complete and remove.
-- **Events:** title, date, optional time. Something that happens rather than something to do. Add, edit and remove. Events do not repeat in v1.
+- **Events:** title, date, optional time, optional person (one). Something that happens rather than something to do. Add, edit and remove. Events do not repeat in v1.
 - **Repeat:** completing a repeating task creates the next one from its due date, not from when it was completed.
 - **Today view:** overdue tasks first, then today's tasks and events. Can be filtered to one person.
 - **Week view:** tasks and events for the next 7 days, grouped by day.
@@ -86,10 +86,11 @@ A task is **open** when `done_at` and `removed_at` are both null.
 | title | text not null | |
 | date | text not null | `YYYY-MM-DD` |
 | time | text null | `HH:MM` |
+| person_id | integer fk → people.id, null | one optional person (added after PR 6, migration `0005`) |
 | created_at | text | |
 | removed_at | text null | set by Remove |
 
-This changes PRD §6: `people` gets `created_at` (and an unused `archived_at`), `tasks` gets `created_at` and `removed_at`, and `events` gets `created_at` and `removed_at`. The PRD is updated by the PR that adds each table.
+This changes PRD §6: `people` gets `created_at` (and an unused `archived_at`), `tasks` gets `created_at` and `removed_at`, and `events` gets `created_at`, `removed_at` and `person_id`. The PRD is updated by the PR that adds each table.
 
 ## 4. Shared package (`packages/shared/src`)
 
@@ -114,7 +115,7 @@ No Node or DOM types.
 - `routers/tasks.ts`: `add`, `update` (also reschedules), `complete`, `remove`, with `list` for the task list itself.
   - `complete({ id, today })` runs in one transaction. It marks the task done and, for a repeating task, inserts the next one from `nextDueDate`. Completing a task that is already done fails with "That task is already done. Refresh the list.", so two tablets cannot create two next tasks.
 - `routers/events.ts`: `add`, `update`, `remove`.
-- `routers/schedule.ts`: `view({ today, days, personId? })` returns the overdue open tasks, then each day from `today` for `days` days with its tasks and events in `compareSchedule` order. Today is `days: 1` and Week is `days: 7`. Events are not filtered by person, because they have none.
+- `routers/schedule.ts`: `view({ today, days, personId? })` returns the overdue open tasks, then each day from `today` for `days` days with its tasks and events in `compareSchedule` order. Today is `days: 1` and Week is `days: 7`. With a `personId`, both tasks and events are filtered to that person, so events nobody is assigned to are left out. Events carry `personName` like tasks do. When the filter leaves nothing, the page says so and offers "Show everyone".
 - Error text goes in `apps/api/src/messages.ts`.
 
 ## 6. Web (`apps/web/src`)

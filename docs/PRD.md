@@ -53,7 +53,7 @@ The household tracks consumables they care about running out of.
 
 - **Task**: title, optional due date, optional time, optional repeat (daily, weekly, monthly), optional person it's for, done or not.
 - **People**: a setup page lists the household's people by name. Tasks can be assigned to one of them. No accounts or logins: a person is a name to assign to, not a user.
-- **Event**: title, date, optional time. Something that happens rather than something to do (e.g. "Dentist").
+- **Event**: title, date, optional time, optional person. Something that happens rather than something to do (e.g. "Dentist").
 - **Today** view: overdue tasks first, then tasks and events for today.
 - **Week** view: tasks and events for the next 7 days.
 - Completing a repeating task creates the next one from its due date, not from when it was completed.
@@ -112,7 +112,7 @@ A chat screen backed by a local model (Ollama, `qwen3.5:9b`) that can read and c
 - `people`: id, name, created_at (and an unused archived_at: people are not removed)
 - `grocery_entries`: id, item_id (nullable), text, quantity, added_by (auto/manual), created_at, bought_at, removed_at (never delete rows)
 - `tasks`: id, title, due_date, due_time, repeat, person_id (nullable), created_at, done_at, removed_at
-- `events`: id, title, date, time, created_at, removed_at
+- `events`: id, title, date, time, person_id (optional), created_at, removed_at
 - `assistant_actions`: id, tool, args, result, created_at, undone_at (for Undo and debugging)
 
 Schemas live in `packages/shared/src/schemas.ts`; pure calculations (`daysRemaining`, `nextDueDate`) in `domain.ts` with property-based tests.

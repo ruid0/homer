@@ -46,6 +46,9 @@ export const SchedulePage = () => {
   }));
   const empty = overdue.length === 0 && anytime.length === 0 && dayList.every((day) => day.items.length === 0);
   const actionError = editing ? undefined : complete.error?.message;
+  const loaded = view.data !== undefined && !view.isPlaceholderData;
+  const nothingForPerson = loaded && empty && personId !== undefined;
+  const filteredName = (people.data ?? []).find((person) => person.id === personId)?.name ?? copy.schedule.thisPerson;
 
   const taskCard = (task: ScheduleTask) => (
     <TaskCard
@@ -93,12 +96,20 @@ export const SchedulePage = () => {
       {view.isPending && <p role="status">{copy.schedule.loading}</p>}
       {view.error && <p role="alert">{copy.schedule.loadFailed}</p>}
       {actionError && <p role="alert" className="mb-4 text-red-700 dark:text-red-400">{actionError}</p>}
-      {view.data && empty && mode === "today" && <p>{copy.schedule.empty}</p>}
+      {loaded && empty && mode === "today" && personId === undefined && <p>{copy.schedule.empty}</p>}
+      {nothingForPerson && (
+        <div className="mb-6 grid justify-items-start gap-3">
+          <p>{copy.schedule.nothingForPerson(filteredName)}</p>
+          <button type="button" className={secondaryButton} onClick={() => setFilter("")}>
+            {copy.schedule.showEveryone}
+          </button>
+        </div>
+      )}
 
       <Section heading={copy.schedule.overdue} count={overdue.length}>
         {overdue.map(taskCard)}
       </Section>
-      {dayList.map(({ date, items }) => (
+      {!nothingForPerson && dayList.map(({ date, items }) => (
         <Section
           key={date}
           heading={mode === "today" ? copy.schedule.today : dayHeading(date, today)}
@@ -136,6 +147,8 @@ export const SchedulePage = () => {
         <EventEditor
           key={editing.event?.id ?? 0}
           event={editing.event}
+          people={people.data ?? []}
+          defaultPersonId={personId ?? null}
           defaultDate={today}
           onSaved={saved}
           onClose={() => setEditing(null)}

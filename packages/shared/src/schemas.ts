@@ -145,6 +145,7 @@ export const eventInputSchema = z.object({
   title: text,
   date: dateSchema,
   time: timeSchema.nullable().default(null),
+  personId: personIdSchema.nullable().default(null),
 });
 
 export const updateEventInputSchema = eventInputSchema.extend(idInputSchema.shape);
@@ -154,6 +155,7 @@ export const eventSchema = z.object({
   title: text,
   date: dateSchema,
   time: timeSchema.nullable(),
+  personId: personIdSchema.nullable(),
   createdAt: z.string(),
   removedAt: z.string().nullable(),
 });

@@ -101,7 +101,7 @@ describe("updateEventInputSchema", () => {
   it("needs the id and applies the same rules", () => {
     const event = { title: "Dentist", date: "2026-11-10" };
     expect(updateEventInputSchema.safeParse(event).success).toBe(false);
-    expect(updateEventInputSchema.parse({ id: 4, ...event })).toEqual({ id: 4, ...event, time: null });
+    expect(updateEventInputSchema.parse({ id: 4, ...event })).toEqual({ id: 4, ...event, time: null, personId: null });
     expect(updateEventInputSchema.safeParse({ id: 4, ...event, date: "2026-02-30" }).success).toBe(false);
   });
 });
@@ -112,9 +112,17 @@ describe("eventInputSchema", () => {
       title: "Dentist",
       date: "2026-11-10",
       time: null,
+      personId: null,
     });
     expect(eventInputSchema.safeParse({ title: "Dentist" }).success).toBe(false);
     expect(eventInputSchema.parse({ title: "Dentist", date: "2026-11-10", time: "14:30" }).time).toBe("14:30");
+  });
+
+  it("takes one optional person", () => {
+    const event = { title: "Dentist", date: "2026-11-10" };
+    expect(eventInputSchema.parse({ ...event, personId: 3 }).personId).toBe(3);
+    expect(eventInputSchema.parse({ ...event, personId: null }).personId).toBeNull();
+    expect(eventInputSchema.safeParse({ ...event, personId: 1.5 }).success).toBe(false);
   });
 });
 

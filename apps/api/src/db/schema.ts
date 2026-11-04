@@ -89,6 +89,7 @@ export const events = sqliteTable("events", {
   title: text("title").notNull(),
   date: text("date").notNull(),
   time: text("time"),
+  personId: integer("person_id").references(() => people.id),
   createdAt: text("created_at").notNull().$defaultFn(now),
   removedAt: text("removed_at"),
 });

@@ -6,6 +6,7 @@ import { publicProcedure, router } from "../trpc";
 
 type TaskRow = typeof tasks.$inferSelect;
 type EventRow = typeof events.$inferSelect;
+type EventView = EventRow & { personName: string | null };
 type TaskView = TaskRow & { personName: string | null; daysOverdue: number };
 
 const byWhen = (today: string) => (a: TaskRow, b: TaskRow) => {
@@ -19,7 +20,7 @@ const byWhen = (today: string) => (a: TaskRow, b: TaskRow) => {
 
 const entryOf = (event: { date: string; time: string | null }) => ({ ...event, overdue: false });
 
-const eventOrder = (a: EventRow, b: EventRow) =>
+const eventOrder = (a: EventView, b: EventView) =>
   compareSchedule(entryOf(a), entryOf(b)) || a.title.localeCompare(b.title) || a.id - b.id;
 
 const toView = (today: string) => ({ task, personName }: { task: TaskRow; personName: string | null }): TaskView => ({
@@ -46,11 +47,18 @@ export const scheduleRouter = router({
       .sort((a, b) => compare(a.task, b.task))
       .map(toView(today));
     const dates = Array.from({ length: days }, (_, index) => addDays(today, index));
-    const shownEvents = ctx.db
-      .select()
+    const inRange = and(
+      isShown,
+      inArray(events.date, dates),
+      personId === undefined ? undefined : eq(events.personId, personId),
+    );
+    const shownEvents: EventView[] = ctx.db
+      .select({ event: events, personName: people.name })
       .from(events)
-      .where(and(isShown, inArray(events.date, dates)))
+      .leftJoin(people, eq(events.personId, people.id))
+      .where(inRange)
       .all()
+      .map(({ event, personName }) => ({ ...event, personName }))
       .sort(eventOrder);
     return {
       overdue: views.filter((task) => task.daysOverdue > 0),
