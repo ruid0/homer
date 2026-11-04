@@ -1,8 +1,7 @@
 import { keepPreviousData } from "@tanstack/react-query";
 import { useState } from "react";
-import { EventCard } from "../components/EventCard";
 import { EventEditor } from "../components/EventEditor";
-import { TaskCard } from "../components/TaskCard";
+import { EventRow, TaskRow } from "../components/ScheduleRows";
 import { TaskEditor } from "../components/TaskEditor";
 import { inputClass, primaryButton, secondaryButton, toggleButton } from "../components/ui";
 import { dayHeading } from "../lib/dayHeading";
@@ -50,8 +49,8 @@ export const SchedulePage = () => {
   const nothingForPerson = loaded && empty && personId !== undefined;
   const filteredName = (people.data ?? []).find((person) => person.id === personId)?.name ?? copy.schedule.thisPerson;
 
-  const taskCard = (task: ScheduleTask) => (
-    <TaskCard
+  const taskRow = (task: ScheduleTask) => (
+    <TaskRow
       key={`task-${task.id}`}
       task={task}
       busy={complete.isPending}
@@ -64,18 +63,17 @@ export const SchedulePage = () => {
     <>
       <h1 className="mb-4 text-page font-semibold">{copy.schedule.title}</h1>
 
-      <div role="group" aria-label={copy.schedule.viewLabel} className="mb-4 flex gap-3">
-        <button type="button" className={toggleButton(mode === "today")} aria-pressed={mode === "today"} onClick={() => setMode("today")}>
-          {copy.schedule.todayView}
-        </button>
-        <button type="button" className={toggleButton(mode === "week")} aria-pressed={mode === "week"} onClick={() => setMode("week")}>
-          {copy.schedule.weekView}
-        </button>
-      </div>
-
       <div className="mb-4 flex flex-wrap items-end gap-3">
+        <div role="group" aria-label={copy.schedule.viewLabel} className="flex gap-3">
+          <button type="button" className={toggleButton(mode === "today")} aria-pressed={mode === "today"} onClick={() => setMode("today")}>
+            {copy.schedule.todayView}
+          </button>
+          <button type="button" className={toggleButton(mode === "week")} aria-pressed={mode === "week"} onClick={() => setMode("week")}>
+            {copy.schedule.weekView}
+          </button>
+        </div>
         <label className="grid gap-1">
-          <span>{copy.schedule.person}</span>
+          <span className="text-meta text-muted">{copy.schedule.person}</span>
           <select className={inputClass} value={filter} onChange={(event) => setFilter(event.target.value)}>
             <option value="">{copy.schedule.everyone}</option>
             {(people.data ?? []).map((person) => (
@@ -106,32 +104,35 @@ export const SchedulePage = () => {
         </div>
       )}
 
-      <Section heading={copy.schedule.overdue} count={overdue.length}>
-        {overdue.map(taskCard)}
-      </Section>
-      {!nothingForPerson && dayList.map(({ date, items }) => (
-        <Section
-          key={date}
-          heading={mode === "today" ? copy.schedule.today : dayHeading(date, today)}
-          count={items.length}
-          emptyText={mode === "week" ? copy.schedule.nothingThisDay : undefined}
-        >
-          {items.map((item) =>
-            item.kind === "task" ? (
-              taskCard(item.value)
-            ) : (
-              <EventCard
-                key={`event-${item.value.id}`}
-                event={item.value}
-                onEdit={() => setEditing({ kind: "event", event: item.value })}
-              />
-            ),
-          )}
+      <div className="grid items-start gap-4 lg:grid-cols-2">
+        <Section heading={copy.schedule.overdue} count={overdue.length} wide>
+          {overdue.map(taskRow)}
         </Section>
-      ))}
-      <Section heading={copy.schedule.anytime} count={anytime.length}>
-        {anytime.map(taskCard)}
-      </Section>
+        {!nothingForPerson && dayList.map(({ date, items }) => (
+          <Section
+            key={date}
+            heading={mode === "today" ? copy.schedule.today : dayHeading(date, today)}
+            count={items.length}
+            wide={mode === "today"}
+            emptyText={mode === "week" ? copy.schedule.nothingThisDay : undefined}
+          >
+            {items.map((item) =>
+              item.kind === "task" ? (
+                taskRow(item.value)
+              ) : (
+                <EventRow
+                  key={`event-${item.value.id}`}
+                  event={item.value}
+                  onEdit={() => setEditing({ kind: "event", event: item.value })}
+                />
+              ),
+            )}
+          </Section>
+        ))}
+        <Section heading={copy.schedule.anytime} count={anytime.length} wide>
+          {anytime.map(taskRow)}
+        </Section>
+      </div>
 
       {editing?.kind === "task" && (
         <TaskEditor
@@ -158,16 +159,12 @@ export const SchedulePage = () => {
   );
 };
 
-type SectionProps = { heading: string; count: number; emptyText?: string; children: React.ReactNode };
+type SectionProps = { heading: string; count: number; emptyText?: string; wide?: boolean; children: React.ReactNode };
 
-const Section = ({ heading, count, emptyText, children }: SectionProps) =>
+const Section = ({ heading, count, emptyText, wide = false, children }: SectionProps) =>
   count === 0 && emptyText === undefined ? null : (
-    <section className="mb-6">
-      <h2 className="mb-3 text-section font-semibold">{heading}</h2>
-      {count === 0 ? (
-        <p className="text-muted">{emptyText}</p>
-      ) : (
-        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{children}</ul>
-      )}
+    <section className={`rounded-2xl border border-line bg-card px-5 pb-2 pt-4${wide ? " lg:col-span-2" : ""}`}>
+      <h2 className="pb-2 text-section font-semibold">{heading}</h2>
+      {count === 0 ? <p className="border-t border-line py-4 text-muted">{emptyText}</p> : <ul>{children}</ul>}
     </section>
   );
