@@ -46,7 +46,7 @@ export const GroceriesPage = () => {
 
   return (
     <>
-      <h1 className="mb-4 text-2xl font-semibold">{copy.groceries.title}</h1>
+      <h1 className="mb-4 text-page font-semibold">{copy.groceries.title}</h1>
 
       <form onSubmit={submit} className="mb-4 flex items-end gap-3">
         <label className="grid flex-1 gap-1">
@@ -66,7 +66,7 @@ export const GroceriesPage = () => {
 
       {entries.isPending && <p>{copy.groceries.loading}</p>}
       {entries.error && <p role="alert">{copy.groceries.loadFailed}</p>}
-      {actionError && <p role="alert" className="mb-4 text-red-700 dark:text-red-400">{actionError}</p>}
+      {actionError && <p role="alert" className="mb-4 text-late">{actionError}</p>}
       {entries.data?.length === 0 && <p>{copy.groceries.empty}</p>}
 
       <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

@@ -66,7 +66,7 @@ export const TaskDialog = ({ task, people, defaultPersonId, pending, serverError
           </select>
         </Field>
         <PersonField label={copy.taskForm.person} people={people} value={personId} onChange={setPersonId} />
-        {(error ?? serverError) && <p role="alert" className="text-red-700 dark:text-red-400">{error ?? serverError}</p>}
+        {(error ?? serverError) && <p role="alert" className="text-late">{error ?? serverError}</p>}
         <div className="flex flex-wrap justify-end gap-3">
           {onRemove && (
             <button type="button" className={`${secondaryButton} mr-auto`} onClick={onRemove}>{copy.taskForm.removeTask}</button>

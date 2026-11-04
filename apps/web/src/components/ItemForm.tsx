@@ -62,7 +62,7 @@ export const ItemForm = ({ item, pending, serverError, onSave, onRemove, onClose
         <Field label={copy.itemForm.lowThresholdDays}>
           <NumberInput value={threshold} onChange={setThreshold} />
         </Field>
-        {(error ?? serverError) && <p role="alert" className="text-red-700 dark:text-red-400">{error ?? serverError}</p>}
+        {(error ?? serverError) && <p role="alert" className="text-late">{error ?? serverError}</p>}
         <div className="flex flex-wrap justify-end gap-3">
           {onRemove && (
             <button type="button" className={`${secondaryButton} mr-auto`} onClick={onRemove}>{copy.itemForm.removeItem}</button>

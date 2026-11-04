@@ -1,13 +1,77 @@
 @import "tailwindcss";
+@import "@fontsource-variable/atkinson-hyperlegible-next";
 
-@custom-variant dark (@media (prefers-color-scheme: dark));
+/* Colours switch with the system theme, so components never repeat dark: pairs. */
+:root {
+  --surface: var(--color-stone-50);
+  --card: #fff;
+  --ink: var(--color-stone-900);
+  --on-ink: #fff;
+  --muted: var(--color-stone-600);
+  --line: var(--color-stone-200);
+  --line-strong: var(--color-stone-300);
+  --hover: var(--color-stone-100);
+  --warn: var(--color-amber-700);
+  --late: var(--color-red-700);
+  --scrim: rgb(0 0 0 / 0.5);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --surface: var(--color-stone-950);
+    --card: var(--color-stone-900);
+    --ink: var(--color-stone-50);
+    --on-ink: var(--color-stone-900);
+    --muted: var(--color-stone-400);
+    --line: var(--color-stone-800);
+    --line-strong: var(--color-stone-700);
+    --hover: var(--color-stone-800);
+    --warn: var(--color-amber-400);
+    --late: var(--color-red-400);
+  }
+}
+
+@theme inline {
+  --color-surface: var(--surface);
+  --color-card: var(--card);
+  --color-ink: var(--ink);
+  --color-on-ink: var(--on-ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-hover: var(--hover);
+  --color-warn: var(--warn);
+  --color-late: var(--late);
+  --color-scrim: var(--scrim);
+
+  --font-sans: "Atkinson Hyperlegible Next Variable", ui-sans-serif, system-ui, sans-serif;
+
+  /* The type scale, by role: a page title, a section, a card title, the one-line answer, small print. */
+  --text-page: 1.75rem;
+  --text-page--line-height: 2.25rem;
+  --text-section: 1.25rem;
+  --text-section--line-height: 1.75rem;
+  --text-title: 1.125rem;
+  --text-title--line-height: 1.5rem;
+  --text-answer: 1.25rem;
+  --text-answer--line-height: 1.75rem;
+  --text-meta: 0.875rem;
+  --text-meta--line-height: 1.25rem;
+}
 
 html {
   color-scheme: light dark;
 }
 
+/* Everything is in rem, so type and touch targets grow together on a tablet. */
+@media (min-width: 64rem) {
+  html {
+    font-size: 112.5%;
+  }
+}
+
 body {
-  @apply bg-stone-50 text-stone-900 dark:bg-stone-950 dark:text-stone-100;
+  @apply bg-surface font-sans text-ink;
 }
 
 @media (prefers-reduced-motion: reduce) {
