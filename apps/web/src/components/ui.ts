@@ -1,7 +1,7 @@
 const base =
   "min-h-11 rounded-lg px-4 text-base font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:opacity-50";
 
-export const primaryButton = `${base} bg-ink text-on-ink hover:opacity-85`;
+export const primaryButton = `${base} bg-primary text-on-primary hover:opacity-85`;
 
 export const secondaryButton = `${base} border border-line-strong hover:bg-hover`;
 

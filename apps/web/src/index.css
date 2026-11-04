@@ -6,7 +6,8 @@
   --surface: var(--color-stone-50);
   --card: #fff;
   --ink: var(--color-stone-900);
-  --on-ink: #fff;
+  --primary: var(--color-stone-900);
+  --on-primary: #fff;
   --muted: var(--color-stone-600);
   --line: var(--color-stone-200);
   --line-strong: var(--color-stone-300);
@@ -18,16 +19,18 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --surface: var(--color-stone-950);
-    --card: var(--color-stone-900);
-    --ink: var(--color-stone-50);
-    --on-ink: var(--color-stone-900);
-    --muted: var(--color-stone-400);
-    --line: var(--color-stone-800);
-    --line-strong: var(--color-stone-700);
-    --hover: var(--color-stone-800);
-    --warn: var(--color-amber-400);
-    --late: var(--color-red-400);
+    /* Charcoal: a soft warm grey, with off-white text and a calmer primary button than pure white. */
+    --surface: #1f1d1b;
+    --card: #2a2725;
+    --ink: #e9e5e0;
+    --primary: #d8d2ca;
+    --on-primary: #1f1d1b;
+    --muted: #aaa59d;
+    --line: #3a3633;
+    --line-strong: #4f4a45;
+    --hover: #332f2c;
+    --warn: #e6b04f;
+    --late: #ef8c80;
   }
 }
 
@@ -35,7 +38,8 @@
   --color-surface: var(--surface);
   --color-card: var(--card);
   --color-ink: var(--ink);
-  --color-on-ink: var(--on-ink);
+  --color-primary: var(--primary);
+  --color-on-primary: var(--on-primary);
   --color-muted: var(--muted);
   --color-line: var(--line);
   --color-line-strong: var(--line-strong);

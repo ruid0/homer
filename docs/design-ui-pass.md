@@ -20,19 +20,22 @@ Status: in progress (PR 1 built) · Owner: Igor Bondarenko · Date: 2026-11-03 �
 
 ## 2. PR 1: Foundation (built)
 
-- **Colour tokens** in `apps/web/src/index.css`. Semantic names switch with the system theme, so components never repeat `dark:` pairs. The values are the same stone, amber and red as before: no new hues.
+- **Colour tokens** in `apps/web/src/index.css`. Semantic names switch with the system theme, so components never repeat `dark:` pairs. Light uses the Tailwind stone, amber and red palette. Dark is **Charcoal**, chosen by the owner (2026-11-03) from three options because the first dark palette was too black, too white and cold: a soft warm grey, off-white text, and a calmer sand-grey primary button.
 
-  | token | light | dark | used for |
+  | token | light | dark (Charcoal) | used for |
   |---|---|---|---|
-  | `surface` | stone-50 | stone-950 | the page |
-  | `card` | white | stone-900 | cards, inputs, dialogs |
-  | `ink` / `on-ink` | stone-900 / white | stone-50 / stone-900 | text and the primary button |
-  | `muted` | stone-600 | stone-400 | secondary text |
-  | `line` / `line-strong` | stone-200 / 300 | stone-800 / 700 | card edges / inputs |
-  | `hover` | stone-100 | stone-800 | hover fill |
-  | `warn` | amber-700 | amber-400 | running low |
-  | `late` | red-700 | red-400 | overdue and errors |
+  | `surface` | stone-50 | `#1f1d1b` | the page |
+  | `card` | white | `#2a2725` | cards, inputs, dialogs |
+  | `ink` | stone-900 | `#e9e5e0` | text |
+  | `primary` / `on-primary` | stone-900 / white | `#d8d2ca` / `#1f1d1b` | the primary button and the active nav link |
+  | `muted` | stone-600 | `#aaa59d` | secondary text |
+  | `line` / `line-strong` | stone-200 / 300 | `#3a3633` / `#4f4a45` | card edges / inputs |
+  | `hover` | stone-100 | `#332f2c` | hover fill |
+  | `warn` | amber-700 | `#e6b04f` | running low |
+  | `late` | red-700 | `#ef8c80` | overdue and errors |
   | `scrim` | black 50% | black 50% | behind dialogs |
+
+  Contrast on the dark card: text 11.8, secondary text 6.1, running low 7.6, overdue 6.2, and the button label on the button 11.2 (4.5 is the minimum for text). Input edges are subtle in both themes, as before.
 
 - **A guard test** (`rawColors.test.ts`) fails if a component uses a raw palette colour, such as `text-stone-600` or `bg-white`, instead of a token, so the system cannot drift back.
 - **Type scale by role:** `page` (1.75rem), `section` (1.25rem), `title` (1.125rem), `answer` (1.25rem, the "Runs out in 6 days" line), and `text-meta` (0.875rem) for small print.

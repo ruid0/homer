@@ -8,7 +8,7 @@ import { copy } from "./copy";
 
 const linkClass = ({ isActive }: { isActive: boolean }) =>
   `inline-flex min-h-11 items-center rounded-lg px-4 text-base font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${
-    isActive ? "bg-ink text-on-ink" : "hover:bg-hover"
+    isActive ? "bg-primary text-on-primary" : "hover:bg-hover"
   }`;
 
 export const App = () => (
