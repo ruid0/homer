@@ -1,4 +1,5 @@
 import { createCallerFactory, router } from "../trpc";
+import { assistantRouter } from "./assistant";
 import { eventsRouter } from "./events";
 import { groceriesRouter } from "./groceries";
 import { inventoryRouter } from "./inventory";
@@ -13,6 +14,7 @@ export const appRouter = router({
   tasks: tasksRouter,
   events: eventsRouter,
   schedule: scheduleRouter,
+  assistant: assistantRouter,
 });
 
 export type AppRouter = typeof appRouter;
