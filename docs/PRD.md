@@ -65,7 +65,7 @@ The household tracks consumables they care about running out of.
 
 ### 4.3 Dashboard
 
-One screen readable in about 3 seconds on a kitchen tablet: what's running out, what's overdue, what's today. Follows `.claude/skills/homer-ui`.
+One screen readable in about 3 seconds on a kitchen tablet, a bigger touchscreen or a phone: what's running out, what's overdue, what's today. Built as the Home page with a timeline (see `docs/design-slice-4-dashboard.md`). Follows `.claude/skills/homer-ui`.
 
 ### 4.4 Assistant
 
@@ -130,7 +130,7 @@ Each slice goes through DEFINE → SHIP (see CLAUDE.md). A slice is shipped as s
 1. **Items and days remaining** (built, see `docs/design-slice-1-items.md`): schema, `daysRemaining` with property tests, Items screen with forms. Restocks recorded from the start.
 2. **Grocery list**: auto-add when low, manual add, Bought it / Out of it.
 3. **People, tasks and events**: People setup page; create, assign, complete, repeat via `nextDueDate`; Today and Week views.
-4. **Dashboard**.
+4. **Home** (built, see `docs/design-slice-4-dashboard.md`): the app shell (left rail, bottom bar, a breakpoint for big touchscreens), and a Home page with a scrolling "Your day" timeline (overdue, a Now marker, today) and Running out, with Done and Bought it.
 5. **Assistant**: tool loop, MVP tools, Undo, eval harness with the first golden set.
 6. **PWA and Docker Compose** packaging (web and api; Ollama stays native).
 7. **Learned usage**: estimate from restock history, shown as entered or learned.

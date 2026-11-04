@@ -19,10 +19,30 @@ export const copy = {
 
   nav: {
     label: "Main",
+    home: "Home",
     items: "Items",
     groceries: "Groceries",
     schedule: "Schedule",
     people: "People",
+  },
+
+  home: {
+    yourDay: "Your day",
+    runningOut: "Running out",
+    now: (time: string) => `Now · ${time}`,
+    anyTime: "Any time",
+    separator: " · ",
+    nothingPlanned: "Nothing planned today.",
+    nothingRunningOut: "Nothing running out.",
+    loading: "Loading.",
+    timelineFailed: "Couldn't load your day. Check that the api is running, then refresh.",
+    runningOutFailed: "Couldn't load what is running out. Check that the api is running, then refresh.",
+    doneLabel: (title: string) => `Mark ${title} done`,
+    boughtLabel: (name: string) => `Bought ${name}`,
+    taskDone: (title: string) => `${title} done.`,
+    taskDoneNext: (title: string, when: string) => `${title} done. Next one: ${when}.`,
+    restocked: (name: string, quantity: number) => `${name} restocked: ${quantity}.`,
+    dismiss: "Dismiss",
   },
 
   schedule: {

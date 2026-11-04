@@ -2,6 +2,7 @@ import { NavLink } from "react-router-dom";
 import { copy } from "../copy";
 
 const iconPaths = {
+  home: "M3 11 12 3l9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z",
   items: "M21 8 12 3 3 8v8l9 5 9-5zM3 8l9 5 9-5M12 13v8",
   groceries: "M3 4h2l2.4 11h10.2l2-8H6.2M9 19.5a.5.5 0 1 0 0 1 .5.5 0 0 0 0-1M17 19.5a.5.5 0 1 0 0 1 .5.5 0 0 0 0-1",
   schedule: "M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zM4 10h16M8 3v4M16 3v4",
@@ -9,6 +10,7 @@ const iconPaths = {
 };
 
 const navItems = [
+  { to: "/", label: copy.nav.home, icon: iconPaths.home, end: true },
   { to: "/items", label: copy.nav.items, icon: iconPaths.items },
   { to: "/groceries", label: copy.nav.groceries, icon: iconPaths.groceries },
   { to: "/schedule", label: copy.nav.schedule, icon: iconPaths.schedule },
@@ -46,7 +48,7 @@ export const RailNav = ({ header }: { header: React.ReactNode }) => (
   >
     <div className="flex justify-center pb-6 pt-2">{header}</div>
     {navItems.map((item) => (
-      <NavLink key={item.to} to={item.to} className={railLink}>
+      <NavLink key={item.to} to={item.to} end={item.end} className={railLink}>
         <NavIcon path={item.icon} className="size-7" />
         {item.label}
       </NavLink>
@@ -57,10 +59,10 @@ export const RailNav = ({ header }: { header: React.ReactNode }) => (
 export const BottomNav = () => (
   <nav
     aria-label={copy.nav.label}
-    className="fixed inset-x-0 bottom-0 z-10 grid grid-cols-4 gap-1 border-t border-line bg-card px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 md:hidden"
+    className="fixed inset-x-0 bottom-0 z-10 grid grid-cols-5 gap-1 border-t border-line bg-card px-2 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 md:hidden"
   >
     {navItems.map((item) => (
-      <NavLink key={item.to} to={item.to} className={barLink}>
+      <NavLink key={item.to} to={item.to} end={item.end} className={barLink}>
         <NavIcon path={item.icon} className="size-6" />
         {item.label}
       </NavLink>
