@@ -93,3 +93,14 @@ export const events = sqliteTable("events", {
   createdAt: text("created_at").notNull().$defaultFn(now),
   removedAt: text("removed_at"),
 });
+
+// One row per assistant change, with the rows it touched, so Undo can put them back.
+export const assistantActions = sqliteTable("assistant_actions", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  tool: text("tool").notNull(),
+  args: text("args", { mode: "json" }).notNull(),
+  result: text("result", { mode: "json" }),
+  changes: text("changes", { mode: "json" }).notNull(),
+  createdAt: text("created_at").notNull().$defaultFn(now),
+  undoneAt: text("undone_at"),
+});
