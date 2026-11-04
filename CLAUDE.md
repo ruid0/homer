@@ -45,7 +45,7 @@ Key design constraints:
 
 ## Claude Code setup
 
-- **Skills** (`.claude/skills/`): `coding-style` (the owner's code style), `homer-ui` (visual and interaction rules for `apps/web`), `test-driven-development` (red-green-refactor loop).
+- **Skills** (`.claude/skills/`): `coding-style` (the owner's code style), `homer-ui` (visual and interaction rules for `apps/web`), `frontend-design` (from [anthropics/skills](https://github.com/anthropics/skills/tree/main/skills/frontend-design), Apache 2.0; distinctive visual design, and where it conflicts with `homer-ui` the `homer-ui` rules win), `test-driven-development` (red-green-refactor loop).
 - **Subagent** (`.claude/agents/reviewer.md`): read-only, fresh-context review of the uncommitted diff.
 - **Hooks** (`.claude/settings.json`, `.claude/hooks/`):
   - `guard.sh` (before edits and shell commands) blocks touching `.env` files and the SQLite database directly. Change data through the app or a Drizzle migration.

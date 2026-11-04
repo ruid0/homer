@@ -7,6 +7,9 @@ description: HOMER's visual and interaction rules. Use when building or changing
 HOMER is glanced at in a kitchen, often on a tablet, by people who are busy.
 Design for a quick read, not exploration.
 
+These rules win over the `frontend-design` skill wherever the two disagree. HOMER is calm and
+glanceable, so take that skill's typography and layout craft, not its call for bold aesthetic risk.
+
 ## Principles
 - Urgency first. Things running out or overdue sit at the top, in plain words
   ("Salt runs out in 3 days" -> Check if true, confirm), not as colors or icons alone.
