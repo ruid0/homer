@@ -66,13 +66,13 @@ export const ItemsPage = () => {
   return (
     <>
       <header className="mb-4 flex items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">{copy.items.title}</h1>
+        <h1 className="text-page font-semibold">{copy.items.title}</h1>
         <button type="button" className={primaryButton} onClick={() => setEditing("new")}>{copy.items.addItem}</button>
       </header>
 
       {items.isPending && <p>{copy.items.loading}</p>}
       {items.error && <p role="alert">{copy.items.loadFailed}</p>}
-      {actionError && <p role="alert" className="mb-4 text-red-700 dark:text-red-400">{copy.items.actionFailed(actionError)}</p>}
+      {actionError && <p role="alert" className="mb-4 text-late">{copy.items.actionFailed(actionError)}</p>}
       {items.data?.length === 0 && <p>{copy.items.empty}</p>}
 
       <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

@@ -65,7 +65,7 @@ export const EventDialog = ({
           <input className={inputClass} type="time" value={time} onChange={(e) => setTime(e.target.value)} />
         </Field>
         <PersonField label={copy.eventForm.person} people={people} value={personId} onChange={setPersonId} />
-        {(error ?? serverError) && <p role="alert" className="text-red-700 dark:text-red-400">{error ?? serverError}</p>}
+        {(error ?? serverError) && <p role="alert" className="text-late">{error ?? serverError}</p>}
         <div className="flex flex-wrap justify-end gap-3">
           {onRemove && (
             <button type="button" className={`${secondaryButton} mr-auto`} onClick={onRemove}>{copy.eventForm.removeEvent}</button>

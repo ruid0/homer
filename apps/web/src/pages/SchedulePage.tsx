@@ -62,7 +62,7 @@ export const SchedulePage = () => {
 
   return (
     <>
-      <h1 className="mb-4 text-2xl font-semibold">{copy.schedule.title}</h1>
+      <h1 className="mb-4 text-page font-semibold">{copy.schedule.title}</h1>
 
       <div role="group" aria-label={copy.schedule.viewLabel} className="mb-4 flex gap-3">
         <button type="button" className={toggleButton(mode === "today")} aria-pressed={mode === "today"} onClick={() => setMode("today")}>
@@ -95,7 +95,7 @@ export const SchedulePage = () => {
 
       {view.isPending && <p role="status">{copy.schedule.loading}</p>}
       {view.error && <p role="alert">{copy.schedule.loadFailed}</p>}
-      {actionError && <p role="alert" className="mb-4 text-red-700 dark:text-red-400">{actionError}</p>}
+      {actionError && <p role="alert" className="mb-4 text-late">{actionError}</p>}
       {loaded && empty && mode === "today" && personId === undefined && <p>{copy.schedule.empty}</p>}
       {nothingForPerson && (
         <div className="mb-6 grid justify-items-start gap-3">
@@ -163,9 +163,9 @@ type SectionProps = { heading: string; count: number; emptyText?: string; childr
 const Section = ({ heading, count, emptyText, children }: SectionProps) =>
   count === 0 && emptyText === undefined ? null : (
     <section className="mb-6">
-      <h2 className="mb-3 text-xl font-semibold">{heading}</h2>
+      <h2 className="mb-3 text-section font-semibold">{heading}</h2>
       {count === 0 ? (
-        <p className="text-stone-600 dark:text-stone-400">{emptyText}</p>
+        <p className="text-muted">{emptyText}</p>
       ) : (
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{children}</ul>
       )}

@@ -31,7 +31,7 @@ export const RenamePersonDialog = ({ person, pending, serverError, onSave, onClo
           <span>{copy.people.nameLabel}</span>
           <input className={inputClass} value={name} onChange={(event) => setName(event.target.value)} autoFocus />
         </label>
-        {(error ?? serverError) && <p role="alert" className="text-red-700 dark:text-red-400">{error ?? serverError}</p>}
+        {(error ?? serverError) && <p role="alert" className="text-late">{error ?? serverError}</p>}
         <div className="flex justify-end gap-3">
           <button type="button" className={secondaryButton} onClick={onClose}>{copy.common.cancel}</button>
           <button type="submit" className={primaryButton} disabled={pending}>{copy.common.save}</button>

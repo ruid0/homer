@@ -37,7 +37,7 @@ export const PeoplePage = () => {
 
   return (
     <>
-      <h1 className="mb-4 text-2xl font-semibold">{copy.people.title}</h1>
+      <h1 className="mb-4 text-page font-semibold">{copy.people.title}</h1>
 
       <form onSubmit={submit} className="mb-4 flex items-end gap-3">
         <label className="grid flex-1 gap-1">
@@ -56,9 +56,9 @@ export const PeoplePage = () => {
       </form>
 
       {people.isPending && <p>{copy.people.loading}</p>}
-      {people.error && <p role="alert" className="text-red-700 dark:text-red-400">{copy.people.loadFailed}</p>}
+      {people.error && <p role="alert" className="text-late">{copy.people.loadFailed}</p>}
       {(blank || add.error) && (
-        <p role="alert" className="mb-4 text-red-700 dark:text-red-400">
+        <p role="alert" className="mb-4 text-late">
           {blank ? copy.people.blankName : add.error?.message}
         </p>
       )}
@@ -68,9 +68,9 @@ export const PeoplePage = () => {
         {(people.data ?? []).map((person) => (
           <li
             key={person.id}
-            className="flex items-center justify-between gap-3 rounded-xl border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900"
+            className="flex items-center justify-between gap-3 rounded-xl border border-line bg-card p-4"
           >
-            <h2 className="text-lg font-semibold">{person.name}</h2>
+            <h2 className="text-title font-semibold">{person.name}</h2>
             <button
               type="button"
               className={secondaryButton}

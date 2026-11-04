@@ -13,6 +13,10 @@ const common = {
 export const copy = {
   common,
 
+  brand: {
+    name: "HOMER",
+  },
+
   nav: {
     label: "Main",
     items: "Items",

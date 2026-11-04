@@ -22,6 +22,14 @@ glanceable, so take that skill's typography and layout craft, not its call for b
 Follow the UI naming and copy-file rules (§6, §7) in the coding-style skill. Errors say what happened and
 what to do; no apologies.
 
+## Tokens
+Colours and type sizes are named once in `apps/web/src/index.css`. Use the colour tokens
+(`surface`, `card`, `ink`, `primary`, `on-primary`, `muted`, `line`, `line-strong`, `hover`, `warn`, `late`) and the type
+roles (`text-page`, `text-section`, `text-title`, `text-answer`, `text-meta`). They switch with dark mode,
+so there are no `dark:` colour pairs. A test fails on raw palette classes such as `text-stone-600`.
+Colour means state only: `warn` for running low, `late` for overdue and errors. Design notes are in
+`docs/design-ui-pass.md`.
+
 ## Stack
 Tailwind only, no component library. Respect prefers-reduced-motion and
 dark mode. Every interactive element is keyboard reachable.

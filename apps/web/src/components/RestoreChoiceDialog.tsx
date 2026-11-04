@@ -15,7 +15,7 @@ type Props = {
 export const RestoreChoiceDialog = ({ archived, pending, serverError, onRestore, onCreateNew, onClose }: Props) => (
   <Dialog title={copy.restoreChoice.title(archived.name)} onClose={onClose}>
     <p className="mb-4">{copy.restoreChoice.explanation}</p>
-    {serverError && <p role="alert" className="mb-4 text-red-700 dark:text-red-400">{serverError}</p>}
+    {serverError && <p role="alert" className="mb-4 text-late">{serverError}</p>}
     <div className="grid gap-3">
       <button type="button" className={primaryButton} onClick={onRestore} disabled={pending} autoFocus>
         {copy.restoreChoice.restore(archived.name)}

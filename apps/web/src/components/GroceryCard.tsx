@@ -11,11 +11,11 @@ export const GroceryCard = ({ entry, busy, onBought, onRemove }: Props) => {
   const amount = describeAmount(entry);
 
   return (
-    <li className="flex flex-col gap-3 rounded-xl border border-stone-200 bg-white p-4 dark:border-stone-800 dark:bg-stone-900">
+    <li className="flex flex-col gap-3 rounded-xl border border-line bg-card p-4">
       <div>
-        <h2 className="text-lg font-semibold">{entry.text}</h2>
-        {amount && <p className="text-stone-600 dark:text-stone-400">{amount}</p>}
-        <p className="text-sm text-stone-600 dark:text-stone-400">
+        <h2 className="text-title font-semibold">{entry.text}</h2>
+        {amount && <p className="text-muted">{amount}</p>}
+        <p className="text-meta text-muted">
           {entry.addedBy === "auto" ? copy.groceries.addedAutomatically : copy.groceries.addedByHand}
         </p>
       </div>
