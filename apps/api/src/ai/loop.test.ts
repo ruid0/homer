@@ -29,7 +29,7 @@ describe("runAssistant", () => {
     const before = snapshot(db);
     const chat = scriptedChat([useTool("mark_out", { name: "salt" }), say("Marked salt as out.")]);
     const done = await runAssistant({ db, chat, today, history: [], text: "We're out of salt" });
-    expect(done.reply).toBe("Marked salt as out.");
+    expect(done.reply).toBe("Marked Salt as out and added it to groceries.");
     expect(done.actionIds).toHaveLength(1);
     const second = chat.calls[1]!;
     expect(second.at(-2)).toMatchObject({ role: "assistant", toolCalls: [{ name: "mark_out" }] });
@@ -45,6 +45,22 @@ describe("runAssistant", () => {
     const done = await runAssistant({ db, chat, today, history: [], text: "Remind me Friday" });
     expect(done.actionIds).toHaveLength(1);
     expect((await api.schedule.view({ today, days: 3 })).days[2]!.tasks[0]).toMatchObject({ dueDate: "2026-11-06" });
+  });
+
+  it("never shows a claim of change when nothing changed", async () => {
+    const { db } = setup();
+    const chat = scriptedChat([say("I've added the dentist appointment for Anna.")]);
+    const done = await runAssistant({ db, chat, today, history: [], text: "Dentist Thursday" });
+    expect(done.actionIds).toEqual([]);
+    expect(done.reply).toBe("I didn't change anything. Try saying it again.");
+  });
+
+  it("writes the report itself, keeping only the model's closing question", async () => {
+    const { db, api } = setup();
+    await api.inventory.create(salt);
+    const chat = scriptedChat([useTool("mark_out", { name: "salt" }), say("Wonderful, all sorted! Anything else?")]);
+    const done = await runAssistant({ db, chat, today, history: [], text: "out of salt" });
+    expect(done.reply).toBe("Marked Salt as out and added it to groceries.\nAnything else?");
   });
 
   it("passes the screen's earlier messages to the model", async () => {
@@ -68,7 +84,7 @@ describe("runAssistant", () => {
     await api.inventory.create(salt);
     const chat = scriptedChat([useTool("restock_item", { name: "salt", quantity: -1 }), useTool("restock_item", { name: "salt", quantity: 2 }), say("Added 2.")]);
     const done = await runAssistant({ db, chat, today, history: [], text: "Bought 2 salt" });
-    expect(done.reply).toBe("Added 2.");
+    expect(done.reply).toBe("Restocked Salt: added 2 bag, now 4.");
     const retry = chat.calls[1]!.at(-1) as { content: string };
     expect(retry.content).toContain("quantity");
     expect(done.actionIds).toHaveLength(1);
@@ -138,5 +154,24 @@ describe("runAssistant", () => {
     const chat = scriptedChat([useTool("mark_out", { name: "salt" }), new Error("disk full")]);
     const done = await runAssistant({ db, chat, today, history: [], text: "x" });
     expect(done.actionIds).toHaveLength(1);
+  });
+
+  it("still reports a change when the model then goes away", async () => {
+    const { db, api } = setup();
+    await api.inventory.create(salt);
+    const chat = scriptedChat([useTool("mark_out", { name: "salt" }), new OllamaUnreachable("down")]);
+    const done = await runAssistant({ db, chat, today, history: [], text: "x" });
+    expect(done.reply.startsWith("Marked Salt as out and added it to groceries.")).toBe(true);
+  });
+
+  it("reports the failed call of a turn next to the one that worked", async () => {
+    const { db, api } = setup();
+    await api.inventory.create(salt);
+    const chat = scriptedChat([
+      { content: "", toolCalls: [{ name: "mark_out", args: { name: "salt" } }, { name: "mark_out", args: { name: "flour" } }] },
+      say("Marked salt. Flour is not tracked."),
+    ]);
+    const done = await runAssistant({ db, chat, today, history: [], text: "out of salt and flour" });
+    expect(done.reply).toBe("Marked Salt as out and added it to groceries.\nflour isn't tracked, so nothing changed for it.");
   });
 });

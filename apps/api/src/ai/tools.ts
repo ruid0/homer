@@ -137,7 +137,14 @@ const handlers: Handlers = {
         repeat: repeat ?? null,
         personId,
       });
-      return { status: "done", title: created.title, dueDate: created.dueDate, person: personName };
+      return {
+        status: "done",
+        title: created.title,
+        dueDate: created.dueDate,
+        dueTime: created.dueTime,
+        repeat: created.repeat,
+        person: personName,
+      };
     }),
 
   add_event: async (context, { title, date, time, person }) =>

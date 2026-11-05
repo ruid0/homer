@@ -44,6 +44,37 @@ export const assistantCopy = {
   gaveUp: "I couldn't do that. Try saying it a different way.",
   tooManySteps: "That took too many steps and I stopped. Check what changed and try again.",
   interrupted: "I lost contact with the model part way through. Check what changed, and undo it if it looks wrong.",
+  noChange: "I didn't change anything. Try saying it again.",
+  report: {
+    markOut: (item: string) => `Marked ${item} as out and added it to groceries.`,
+    restock: (item: string, added: number | null, unit: string, quantity: number | null) =>
+      [`Restocked ${item}`, added === null ? "" : `: added ${added} ${unit}`.trimEnd(), quantity === null ? "" : `, now ${quantity}`, "."].join(""),
+    addItem: (item: string, quantity: number | null, unit: string) =>
+      `Now tracking ${item}${quantity === null ? "" : `: ${quantity} ${unit}`.trimEnd()}.`,
+    listed: (name: string, quantity: number | null) =>
+      quantity === null ? `Added ${name} to the grocery list.` : `Added ${quantity} of ${name} to the grocery list.`,
+    bought: (name: string, restocked: number | null) =>
+      restocked === null ? `Marked ${name} as bought.` : `Marked ${name} as bought and restocked ${restocked}.`,
+    task: (title: string, parts: string[]) => `Added the task "${title}" ${parts.join(", ")}.`,
+    event: (title: string, parts: string[]) => `Added the event "${title}" ${parts.join(", ")}.`,
+    done: (title: string, next: string | null) =>
+      next === null ? `Marked "${title}" as done.` : `Marked "${title}" as done. The next one is due ${next}.`,
+    noDate: "with no date",
+    onDay: (when: string) => `on ${when}`,
+    forDay: (when: string) => `for ${when}`,
+    atTime: (time: string) => `at ${time}`,
+    repeating: (repeat: string) => repeat,
+    forPerson: (person: string) => `for ${person}`,
+  },
+  skipped: {
+    notTracked: (name: string) => `${name} isn't tracked, so nothing changed for it.`,
+    ambiguous: (matches: string[]) => `More than one matches: ${matches.join(", ")}. Which one?`,
+    needsQuantity: (name: string) => `How much ${name} did you buy?`,
+    unknownPerson: (name: string) => `I don't know ${name}.`,
+    notOnList: (name: string) => `${name} isn't on the list.`,
+    noTask: (title: string) => `No open task matches "${title}".`,
+  },
+  doneBefore: (lines: string, reply: string) => `${lines}\n${reply}`,
   undoChanged: (label: string) => `${label} changed since, so this can't be undone.`,
   undoneAlready: "That change was already undone.",
   undoMissing: "That change doesn't exist.",
