@@ -1,6 +1,6 @@
 # H.O.M.E.R. — Product Requirements
 
-Status: draft v0.2 · Owner: Igor Bondarenko · Last updated: 2026-11-02
+Status: Built (v1 scope, released as v1.0.0; v2 is in `docs/v2-plan.md`) · Owner: Igor Bondarenko · Last updated: 2026-11-05
 
 ## 1. Problem
 
@@ -101,7 +101,7 @@ A chat screen backed by a local model (Ollama, `qwen3.5:9b`) that can read and c
 - **One file to back up.** All data in a single SQLite file.
 - **Installable.** PWA that can be added to a phone or tablet home screen.
 - **Usable on a tablet with busy hands.** 44px touch targets, readable from arm's length, dark mode.
-- **Responsive enough.** App screens feel instant on the home network. Assistant replies within a few seconds (target to be set once measured, see 7).
+- **Responsive enough.** App screens feel instant on the home network. Assistant replies: in the latest eval, a median of about 10 s (90th percentile 16 s) on the owner's machine with thinking on. No target is set; speeding it up is in `docs/v2-plan.md`.
 - **Runs on the owner's MacBook (Apple M5, 48 GB).** Ollama runs natively on macOS so it can use the GPU; Docker on macOS can't, so Compose runs only web and api and points them at the host's Ollama. 48 GB leaves room to try a larger chat model than `qwen3.5:9b` if the eval shows it's worth it.
 - **Works without the assistant.** If Ollama is down, every screen still works and the chat shows a clear message.
 
@@ -128,21 +128,16 @@ Schemas live in `packages/shared/src/schemas.ts`; pure calculations (`daysRemain
 Each slice goes through DEFINE → SHIP (see CLAUDE.md). A slice is shipped as several small PRs, each a testable part that works by itself.
 
 1. **Items and days remaining** (built, see `docs/design-slice-1-items.md`): schema, `daysRemaining` with property tests, Items screen with forms. Restocks recorded from the start.
-2. **Grocery list**: auto-add when low, manual add, Bought it / Out of it.
-3. **People, tasks and events**: People setup page; create, assign, complete, repeat via `nextDueDate`; Today and Week views.
+2. **Grocery list** (built, see `docs/design-slice-2-groceries.md`): auto-add when low, manual add, Bought it / Out of it.
+3. **People, tasks and events** (built, see `docs/design-slice-3-schedule.md`): People setup page; create, assign, complete, repeat via `nextDueDate`; Today and Week views.
 4. **Home** (built, see `docs/design-slice-4-dashboard.md`): the app shell (left rail, bottom bar, a breakpoint for big touchscreens), and a Home page with a scrolling "Your day" timeline (overdue, a Now marker, today) and Running out, with Done and Bought it.
 5. **Assistant** (built, see `docs/design-slice-5-assistant.md`): tool loop, MVP tools, Undo, eval harness with the first golden set.
-6. **PWA and Docker Compose** packaging (built; web and api; Ollama stays native; reached over Tailscale HTTPS; no service worker, so not offline).
+6. **PWA and Docker Compose** (built, see `docs/design-slice-6-packaging.md`): web and api; Ollama stays native; reached over Tailscale HTTPS; no service worker, so not offline.
 7. **Learned usage** (built, see `docs/design-slice-7-learned-usage.md`): estimate from restock history, shown as entered or learned.
 
-## 9. Later (not v1)
+## 9. Later (v2)
 
-Planned in `docs/v2-plan.md`.
-
-- Maintenance schedules (filters, softener salt, cleaning), the M in HOMER.
-- Receipt and label photos with `qwen3-vl` to restock from a shopping trip.
-- Voice input from the kitchen tablet.
-- Daily 06:00 job that posts a morning summary.
+Planned in `docs/v2-plan.md`, in this order: a daily automatic backup, per-person routines, jobs and notifications, maintenance schedules (filters, softener salt, cleaning), receipt photos (kept and viewable) to restock from a shopping trip, voice input, and Russian and English support. The vision model is chosen by benchmark, not fixed here. Some of these (notifications) change the "local only" rule in section 5, and that is amended only when the owner approves it.
 
 ## 10. Decisions
 
@@ -156,6 +151,11 @@ Answered by the owner on 2026-11-02:
 
 ## 11. Open questions
 
-1. **Learning threshold:** decided: 3 restocks over at least 14 days, no blending, latest 6 only (see `docs/design-slice-7-learned-usage.md`).
-2. **Late Undo:** if an item changed after the assistant's action (e.g. someone restocked it by hand), what should Undo do: revert only the assistant's change, or refuse and explain?
+Resolved:
+
+1. **Learning threshold:** 3 restocks over at least 14 days, no blending, latest 6 only (see `docs/design-slice-7-learned-usage.md`).
+2. **Late Undo:** if an item changed after the assistant's action, Undo refuses and explains (see `docs/design-slice-5-assistant.md`).
+
+Still open:
+
 3. **Other devices:** phones and the kitchen tablet reach the MacBook over the home network. What happens when the MacBook is asleep or away from home?

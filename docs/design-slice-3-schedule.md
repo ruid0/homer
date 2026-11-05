@@ -1,6 +1,6 @@
 # Slice 3: People, tasks and events. Definition, technical plan and system design
 
-Status: built (PRs 0 to 6) · Owner: Igor Bondarenko · Date: 2026-11-03 · Source: PRD §3 goal 3, §4.2, §6, §8 (slice 3). Builds on `docs/design-slice-1-items.md` and `docs/design-slice-2-groceries.md`.
+Status: Built (PRs 0 to 6, shipped in v1.0.0) · Owner: Igor Bondarenko · Last updated: 2026-11-05 · Source: PRD §3 goal 3, §4.2, §6, §8 (slice 3). Builds on `docs/design-slice-1-items.md` and `docs/design-slice-2-groceries.md`.
 
 ## 1. Definition (DEFINE)
 
