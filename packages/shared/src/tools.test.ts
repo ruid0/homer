@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { dateFields } from "./dateWords";
 import { parseToolCall, toolDefinitions, toolNames } from "./tools";
 
 describe("toolDefinitions", () => {
@@ -112,5 +113,31 @@ describe("parseToolCall", () => {
     ["add_event", { title: "Dentist", date: "2026-11-06", person: "Anna" }],
   ])("accepts valid %s arguments", (name, args) => {
     expect(parseToolCall(name, args).ok).toBe(true);
+  });
+});
+
+describe("date fields in the tool schema", () => {
+  const propertiesOf = (name: string) => (toolDefinitions.find((tool) => tool.name === name)!.parameters.properties ?? {}) as Record<string, unknown>;
+
+  it("do not demand the strict date pattern, because a day can be said in words", () => {
+    for (const tool of toolDefinitions) {
+      for (const [field, spec] of Object.entries(propertiesOf(tool.name))) {
+        if (dateFields.includes(field)) expect(JSON.stringify(spec)).not.toContain("pattern");
+      }
+    }
+  });
+
+  it("keep the pattern on a time", () => {
+    expect(JSON.stringify(propertiesOf("add_task").dueTime)).toContain("pattern");
+  });
+
+  it("are only used by the tools that mean a day by them", () => {
+    const using = toolDefinitions.filter((tool) => Object.keys(propertiesOf(tool.name)).some((field) => dateFields.includes(field)));
+    expect(using.map((tool) => tool.name).sort()).toEqual(["add_event", "add_task", "list_tasks"]);
+  });
+
+  it("tell the model what a date can be when one is rejected", () => {
+    const result = parseToolCall("add_task", { title: "x", dueDate: "friday 2026-11-06" });
+    expect(!result.ok && result.error).toContain("weekday name");
   });
 });

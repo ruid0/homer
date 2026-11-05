@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { MAX_DAYS_PER_UNIT, MAX_QUANTITY, dateSchema, repeatSchema, timeSchema } from "./schemas";
+import { dateFields } from "./dateWords";
 import { schemaMessages, toolDescriptions, toolErrors } from "./copy";
 
 const text = z.string().trim().min(1);
@@ -66,9 +67,18 @@ const writes: Record<ToolName, boolean> = {
 
 export const toolNames = Object.keys(toolSchemas) as ToolName[];
 
+// A date may be said in words (see dateWords.ts), so the date fields do not advertise the strict pattern.
+const withoutPattern = (value: unknown): unknown => {
+  if (Array.isArray(value)) return value.map(withoutPattern);
+  if (value === null || typeof value !== "object") return value;
+  return Object.fromEntries(Object.entries(value).filter(([key]) => key !== "pattern").map(([key, inner]) => [key, withoutPattern(inner)]));
+};
+
 const toParameters = (schema: z.ZodType): Record<string, unknown> => {
-  const { $schema: _unused, ...rest } = z.toJSONSchema(schema) as Record<string, unknown>;
-  return rest;
+  const { $schema: _unused, properties, ...rest } = z.toJSONSchema(schema) as Record<string, unknown> & { properties?: Record<string, unknown> };
+  if (!properties) return rest;
+  const relaxed = Object.fromEntries(Object.entries(properties).map(([name, spec]) => [name, dateFields.includes(name) ? withoutPattern(spec) : spec]));
+  return { ...rest, properties: relaxed };
 };
 
 export const toolDefinitions: ToolDefinition[] = toolNames.map((name) => ({
@@ -96,6 +106,6 @@ export const parseToolCall = (name: string, args: unknown): ParsedToolCall => {
   if (!isToolName(name)) return { ok: false, error: toolErrors.unknownTool(name, toolNames) };
   const parsed = toolSchemas[name].safeParse(readArgs(args) ?? {});
   if (parsed.success) return { ok: true, call: { name, args: parsed.data } as ToolCall };
-  const problems = parsed.error.issues.map((issue) => toolErrors.problem(issue.path.join("."), issue.message));
+  const problems = parsed.error.issues.map((issue) => toolErrors.problem(issue.path.join("."), issue.message === schemaMessages.invalidDate ? toolErrors.dateHint : issue.message));
   return { ok: false, error: toolErrors.invalidArguments(name, problems) };
 };

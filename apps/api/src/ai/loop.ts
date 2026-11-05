@@ -1,4 +1,4 @@
-import { parseToolCall, toolDefinitions } from "@homer/shared";
+import { parseToolCall, resolveToolDates, toolDefinitions } from "@homer/shared";
 import type { Db } from "../db/client";
 import { assistantCopy } from "../messages";
 import type { ChatClient, ChatMessage, RawToolCall } from "./ollama";
@@ -19,7 +19,7 @@ type Step = { messages: ChatMessage[]; actionIds: number[]; invalid: number };
 const runCalls = async (db: Db, today: string, calls: RawToolCall[]): Promise<Step> => {
   const step: Step = { messages: [], actionIds: [], invalid: 0 };
   for (const call of calls) {
-    const parsed = parseToolCall(call.name, call.args);
+    const parsed = parseToolCall(call.name, resolveToolDates(call.args, today));
     if (!parsed.ok) {
       step.invalid += 1;
       step.messages.push({ role: "tool", toolName: call.name, content: asContent({ status: "error", message: parsed.error }) });

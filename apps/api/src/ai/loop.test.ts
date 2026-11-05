@@ -39,6 +39,14 @@ describe("runAssistant", () => {
     expect(snapshot(db)).toEqual(before);
   });
 
+  it("works out a day said in words, so the model never counts days", async () => {
+    const { db, api } = setup();
+    const chat = scriptedChat([useTool("add_task", { title: "Call the plumber", dueDate: "friday" }), say("Added.")]);
+    const done = await runAssistant({ db, chat, today, history: [], text: "Remind me Friday" });
+    expect(done.actionIds).toHaveLength(1);
+    expect((await api.schedule.view({ today, days: 3 })).days[2]!.tasks[0]).toMatchObject({ dueDate: "2026-11-06" });
+  });
+
   it("passes the screen's earlier messages to the model", async () => {
     const { db } = setup();
     const chat = scriptedChat([say("ok")]);

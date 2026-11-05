@@ -143,7 +143,8 @@ Each PR runs VERIFY and REVIEW before it is opened, and leaves `main` working wi
 | `qwen3.5:9b` | on | rules added | strict | 49/58 (84%) | 10.8s | 15.7s |
 | `qwen3.5:9b` | on | one-week calendar | strict | 51/58 (88%) | 10.2s | 15.9s |
 | **`qwen3.5:9b`** | **on** | **final** (today and tomorrow marked) | **strict** | **51/58 (88%)** | **10.6s** | **15.5s** |
-| **`qwen3.5:27b`** | **off** | **final** | **strict** | **52/58 (90%)** | **8.2s** | **12.4s** |
+| **`qwen3.5:27b`** | **off** | **final** | **strict** | **52/58 (89.7%)** | **8.2s** | **12.4s** |
+| **`qwen3.5:9b`** | **on** | **dates resolved in code** | **strict** | **53/58 (91%)** | **10.3s** | **21.0s** |
 
 **The two final rows are not the same kind of result.**
 - `qwen3.5:9b` with thinking on fails by not acting: it looks the list up instead of marking salt out, asks a question it should not need, or once picks the wrong item (Oat milk for "milk"). Two of its failures are a wrong date (Sunday written as 2026-11-07).
@@ -154,3 +155,11 @@ Each PR runs VERIFY and REVIEW before it is opened, and leaves `main` working wi
 **Not yet met:** the 90% target, by either model (88% and 89.7%). Dates are the main remaining model error on the 9b model, which points at a deterministic fix: let the tools accept "today", "tomorrow" or a weekday name and resolve it in code.
 
 Limits left by the prompt as measured: the one-week calendar cannot express "next Friday", or today's weekday next week; the person has to say the date. The rule "ask when a task has no date when one is needed" was reworded after the last runs, because it contradicted "a task does not need a date", so the final prompt has not been measured exactly. The follow-up PR (code-written confirmations and dates resolved in code) re-measures.
+
+## 11. Dates in code (follow-up, 2026-11-05)
+
+The tools now take "today", "tomorrow" or a weekday name for a date, and `resolveToolDates` (shared, pure) turns it into a date before the arguments are validated. The one-week calendar is gone from the prompt. A weekday always means the coming one, so "Friday" said on a Friday is a week ahead. "Next Friday" is deliberately not resolved: people mean two different days by it, so it is rejected and the model asks.
+
+Result on `qwen3.5:9b`, thinking on, strict checks, two passes: **53/58 (91%)**, median 10.3s, p90 21.0s. No remaining failure is a date. The five failures are all the model acting when it should ask or choosing for the person: it tracked "coffee" at quantity 0 instead of asking how much, completed one of two "bins" tasks on its own, listed milk when asked how much was bought, and once filed a task as an event. These are the next target: reply lines written by code from what changed, and a guard on claimed changes.
+
+The first run after this change scored 78% only because the eval recorded each call's arguments without resolving day words, so a right answer looked empty. The eval now resolves them the same way the loop does.
