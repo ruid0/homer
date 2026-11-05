@@ -86,9 +86,17 @@ describe("runAssistant", () => {
     expect(done.reply.length).toBeGreaterThan(0);
   });
 
-  it("answers an empty reply with a line, not silence", async () => {
+  it("asks once more after an empty reply", async () => {
     const { db } = setup();
-    const done = await runAssistant({ db, chat: scriptedChat([say("")]), today, history: [], text: "x" });
+    const chat = scriptedChat([say(""), say("Here you go.")]);
+    const done = await runAssistant({ db, chat, today, history: [], text: "x" });
+    expect(done.reply).toBe("Here you go.");
+    expect(chat.calls).toHaveLength(2);
+  });
+
+  it("answers a second empty reply with a line, not silence", async () => {
+    const { db } = setup();
+    const done = await runAssistant({ db, chat: scriptedChat([say(""), say("")]), today, history: [], text: "x" });
     expect(done.reply.length).toBeGreaterThan(0);
   });
 

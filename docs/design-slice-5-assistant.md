@@ -1,6 +1,6 @@
 # Slice 5: Assistant. Definition, technical plan and system design
 
-Status: draft · Owner: Igor Bondarenko · Date: 2026-11-04 · Source: PRD §3, §4.4, §5, §6, §7, §8 (slice 5). Builds on slices 1 to 4.
+Status: in progress (PRs 1 to 6 built) · Owner: Igor Bondarenko · Date: 2026-11-04 · Source: PRD §3, §4.4, §5, §6, §7, §8 (slice 5). Builds on slices 1 to 4.
 
 ## 1. Definition (DEFINE)
 
@@ -126,3 +126,31 @@ Each PR runs VERIFY and REVIEW before it is opened, and leaves `main` working wi
 - **History is not memory.** The model sees only the current screen, so a cleared screen starts a fresh conversation. Stored history is for people to read.
 - **Prompt injection.** Item and task names come from the household, but they are put in tool results the model reads. The tools can only do what the app can do, and every change can be undone, which bounds the harm.
 - **Model names.** `.env.example` lists `qwen3.5:9b`, which is installed. Larger tool-capable models (`qwen3.5:27b`, `qwen3.8:27b-mlx`, `qwen3:14b`) are available for the 27b comparison.
+
+## 10. Eval results (PR 6, 2026-11-05)
+
+`pnpm eval -- --model <name> --think true|false --repeat N`: 29 golden cases on the owner's Mac against the real Ollama, run twice (58 runs) unless noted. A case passes when the check for it passes: the right tool with the right arguments and exactly one change, or no change and a question, or a read tool and a reply that mentions what was asked about. "Asks" only checks for a question mark, plus a case-specific word where one is needed. Models are not deterministic, so a figure moves by a few points between runs.
+
+**The first numbers were too kind.** The first checks accepted a right answer with a wrong extra change, and a read case without a read. After tightening them (exactly one change, a required read tool), the same model scored lower. Only the strict-check rows below are comparable.
+
+| Model | Thinking | Prompt | Checks | Passed | Median | p90 |
+|---|---|---|---|---|---|---|
+| `qwen3.5:9b` | on | first | loose | 23/29 (79%), one pass | 11.5s | 21.3s |
+| `qwen3.5:9b` | on | rules added | loose | 54/58 (93%) | 10.5s | 14.9s |
+| `qwen3.5:9b` | off | rules added | loose | 47/58 (81%) | 6.6s | 7.8s |
+| `qwen3.5:27b` | off | rules added | loose | 54/58 (93%) | 8.1s | 12.2s |
+| `qwen3.5:27b` | on | rules added | loose | 27/29 (93%), one pass | 18.8s | 28.3s |
+| `qwen3.5:9b` | on | rules added | strict | 49/58 (84%) | 10.8s | 15.7s |
+| `qwen3.5:9b` | on | one-week calendar | strict | 51/58 (88%) | 10.2s | 15.9s |
+| **`qwen3.5:9b`** | **on** | **final** (today and tomorrow marked) | **strict** | **51/58 (88%)** | **10.6s** | **15.5s** |
+| **`qwen3.5:27b`** | **off** | **final** | **strict** | **52/58 (90%)** | **8.2s** | **12.4s** |
+
+**The two final rows are not the same kind of result.**
+- `qwen3.5:9b` with thinking on fails by not acting: it looks the list up instead of marking salt out, asks a question it should not need, or once picks the wrong item (Oat milk for "milk"). Two of its failures are a wrong date (Sunday written as 2026-11-07).
+- `qwen3.5:27b` with thinking off is faster and scores 52/58, which is 89.7%: just under the 90% target and under the runner's own gate. Five of its six failures are replies that say a change was made when no tool was called ("I've added the dentist appointment for Anna", with nothing saved). That is the failure that costs trust, and a person cannot tell it from a real change in the reply text. The Undo button comes from recorded actions only, never from the reply, so a claimed change with no action shows no Undo.
+
+**What the eval changed:** the prompt now says to call tools straight away with the name as said, to take weekday dates from a one-week list with today and tomorrow marked (the first prompt listed 14 days and the model picked the second Friday), never to choose between matches, never to ask for a quantity before trying, to pass only the name, and that it cannot delete. An empty model reply is retried once.
+
+**Not yet met:** the 90% target, by either model (88% and 89.7%). Dates are the main remaining model error on the 9b model, which points at a deterministic fix: let the tools accept "today", "tomorrow" or a weekday name and resolve it in code.
+
+Limits left by the prompt as measured: the one-week calendar cannot express "next Friday", or today's weekday next week; the person has to say the date. The rule "ask when a task has no date when one is needed" was reworded after the last runs, because it contradicted "a task does not need a date", so the final prompt has not been measured exactly. The follow-up PR (code-written confirmations and dates resolved in code) re-measures.
