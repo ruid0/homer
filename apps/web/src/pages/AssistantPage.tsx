@@ -115,7 +115,7 @@ export const AssistantPage = () => {
   );
 
   return (
-    <div className="flex h-[calc(100dvh-10rem)] min-h-96 flex-col gap-4 md:h-[calc(100dvh-3rem)]">
+    <div className="flex h-[calc(100dvh-12rem)] min-h-96 flex-col gap-4 md:h-[calc(100dvh-3rem)]">
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-page font-semibold">{copy.assistant.title}</h1>
         {hasChat && (
