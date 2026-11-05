@@ -1,4 +1,4 @@
-import { parseToolCall, resolveToolDates } from "@homer/shared";
+import { addSaidTime, parseToolCall, resolveToolDates } from "@homer/shared";
 import { createDb } from "../../db/client";
 import { createCaller } from "../../routers/index";
 import { runAssistant } from "../loop";
@@ -15,9 +15,9 @@ export type CaseResult = {
   calls: ObservedCall[];
 };
 
-const asArgs = (name: string, args: unknown): Record<string, unknown> => {
-  // The same day-word resolution as the loop, so the recorded arguments are what the tool actually received.
-  const parsed = parseToolCall(name, resolveToolDates(args, EVAL_TODAY));
+const asArgs = (name: string, args: unknown, text: string): Record<string, unknown> => {
+  // The same day-word and time resolution as the loop, so the recorded arguments are what the tool actually received.
+  const parsed = parseToolCall(name, addSaidTime(name, resolveToolDates(args, EVAL_TODAY), text));
   return parsed.ok ? (parsed.call.args as Record<string, unknown>) : {};
 };
 
@@ -31,7 +31,7 @@ export const evaluateCase = async (golden: GoldenCase, chat: ChatClient): Promis
     ...chat,
     chat: async (messages, tools) => {
       const reply = await chat.chat(messages, tools);
-      calls.push(...reply.toolCalls.map((call) => ({ name: call.name, args: asArgs(call.name, call.args) })));
+      calls.push(...reply.toolCalls.map((call) => ({ name: call.name, args: asArgs(call.name, call.args, golden.prompt) })));
       return reply;
     },
   };
