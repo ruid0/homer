@@ -166,4 +166,4 @@ homer/
 ## Remote access and notifications
 
 - For remote access the most streightforward way is to use `Tailscale` installed on both the server and a users devices
-- Notifications are implemented via `ntfy`
+- Notifications are not built yet. They are planned for v2 with `ntfy` (see `docs/v2-plan.md`).

@@ -137,6 +137,8 @@ Each slice goes through DEFINE → SHIP (see CLAUDE.md). A slice is shipped as s
 
 ## 9. Later (not v1)
 
+Planned in `docs/v2-plan.md`.
+
 - Maintenance schedules (filters, softener salt, cleaning), the M in HOMER.
 - Receipt and label photos with `qwen3-vl` to restock from a shopping trip.
 - Voice input from the kitchen tablet.
