@@ -15,7 +15,7 @@ import type { Db } from "../db/client";
 import { items, restocks } from "../db/schema";
 import { closeOpenEntry, removeOpenEntries, syncGrocery } from "../groceries/sync";
 import { findActive, notFound, type ItemRow } from "../inventory/lookup";
-import { applyRestock, usualRestock } from "../inventory/stock";
+import { applyRestock, learnedFrom, usualRestock } from "../inventory/stock";
 import { messages } from "../messages";
 import { publicProcedure, router } from "../trpc";
 
@@ -58,6 +58,7 @@ const toListItem = (db: Db, row: ItemRow) => {
     runningLow: isRunningLow(days, row.lowThresholdDays),
     estimateSource: estimate?.source ?? null,
     usualRestock: usualRestock(db, row.id),
+    learnedFrom: estimate?.source === "learned" ? learnedFrom(db, row) : null,
   };
 };
 
@@ -68,6 +69,10 @@ const itemValues = (input: z.infer<typeof itemInputSchema>) => ({
   daysPerUnitEntered: input.daysPerUnit,
   lowThresholdDays: input.lowThresholdDays,
 });
+
+// A new number typed by hand starts learning over: the old history described the old number.
+const restartLearning = (current: ItemRow, input: z.infer<typeof itemInputSchema>) =>
+  input.daysPerUnit === current.daysPerUnitEntered ? {} : { daysPerUnitLearned: null, learningSince: new Date().toISOString() };
 
 export const inventoryRouter = router({
   list: publicProcedure.query(({ ctx }) =>
@@ -90,10 +95,15 @@ export const inventoryRouter = router({
   }),
 
   update: publicProcedure.input(updateItemInputSchema).mutation(({ ctx, input }) => {
-    findActive(ctx.db, input.id);
+    const current = findActive(ctx.db, input.id);
     if (activeNameTaken(ctx.db, input.name, input.id)) throw nameTaken(input.name);
     return ctx.db.transaction((tx) => {
-      const updated = tx.update(items).set(itemValues(input)).where(eq(items.id, input.id)).returning().get();
+      const updated = tx
+        .update(items)
+        .set({ ...itemValues(input), ...restartLearning(current, input) })
+        .where(eq(items.id, input.id))
+        .returning()
+        .get();
       syncGrocery(tx, input.id);
       return updated;
     });
@@ -121,12 +131,12 @@ export const inventoryRouter = router({
     .query(({ ctx, input }) => findArchivedByName(ctx.db, input.name)),
 
   restore: publicProcedure.input(updateItemInputSchema).mutation(({ ctx, input }) => {
-    findArchived(ctx.db, input.id);
+    const archived = findArchived(ctx.db, input.id);
     if (activeNameTaken(ctx.db, input.name)) throw nameTaken(input.name);
     return ctx.db.transaction((tx) => {
       const restored = tx
         .update(items)
-        .set({ ...itemValues(input), archivedAt: null })
+        .set({ ...itemValues(input), ...restartLearning(archived, input), archivedAt: null })
         .where(eq(items.id, input.id))
         .returning()
         .get();

@@ -165,6 +165,7 @@ export const copy = {
     edit: "Edit",
     editLabel: editItem,
     estimateSource: { entered: "Entered by hand", learned: "Learned from restocks" },
+    learnedFrom: (count: number) => (count === 1 ? "Learned from 1 restock" : `Learned from ${count} restocks`),
   },
 
   itemForm: {

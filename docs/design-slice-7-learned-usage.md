@@ -1,6 +1,6 @@
 # Slice 7: Learned usage
 
-Status: in progress (PR 1 of 2 built) · Owner: Igor Bondarenko · Date: 2026-11-05 · Source: PRD §4.1, §9 (open question 1).
+Status: built (PRs 1 and 2) · Owner: Igor Bondarenko · Date: 2026-11-05 · Source: PRD §4.1, §9 (open question 1).
 
 ## 1. Definition
 
@@ -23,4 +23,12 @@ HOMER starts from the usage the person enters ("one bag lasts 30 days") and lear
 ## 4. Work order
 
 1. **The calculation** in shared, with tests. Built.
-2. **Wiring:** `inventory.restock` stores the result in `days_per_unit_learned` (and clears it when there is not enough history), Undo of a restock keeps it right (the journal already restores the item row), editing the entered number resets learning, and the Items row shows "Learned from N restocks". Router tests, and a check in the running app.
+2. **Wiring (built):** `inventory.restock` stores the result in `days_per_unit_learned` (and clears it when there is not enough history), Undo of a restock keeps it right (the journal already restores the item row), editing the entered number resets learning, and the Items row shows "Learned from N restocks". Router tests, and a check in the running app.
+
+## 5. How it is wired
+
+- `applyRestock` (used by both the Items "Bought it" and the grocery list's "Bought it") records the restock and then calls `relearn`, which stores the result of `learnDaysPerUnit` in `days_per_unit_learned`, or clears it when there is not enough history.
+- Items have a new nullable `learning_since` column (migration 0008). Learning only looks at restocks from that time on. It is set when the entered number is changed by hand, together with clearing the learned estimate. Saving an item without changing that number leaves both alone.
+- Undo of a restock goes through the journal, which restores the item row and removes the restock row, so the learned estimate goes back with it (tested).
+- `inventory.list` returns `learnedFrom` (the number of trips the estimate rests on). The Items row shows "Learned from N restocks", or "Entered by hand".
+- Checked in the running app (scratch copy): salt entered as 30 days with restocks 60, 40 and 20 days ago plus one now shows "Learned from 4 restocks" and 40 days for 2 bags; editing the number to 25 shows "Entered by hand" and 50 days.
