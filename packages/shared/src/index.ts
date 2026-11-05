@@ -5,4 +5,5 @@ export * from "./calendar";
 export * from "./resolveName";
 export * from "./tools";
 export * from "./dateWords";
+export * from "./learn";
 export * from "./timeWords";
