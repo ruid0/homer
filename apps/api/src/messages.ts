@@ -9,6 +9,14 @@ export const messages = {
   taskClosed: "That task is already done or removed. Refresh the list.",
 };
 
+// Written to the api log.
+export const backupLog = {
+  written: (file: string, removed: number) => `backup written to ${file}${removed ? `, removed ${removed} old` : ""}`,
+  failed: (reason: string) => `backup failed: ${reason}`,
+  corrupt: (file: string) => `The backup copy failed its integrity check and was deleted: ${file}`,
+  badTime: (time: string) => `BACKUP_TIME must look like 06:00, got "${time}"`,
+};
+
 // Read by the model, not shown to people.
 export const toolMessages = {
   rangeBackwards: "The end date is before the start date. Swap them.",
