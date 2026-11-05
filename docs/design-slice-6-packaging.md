@@ -18,4 +18,4 @@ This slice was small enough to skip a full design. This file records what was de
 - nginx served the manifest as `application/octet-stream`. An exact-match location sets `application/manifest+json`.
 - An api restart caused 502s from nginx until it was given a resolver (`127.0.0.11`) so the name is looked up again. The proxy timeouts are 600 s because assistant replies can be slow.
 - The api has `GET /health`, which the compose healthcheck uses.
-- The backup command in the README had not been run end to end when v1 shipped. The first v2 step replaces it with an automatic daily backup (`docs/v2-plan.md`).
+- The backup command in the README had not been run end to end when v1 shipped. The first v2 step replaced it with an automatic daily backup (`docs/v2-plan.md`, built).

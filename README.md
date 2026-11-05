@@ -75,14 +75,23 @@ docker compose up -d --build
   ```
 
   Open the `https://<machine>.<tailnet>.ts.net` address it prints, then use "Add to Home Screen" (iOS) or "Install app" (Android).
-- **Back up** the one file in the volume:
+- **Backups.** The api copies the database once a day at 06:00 (household time) into `./backups` on this machine, as
+  `homer-YYYY-MM-DD.db`. It keeps the last 14 days and one per week for six weeks before that, and never touches other
+  files in the folder. If the Mac slept through 06:00, the api backs up when it next starts. Set `BACKUP_HOST_DIR` to use
+  another folder (an external disk or a synced folder), and `BACKUP_TIME` to change the time. Like `TZ`, export them in
+  your shell or put them in a root `.env` before `docker compose up`; `.env.local` is not read for these. A failed backup is written to
+  the api log: `docker compose logs api`. The folder is on this Mac, so it does not protect against losing the Mac unless
+  it is synced somewhere.
+
+  To restore, stop the api, copy a backup over the live file, then start it again (replace the file name):
 
   ```bash
-  docker compose exec api node -e "require('better-sqlite3')('/data/homer.db').backup('/data/backup.db').then(() => console.log('ok'))"
-  docker compose cp api:/data/backup.db ./homer-backup.db
+  ls backups   # pick a file
+  docker compose stop api
+  docker compose run --rm --no-deps --entrypoint sh api -c \
+    "rm -f /data/homer.db-wal /data/homer.db-shm && cp /backups/homer-2026-11-05.db /data/homer.db"
+  docker compose up -d api
   ```
-
-  Keep the copy somewhere other than the Docker volume. Each run overwrites `backup.db` inside it.
 - **Update** after pulling: `docker compose up -d --build`. Migrations run when the api starts.
 
 ## Stack
@@ -95,10 +104,10 @@ docker compose up -d --build
 | API framework | Hono | Express-shaped, official tRPC adapter |
 | RPC | tRPC | Typed client, no codegen |
 | ORM | Drizzle ORM | Migrations via drizzle-kit |
-| Database | SQLite (`better-sqlite3`) | One file to back up |
+| Database | SQLite (`better-sqlite3`) | One file, backed up daily |
 | Validation | Zod | Shared schemas: DB, tRPC, LLM all use them |
 | Pure logic tests | Vitest + fast-check | Property-based tests |
-| Scheduling | node-cron | Daily jobs |
+| Scheduling | node-cron | Daily backup (more jobs in v2) |
 | LLM runtime | Ollama (`127.0.0.1:11434`) | Local only |
 | Vision model | `qwen3-vl:8b` | OCR, labels, receipts |
 | Chat/tools model | `qwen3.5:9b` or `qwen3.8:27b-mlx` | Tool calling |

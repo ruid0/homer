@@ -98,7 +98,7 @@ A chat screen backed by a local model (Ollama, `qwen3.5:9b`) that can read and c
 ## 5. Non-functional requirements
 
 - **Local only.** No outbound network calls except to Ollama on `127.0.0.1`. No telemetry.
-- **One file to back up.** All data in a single SQLite file.
+- **One file to back up.** All data in a single SQLite file, copied automatically once a day (see the README).
 - **Installable.** PWA that can be added to a phone or tablet home screen.
 - **Usable on a tablet with busy hands.** 44px touch targets, readable from arm's length, dark mode.
 - **Responsive enough.** App screens feel instant on the home network. Assistant replies: in the latest eval, a median of about 10 s (90th percentile 16 s) on the owner's machine with thinking on. No target is set; speeding it up is in `docs/v2-plan.md`.
