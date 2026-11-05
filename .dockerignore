@@ -11,3 +11,6 @@ docs
 **/*.db-shm
 **/*.db-wal
 **/*.sqlite*
+
+/backups/
+apps/api/backups/

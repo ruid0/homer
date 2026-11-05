@@ -44,3 +44,7 @@ vite.config.ts.timestamp-*
 
 # Playwright MCP output
 .playwright-mcp/
+
+# Daily database backups
+/backups/
+apps/api/backups/

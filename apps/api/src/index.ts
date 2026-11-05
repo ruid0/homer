@@ -3,6 +3,7 @@ import { createApp } from "./app";
 import { createOllamaClient } from "./ai/ollama";
 import { createDb } from "./db/client";
 import { backfillGrocery } from "./groceries/backfill";
+import { startBackups } from "./jobs/backups";
 
 export type { AppRouter } from "./routers";
 
@@ -11,6 +12,7 @@ const databasePath = process.env.DATABASE_PATH || "./homer.db";
 
 const db = createDb(databasePath);
 backfillGrocery(db);
+startBackups(db, { dir: process.env.BACKUP_DIR || "./backups", time: process.env.BACKUP_TIME || "06:00" });
 
 const chat = createOllamaClient({
   host: process.env.OLLAMA_HOST || "http://127.0.0.1:11434",
