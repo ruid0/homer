@@ -10,6 +10,12 @@ const post = (path: string, body: unknown) =>
   });
 
 describe("api over http", () => {
+  it("answers the health check", async () => {
+    const response = await createApp(createDb(":memory:")).request("/health");
+    expect(response.status).toBe(200);
+    expect(await response.text()).toBe("ok");
+  });
+
   it("creates an item and lists it with days remaining", async () => {
     const app = createApp(createDb(":memory:"));
     const created = await app.request(

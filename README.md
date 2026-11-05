@@ -50,10 +50,41 @@ Ollama: http://localhost:11434
 
 ```
 
-### Docker Compose (production-ish)
+### Docker Compose (the household copy)
+
+Ollama keeps running natively on the Mac (Docker on macOS has no GPU access). Compose runs only the web and the api.
+
 ```bash
-docker compose up -d
+docker compose up -d --build
 ```
+
+- **Data.** The database lives in the `homer-data` Docker volume, so the household copy starts empty and is separate from the
+  dev database in `apps/api`. Nothing from dev reaches the image.
+- **Time zone.** Containers run in UTC, so compose sets `TZ` for the api (default `America/Edmonton`). To change it, export `TZ`
+  in your shell before `docker compose up` or edit `docker-compose.yml`; `.env.local` is not read for this one. The assistant
+  works out "today" and "Friday" from it.
+- **Ollama.** The api reaches Ollama on the Mac through `host.docker.internal`. If the assistant says it can't reach it, check
+  from inside the container: `docker compose exec api node -e "fetch('http://host.docker.internal:11434/api/tags').then(r => console.log(r.status))"`.
+  If that fails (OrbStack, Colima), start Ollama with `OLLAMA_HOST=0.0.0.0`.
+- **Reaching it.** The web port is bound to this machine only (`127.0.0.1:3000`), and the api is not published at all: HOMER has
+  no login, so it should not be open to the whole network. Phones and tablets use Tailscale, which also gives the HTTPS an
+  installable app needs:
+
+  ```bash
+  tailscale serve --bg 3000
+  ```
+
+  Open the `https://<machine>.<tailnet>.ts.net` address it prints, then use "Add to Home Screen" (iOS) or "Install app" (Android).
+- **Back up** the one file in the volume:
+
+  ```bash
+  docker compose exec api node -e "require('better-sqlite3')('/data/homer.db').backup('/data/backup.db').then(() => console.log('ok'))"
+  docker compose cp api:/data/backup.db ./homer-backup.db
+  ```
+
+  Keep the copy somewhere other than the Docker volume. Each run overwrites `backup.db` inside it.
+- **Update** after pulling: `docker compose up -d --build`. Migrations run when the api starts.
+
 ## Stack
 
 | Layer | Choice | Notes |

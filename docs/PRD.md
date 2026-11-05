@@ -132,7 +132,7 @@ Each slice goes through DEFINE → SHIP (see CLAUDE.md). A slice is shipped as s
 3. **People, tasks and events**: People setup page; create, assign, complete, repeat via `nextDueDate`; Today and Week views.
 4. **Home** (built, see `docs/design-slice-4-dashboard.md`): the app shell (left rail, bottom bar, a breakpoint for big touchscreens), and a Home page with a scrolling "Your day" timeline (overdue, a Now marker, today) and Running out, with Done and Bought it.
 5. **Assistant** (built, see `docs/design-slice-5-assistant.md`): tool loop, MVP tools, Undo, eval harness with the first golden set.
-6. **PWA and Docker Compose** packaging (web and api; Ollama stays native).
+6. **PWA and Docker Compose** packaging (built; web and api; Ollama stays native; reached over Tailscale HTTPS; no service worker, so not offline).
 7. **Learned usage**: estimate from restock history, shown as entered or learned.
 
 ## 9. Later (not v1)
