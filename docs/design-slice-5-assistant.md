@@ -1,6 +1,6 @@
 # Slice 5: Assistant. Definition, technical plan and system design
 
-Status: in progress (PRs 1 to 6 built) · Owner: Igor Bondarenko · Date: 2026-11-04 · Source: PRD §3, §4.4, §5, §6, §7, §8 (slice 5). Builds on slices 1 to 4.
+Status: built (PRs 1 to 7) · Owner: Igor Bondarenko · Date: 2026-11-04 · Source: PRD §3, §4.4, §5, §6, §7, §8 (slice 5). Builds on slices 1 to 4.
 
 ## 1. Definition (DEFINE)
 
@@ -51,7 +51,7 @@ Status: in progress (PRs 1 to 6 built) · Owner: Igor Bondarenko · Date: 2026-1
 
 - The loop sends the system prompt, the current screen's messages and the tool list. If the model answers with tool calls, each runs and its result goes back to the model, until it answers in text (at most 6 rounds).
 - Tools **resolve names to ids** (`mark_out({ name: "salt" })`). A name that matches nothing or several items returns a plain result ("not tracked", "matches: oat milk, milk") for the model to ask about. The model never handles ids.
-- Dates: the system prompt carries today's date, the weekday, and a 14-day calendar (weekday to date), so "Friday" is a lookup, not arithmetic.
+- Dates: the system prompt carries today's date and the weekday. Days said in words ("today", "tomorrow", a weekday) are resolved in code, see §11.
 - No new network traffic: the only host the api calls is `OLLAMA_HOST`.
 
 ## 3. Data model
@@ -82,7 +82,7 @@ This is covered by a property test: for random sequences of tool calls, Undo of 
   - `loop.ts`: the tool-call loop and the retry on invalid arguments.
   - `tools.ts`: each tool, built on `createCaller`.
   - `journal.ts`: snapshot, diff, undo.
-  - `prompt.ts`: the system prompt and the calendar table.
+  - `prompt.ts`: the system prompt.
 - `apps/api/src/routers/assistant.ts`: `send`, `history`, `undo`, `clear`, `status`.
 - `apps/api/src/ai/eval/`: `golden.ts` (20 or more prompts, each with seeded data and the expected tool and arguments) and a runner behind `pnpm eval`. It needs Ollama, so it is not part of `pnpm test`.
 
@@ -102,14 +102,14 @@ This is covered by a property test: for random sequences of tool calls, Undo of 
   - The loop with a scripted fake client: a text-only reply; one tool call then a reply; an invalid call that is retried and then given up; the round limit; Ollama unreachable.
   - Write tools record an action; read tools do not.
   - The journal: diff, Undo, the conflict refusal, and the property test above.
-  - The "Friday" calendar table for every weekday.
+  - Day words resolved in code (`resolveToolDates`).
 - **The eval** (`pnpm eval`, real model): at least 20 golden prompts, including the three acceptance prompts, ambiguity (two matches), an untracked item, a prompt that must not change anything, and "don't invent a date". The first baseline sets the real latency target.
 - The Assistant page is checked in the running app at 390px, 1512px and 1920px.
 
 ## 8. Work order (one PR at a time; the next starts after the previous is merged)
 
 1. **This design doc.**
-2. **Shared tools:** `tools.ts` with the argument schemas, name resolution and the calendar helper, with tests.
+2. **Shared tools:** `tools.ts` with the argument schemas, name resolution and the date-word helper, with tests.
 3. **Journal and Undo:** the `assistant_actions` table and migration, snapshot, diff and Undo, with the property test. No model yet.
 4. **Tools over the app code:** the eleven tools on `createCaller`, wrapped in the journal, with tests. No model yet.
 5. **Model and router:** the Ollama client, the loop, the prompt, `assistant_messages` and migration, and the `assistant` router, all tested with the fake client.

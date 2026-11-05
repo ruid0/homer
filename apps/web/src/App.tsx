@@ -1,6 +1,7 @@
 import { Route, Routes } from "react-router-dom";
 import { BottomNav, RailNav } from "./components/Nav";
 import { Wordmark } from "./components/Wordmark";
+import { AssistantPage } from "./pages/AssistantPage";
 import { GroceriesPage } from "./pages/GroceriesPage";
 import { HomePage } from "./pages/HomePage";
 import { ItemsPage } from "./pages/ItemsPage";
@@ -22,6 +23,7 @@ export const App = () => (
           <Route path="/groceries" element={<GroceriesPage />} />
           <Route path="/schedule" element={<SchedulePage />} />
           <Route path="/people" element={<PeoplePage />} />
+          <Route path="/assistant" element={<AssistantPage />} />
         </Routes>
       </main>
     </div>

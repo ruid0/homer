@@ -26,6 +26,7 @@ export const copy = {
     groceries: "Groceries",
     schedule: "Schedule",
     people: "People",
+    assistant: "Assistant",
   },
 
   home: {
@@ -104,6 +105,31 @@ export const copy = {
     removeEvent: "Remove event",
     confirmRemove: (title: string) => `Remove ${title}? It is hidden, and can't be brought back here.`,
     blankTitle: "Enter what's happening.",
+  },
+
+  assistant: {
+    title: "Assistant",
+    chat: "Chat",
+    messageLabel: "Message",
+    placeholder: "Say what changed, or ask a question",
+    send: "Send",
+    thinking: "Thinking.",
+    undo: "Undo",
+    undone: "Undone.",
+    earlier: (count: number) => `Earlier messages (${count})`,
+    hideEarlier: "Hide earlier messages",
+    clear: "Clear chat",
+    confirmClear: "Clear the chat and its history? Changes already made stay.",
+    you: "You",
+    assistant: "HOMER",
+    loadFailed: "Couldn't load the chat. Check that the api is running, then refresh.",
+    sendFailed: "That didn't reach the assistant. Check that the api is running, then send it again.",
+    undoFailed: "Couldn't undo that. Check that the api is running, then try again.",
+    clearFailed: "Couldn't clear the chat. Check that the api is running, then try again.",
+    unreachable: "The assistant can't reach Ollama. Start Ollama, then refresh. The rest of HOMER still works.",
+    noModel: "The assistant's model isn't installed. Pull it with Ollama, then refresh. The rest of HOMER still works.",
+    examplesHint: "Try one of these, or say what changed, like \"We're out of salt\".",
+    examples: ["What do we need?", "What's on today?", "What's running out?"],
   },
 
   people: {
