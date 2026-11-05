@@ -138,11 +138,31 @@ describe("runAssistant", () => {
     await expect(runAssistant({ db, chat, today, history: [], text: "x" })).rejects.toBeInstanceOf(OllamaUnreachable);
   });
 
+  it("writes nothing when the model picks one of several matches, and says so", async () => {
+    const { db, api } = setup();
+    await api.inventory.create({ ...salt, name: "Oat milk" });
+    await api.inventory.create({ ...salt, name: "Soy milk" });
+    const chat = scriptedChat([useTool("mark_out", { name: "Oat milk" }), say("Which milk is out, oat or soy?")]);
+    const done = await runAssistant({ db, chat, today, history: [], text: "We're out of milk" });
+    expect(done.actionIds).toHaveLength(0);
+    expect(done.reply).toContain("?");
+    expect((await api.inventory.list()).map(({ quantity }) => quantity)).toEqual([2, 2]);
+  });
+
+  it("writes nothing for a delete request", async () => {
+    const { db, api } = setup();
+    await api.inventory.create({ ...salt, name: "Milk" });
+    const chat = scriptedChat([useTool("mark_out", { name: "Milk" }), say("I can't delete items.")]);
+    const done = await runAssistant({ db, chat, today, history: [], text: "Delete the milk" });
+    expect(done.actionIds).toHaveLength(0);
+    expect((await api.inventory.list())[0]).toMatchObject({ quantity: 2 });
+  });
+
   it("keeps and reports the actions made before the model went away", async () => {
     const { db, api } = setup();
     await api.inventory.create(salt);
     const chat = scriptedChat([useTool("mark_out", { name: "salt" }), new OllamaUnreachable("down")]);
-    const done = await runAssistant({ db, chat, today, history: [], text: "x" });
+    const done = await runAssistant({ db, chat, today, history: [], text: "out of salt" });
     expect(done.actionIds).toHaveLength(1);
     expect(done.reply.length).toBeGreaterThan(0);
     expect((await api.inventory.list())[0]).toMatchObject({ quantity: 0 });
@@ -152,7 +172,7 @@ describe("runAssistant", () => {
     const { db, api } = setup();
     await api.inventory.create(salt);
     const chat = scriptedChat([useTool("mark_out", { name: "salt" }), new Error("disk full")]);
-    const done = await runAssistant({ db, chat, today, history: [], text: "x" });
+    const done = await runAssistant({ db, chat, today, history: [], text: "out of salt" });
     expect(done.actionIds).toHaveLength(1);
   });
 
@@ -160,7 +180,7 @@ describe("runAssistant", () => {
     const { db, api } = setup();
     await api.inventory.create(salt);
     const chat = scriptedChat([useTool("mark_out", { name: "salt" }), new OllamaUnreachable("down")]);
-    const done = await runAssistant({ db, chat, today, history: [], text: "x" });
+    const done = await runAssistant({ db, chat, today, history: [], text: "out of salt" });
     expect(done.reply.startsWith("Marked Salt as out and added it to groceries.")).toBe(true);
   });
 

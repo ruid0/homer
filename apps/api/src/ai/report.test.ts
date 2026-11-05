@@ -55,6 +55,12 @@ describe("claimsChange", () => {
 });
 
 describe("composeReply", () => {
+  it("says the same refusal once", () => {
+    const refusal = { status: "cannot_delete", message: "I can't delete items." };
+    const salt = [{ name: "mark_out", result: { status: "done", item: "Salt" } }];
+    expect(composeReply({ done: salt, skipped: [refusal, refusal] }, "")).toBe("Marked Salt as out and added it to groceries.\nI can't delete items.");
+  });
+
   const done = [{ name: "mark_out", result: { status: "done", item: "Salt" } }];
 
   it("uses the code's line when something changed, not the model's words", () => {
