@@ -61,9 +61,19 @@ export const SchedulePage = () => {
 
   return (
     <>
-      <h1 className="mb-4 text-page font-semibold">{copy.schedule.title}</h1>
+      <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-page font-semibold">{copy.schedule.title}</h1>
+        <div className="flex gap-3">
+          <button type="button" className={secondaryButton} onClick={() => setEditing({ kind: "event" })}>
+            {copy.schedule.addEvent}
+          </button>
+          <button type="button" className={primaryButton} onClick={() => setEditing({ kind: "task" })}>
+            {copy.schedule.addTask}
+          </button>
+        </div>
+      </header>
 
-      <div className="mb-4 flex flex-wrap items-end gap-3">
+      <div className="mb-4 flex flex-wrap items-center gap-3">
         <div role="group" aria-label={copy.schedule.viewLabel} className="flex gap-3">
           <button type="button" className={toggleButton(mode === "today")} aria-pressed={mode === "today"} onClick={() => setMode("today")}>
             {copy.schedule.todayView}
@@ -72,22 +82,13 @@ export const SchedulePage = () => {
             {copy.schedule.weekView}
           </button>
         </div>
-        <label className="grid gap-1">
-          <span className="text-meta text-muted">{copy.schedule.person}</span>
-          <select className={inputClass} value={filter} onChange={(event) => setFilter(event.target.value)}>
+        <div className="min-w-40 flex-1 sm:max-w-60">
+          <select aria-label={copy.schedule.person} className={inputClass} value={filter} onChange={(event) => setFilter(event.target.value)}>
             <option value="">{copy.schedule.everyone}</option>
             {(people.data ?? []).map((person) => (
               <option key={person.id} value={person.id}>{person.name}</option>
             ))}
           </select>
-        </label>
-        <div className="ml-auto flex flex-wrap gap-3">
-          <button type="button" className={secondaryButton} onClick={() => setEditing({ kind: "event" })}>
-            {copy.schedule.addEvent}
-          </button>
-          <button type="button" className={primaryButton} onClick={() => setEditing({ kind: "task" })}>
-            {copy.schedule.addTask}
-          </button>
         </div>
       </div>
 
