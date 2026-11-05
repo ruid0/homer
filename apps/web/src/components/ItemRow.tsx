@@ -15,7 +15,12 @@ type Props = {
 
 export const ItemRow = ({ item, busy, onList, onBought, onOut, onEdit }: Props) => {
   const urgent = item.runningLow || item.quantity === 0;
-  const note = item.estimateSource ? copy.items.estimateSource[item.estimateSource] : null;
+  const note =
+    item.estimateSource === "learned" && item.learnedFrom !== null
+      ? copy.items.learnedFrom(item.learnedFrom)
+      : item.estimateSource
+        ? copy.items.estimateSource[item.estimateSource]
+        : null;
 
   return (
     <ListRow

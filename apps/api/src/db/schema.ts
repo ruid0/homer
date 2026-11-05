@@ -13,6 +13,8 @@ export const items = sqliteTable(
     quantity: real("quantity").notNull(),
     daysPerUnitEntered: real("days_per_unit_entered"),
     daysPerUnitLearned: real("days_per_unit_learned"),
+    // When the entered estimate was last set by hand. Learning only looks at restocks from then on.
+    learningSince: text("learning_since"),
     lowThresholdDays: integer("low_threshold_days").notNull().default(7),
     createdAt: text("created_at").notNull().$defaultFn(now),
     archivedAt: text("archived_at"),

@@ -18,8 +18,9 @@ export const snapshot = (db: Db | Writer): Snapshot =>
     tableNames.map((name) => [name, db.select().from(journalledTables[name]).orderBy(journalledTables[name].id).all()]),
   ) as unknown as Snapshot;
 
-// Both rows come from the same select, so their keys are in the same order.
-const same = (a: Row, b: Row) => JSON.stringify(a) === JSON.stringify(b);
+// A stored row from before a column was added lacks that key, so only the stored row's own keys are compared.
+const same = (current: Row, stored: Row) =>
+  Object.keys(stored).every((key) => JSON.stringify(current[key]) === JSON.stringify(stored[key]));
 
 const diffRows = (before: Row[], after: Row[]): TableChanges => {
   const old = new Map(before.map((row) => [row.id, row]));
