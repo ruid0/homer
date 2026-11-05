@@ -144,7 +144,8 @@ Each PR runs VERIFY and REVIEW before it is opened, and leaves `main` working wi
 | `qwen3.5:9b` | on | one-week calendar | strict | 51/58 (88%) | 10.2s | 15.9s |
 | **`qwen3.5:9b`** | **on** | **final** (today and tomorrow marked) | **strict** | **51/58 (88%)** | **10.6s** | **15.5s** |
 | **`qwen3.5:27b`** | **off** | **final** | **strict** | **52/58 (89.7%)** | **8.2s** | **12.4s** |
-| **`qwen3.5:9b`** | **on** | **dates resolved in code** | **strict** | **53/58 (91%)** | **10.3s** | **21.0s** |
+| `qwen3.5:9b` | on | dates resolved in code | strict | 53/58 (91%) | 10.3s | 21.0s |
+| **`qwen3.5:9b`** | **on** | **dates and reply lines in code** | **strict** | **54/58 (93%)** | **9.8s** | **19.1s** |
 
 **The two final rows are not the same kind of result.**
 - `qwen3.5:9b` with thinking on fails by not acting: it looks the list up instead of marking salt out, asks a question it should not need, or once picks the wrong item (Oat milk for "milk"). Two of its failures are a wrong date (Sunday written as 2026-11-07).
@@ -163,3 +164,13 @@ The tools now take "today", "tomorrow" or a weekday name for a date, and `resolv
 Result on `qwen3.5:9b`, thinking on, strict checks, two passes: **53/58 (91%)**, median 10.3s, p90 21.0s. No remaining failure is a date. The five failures are all the model acting when it should ask or choosing for the person: it tracked "coffee" at quantity 0 instead of asking how much, completed one of two "bins" tasks on its own, listed milk when asked how much was bought, and once filed a task as an event. These are the next target: reply lines written by code from what changed, and a guard on claimed changes.
 
 The first run after this change scored 78% only because the eval recorded each call's arguments without resolving day words, so a right answer looked empty. The eval now resolves them the same way the loop does.
+
+## 12. Reply lines written by code (follow-up, 2026-11-05)
+
+After a change the reply is a sentence built from what the tool did ("Marked Salt as out and added it to groceries."; "Added the task "Call the plumber" for Friday 2026-11-06."), one line per change, plus the model's closing question if it asked one. The model's own words are used only when nothing changed: an answer, or a question back. This removes the failure that hurt the 27b model, a reply saying "I've added the dentist appointment" with nothing saved, and it makes the reply say the matched name ("Oat milk", not "milk").
+
+- **False claims.** If nothing changed and the reply still says it did ("I've added…", "Added the …", "Got it, marked …"), it is replaced by "I didn't change anything. Try saying it again." The check is first person and past tense only, so honest answers such as "your appointment is scheduled for Thursday" are left alone. It is best effort: a model can word a false claim another way, which is why a change is only ever reported from the recorded result.
+- **Mixed turns.** If one call worked and another did not ("out of salt and flour", with flour untracked), both are reported, so the person does not think both went through. A turn that stops early (gave up, too many steps, the model went away) still lists the changes already made.
+- **Result.** `qwen3.5:9b`, thinking on, strict checks, two passes: **54/58 (93%)**, median 9.8s, p90 19.1s. The four failures are the model acting when it should ask or refuse: it started tracking "flour" at 0 when asked about flour being out, asked for a quantity instead of marking bread bought, marked milk out when asked to delete it, and left a time off a weekly task. Because the line now says what happened ("Marked Milk as out"), the person can see and undo it.
+
+Next: the 90% target is met on the 9b model. What is left is the model deciding to act without being asked to, which a stricter write path (confirming before an item is created or a task completed when the name was not exact) could address. That is not part of this slice.
