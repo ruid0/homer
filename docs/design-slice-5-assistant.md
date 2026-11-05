@@ -184,3 +184,15 @@ A fresh run of the same set scored 52/58 (90%). The risky failures were the mode
 - A refused call counts as skipped. When something else changed in the same turn the reply lists the refusal once. When nothing changed, the model's own words are used, which carry the refusal.
 
 **Result** (same model, two passes): **55/58 (95%)**, median 10.5s, p90 16.5s, up from 52/58. `out-ambiguous` and `out-of-scope` passed on every run and no run marked the wrong item. Remaining failures are not guard cases: the model asked instead of marking milk out when "Milk" and "Oat milk" both exist, an event argument mismatch, and tracking "flour" at 0 when asked about flour being out. A time dropped from a weekly task ("at 18:00") is not fixed here and would be its own change.
+
+## 14. Times said in the message (follow-up, 2026-11-05)
+
+The model sometimes left "at 18:00" off a task or event. `timeWords.ts` (shared, pure) now finds the one time in the person's message ("18:00", "6pm", "6:30 pm") and `addSaidTime` puts it in when the call has a day and no time. It does nothing when:
+
+- there is no time, more than one different time, or a range ("9 to 10pm", "between 5 and 6pm"), because one end would be guessed;
+- the model already gave a time (its own wins);
+- the call has no day (a time needs a day);
+- the turn adds a task and an event together, so it is not clear whose time it is;
+- the time was said in an earlier message. Only the current message counts, which is the safe side.
+
+**Result** (same model, two passes): **55/58 (95%)**, median 10.1s, p90 15.9s. `task-repeat-and-time` passed on every run (it failed twice before, and passed 4 of 4 in a targeted run). The remaining failures are the model asking or answering in words where a tool call was expected (`out-exact-beats-longer`, `bought-text`) and one `restock` run that used `mark_bought` instead.

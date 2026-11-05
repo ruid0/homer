@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createDb } from "../db/client";
+import { tasks } from "../db/schema";
 import { createCaller } from "../routers/index";
 import { scriptedChat, say, useTool } from "./fakeChat";
 import { snapshot, undoAction } from "./journal";
@@ -156,6 +157,27 @@ describe("runAssistant", () => {
     const done = await runAssistant({ db, chat, today, history: [], text: "Delete the milk" });
     expect(done.actionIds).toHaveLength(0);
     expect((await api.inventory.list())[0]).toMatchObject({ quantity: 2 });
+  });
+
+  it("puts in the time the person said when the model leaves it out", async () => {
+    const { db } = setup();
+    const chat = scriptedChat([useTool("add_task", { title: "Water the plants", dueDate: "2026-11-05" }), say("Added.")]);
+    await runAssistant({ db, chat, today, history: [], text: "Water the plants Thursday at 18:00" });
+    expect(db.select().from(tasks).all()[0]).toMatchObject({ dueTime: "18:00" });
+  });
+
+  it("does not guess whose time it is when a task and an event are added together", async () => {
+    const { db } = setup();
+    const both = {
+      content: "",
+      toolCalls: [
+        { name: "add_task", args: { title: "Buy a gift", dueDate: "2026-11-05" } },
+        { name: "add_event", args: { title: "Party", date: "2026-11-05" } },
+      ],
+    };
+    const chat = scriptedChat([both, say("Added.")]);
+    await runAssistant({ db, chat, today, history: [], text: "Task buy a gift and an event party Thursday at 6pm" });
+    expect(db.select().from(tasks).all()[0]).toMatchObject({ dueTime: null });
   });
 
   it("keeps and reports the actions made before the model went away", async () => {

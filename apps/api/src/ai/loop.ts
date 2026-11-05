@@ -1,4 +1,4 @@
-import { parseToolCall, resolveToolDates, toolDefinitions } from "@homer/shared";
+import { addSaidTime, parseToolCall, takesTime, resolveToolDates, toolDefinitions } from "@homer/shared";
 import type { Db } from "../db/client";
 import { assistantCopy } from "../messages";
 import type { ChatClient, ChatMessage, RawToolCall } from "./ollama";
@@ -21,8 +21,10 @@ type Step = { messages: ChatMessage[]; actionIds: number[]; done: DoneChange[]; 
 const runCalls = async (db: Db, today: string, said: Said, calls: RawToolCall[]): Promise<Step> => {
   const known = await knownNames(db);
   const step: Step = { messages: [], actionIds: [], done: [], skipped: [], invalid: 0 };
+  // A said time is filled in only when one call can take it. With a task and an event in one turn it is not clear whose it is.
+  const fillsTime = calls.filter((call) => takesTime(call.name)).length === 1;
   for (const call of calls) {
-    const parsed = parseToolCall(call.name, resolveToolDates(call.args, today));
+    const parsed = parseToolCall(call.name, fillsTime ? addSaidTime(call.name, resolveToolDates(call.args, today), said.now) : resolveToolDates(call.args, today));
     if (!parsed.ok) {
       step.invalid += 1;
       step.messages.push({ role: "tool", toolName: call.name, content: asContent({ status: "error", message: parsed.error }) });
