@@ -1,6 +1,6 @@
-# Slice 1: Items and days remaining. Technical plan and system design
+# Slice 1: Items and days remaining. Definition, technical plan and system design
 
-Status: DONE · Owner: Igor Bondarenko · Date: 2026-11-02 · Source: PRD §4.1, §6, §8 (slice 1)
+Status: Built (slice 1, shipped in v1.0.0) · Owner: Igor Bondarenko · Last updated: 2026-11-05 · Source: PRD §4.1, §6, §8 (slice 1)
 
 ## 1. Scope
 

@@ -1,6 +1,6 @@
 # Slice 5: Assistant. Definition, technical plan and system design
 
-Status: built (PRs 1 to 7) · Owner: Igor Bondarenko · Date: 2026-11-04 · Source: PRD §3, §4.4, §5, §6, §7, §8 (slice 5). Builds on slices 1 to 4.
+Status: Built (PRs 1 to 7, shipped in v1.0.0) · Owner: Igor Bondarenko · Last updated: 2026-11-05 · Source: PRD §3, §4.4, §5, §6, §7, §8 (slice 5). Builds on slices 1 to 4.
 
 ## 1. Definition (DEFINE)
 

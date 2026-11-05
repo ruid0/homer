@@ -1,6 +1,6 @@
 # Slice 4: Home. Definition, technical plan and system design
 
-Status: built, following the timeline design (direction D in the UI rethink) · Owner: Igor Bondarenko · Date: 2026-11-03 · Source: PRD §3, §4.3, §8 (slice 4). Builds on `docs/design-slice-1-items.md`, `docs/design-slice-2-groceries.md`, `docs/design-slice-3-schedule.md` and `docs/design-ui-pass.md`.
+Status: Built (the timeline design, direction D in the UI rethink, shipped in v1.0.0) · Owner: Igor Bondarenko · Last updated: 2026-11-05 · Source: PRD §3, §4.3, §8 (slice 4). Builds on `docs/design-slice-1-items.md`, `docs/design-slice-2-groceries.md`, `docs/design-slice-3-schedule.md` and `docs/design-ui-pass.md`.
 
 ## 1. Definition (DEFINE)
 

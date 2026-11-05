@@ -1,6 +1,6 @@
 # Slice 2: Grocery list. Definition, technical plan and system design
 
-Status: owner questions answered, ready to build · Owner: Igor Bondarenko · Date: 2026-11-02 · Source: PRD §3 goal 2, §4.1, §6, §8 (slice 2). Builds on `docs/design-slice-1-items.md`.
+Status: Built (slice 2, shipped in v1.0.0) · Owner: Igor Bondarenko · Last updated: 2026-11-05 · Source: PRD §3 goal 2, §4.1, §6, §8 (slice 2). Builds on `docs/design-slice-1-items.md`.
 
 ## 1. Definition (DEFINE)
 

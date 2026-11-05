@@ -1,6 +1,6 @@
-# Slice 7: Learned usage
+# Slice 7: Learned usage. Definition, technical plan and system design
 
-Status: built (PRs 1 and 2) · Owner: Igor Bondarenko · Date: 2026-11-05 · Source: PRD §4.1, §9 (open question 1).
+Status: Built (PRs 1 and 2, shipped in v1.0.0) · Owner: Igor Bondarenko · Last updated: 2026-11-05 · Source: PRD §4.1, §11 (open question 1).
 
 ## 1. Definition
 

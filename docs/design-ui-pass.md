@@ -1,6 +1,6 @@
 # UI pass: foundation, navigation, lists, Schedule controls
 
-Status: in progress (PR 1 built) · Owner: Igor Bondarenko · Date: 2026-11-03 · Source: owner request after slice 3, using the `homer-ui` and `frontend-design` skills (`homer-ui` wins where they disagree).
+Status: Superseded (PR 1 built; PRs 2 to 4 were replaced by slice 4) · Owner: Igor Bondarenko · Last updated: 2026-11-05 · Source: owner request after slice 3, using the `homer-ui` and `frontend-design` skills (`homer-ui` wins where they disagree).
 
 ## 1. Definition (DEFINE)
 
