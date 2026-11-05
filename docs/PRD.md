@@ -154,6 +154,6 @@ Answered by the owner on 2026-11-02:
 
 ## 11. Open questions
 
-1. **Learning threshold:** how many restocks before the learned estimate replaces the entered one, and should it blend the two at first?
+1. **Learning threshold:** decided: 3 restocks over at least 14 days, no blending, latest 6 only (see `docs/design-slice-7-learned-usage.md`).
 2. **Late Undo:** if an item changed after the assistant's action (e.g. someone restocked it by hand), what should Undo do: revert only the assistant's change, or refuse and explain?
 3. **Other devices:** phones and the kitchen tablet reach the MacBook over the home network. What happens when the MacBook is asleep or away from home?
