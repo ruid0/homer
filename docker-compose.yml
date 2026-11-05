@@ -12,6 +12,8 @@ services:
       # Ollama runs natively on the Mac so it can use the GPU; Docker on macOS can't.
       OLLAMA_HOST: http://host.docker.internal:11434
       DATABASE_PATH: /data/homer.db
+      BACKUP_DIR: /backups
+      BACKUP_TIME: ${BACKUP_TIME:-06:00}
       # A container runs in UTC. The assistant's "today" and "Friday" need the household's own time.
       TZ: ${TZ:-America/Edmonton}
     # Not published: only the web container talks to the api, and HOMER has no login.
@@ -19,6 +21,8 @@ services:
       - "3001"
     volumes:
       - homer-data:/data
+      # A folder on this machine, not the volume, so backups survive losing the volume. Set BACKUP_HOST_DIR to use another folder.
+      - ${BACKUP_HOST_DIR:-./backups}:/backups
     extra_hosts:
       - "host.docker.internal:host-gateway"
     healthcheck:
