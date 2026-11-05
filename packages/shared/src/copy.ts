@@ -20,16 +20,17 @@ export const toolDescriptions = {
   mark_bought:
     "Something on the grocery list was bought. A tracked item is also restocked by the quantity given.",
   list_tasks:
-    "List tasks and events from a date to a date, both as YYYY-MM-DD. Leave both out for today. Changes nothing.",
+    "List tasks and events from a day to a day, each as today, tomorrow, a weekday name or YYYY-MM-DD. Leave both out for today. Changes nothing.",
   add_task:
-    "Add a task. dueDate is YYYY-MM-DD and is needed for a time or a repeat. person is the name of someone in the household. Never invent a date the person did not give.",
+    "Add a task. dueDate is today, tomorrow, a weekday name or YYYY-MM-DD, and is needed for a time or a repeat. person is the name of someone in the household. Never invent a date the person did not give.",
   add_event:
-    "Add an event on a date (YYYY-MM-DD), with an optional HH:MM time and a person's name.",
+    "Add an event on a day (today, tomorrow, a weekday name or YYYY-MM-DD), with an optional HH:MM time and a person's name.",
   complete_task:
     "Mark an open task done by its title. A repeating task comes back at its next date.",
 } as const;
 
 export const toolErrors = {
+  dateHint: "Use today, tomorrow, a weekday name, or a date like 2026-11-03.",
   unknownTool: (name: string, names: readonly string[]) => `There is no tool called ${name}. Use one of: ${names.join(", ")}.`,
   invalidArguments: (name: string, problems: readonly string[]) => `Invalid arguments for ${name}. ${problems.join(" ")}`,
   problem: (field: string, message: string) => `${field || "arguments"}: ${message}`,

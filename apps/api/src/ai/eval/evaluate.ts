@@ -1,4 +1,4 @@
-import { parseToolCall } from "@homer/shared";
+import { parseToolCall, resolveToolDates } from "@homer/shared";
 import { createDb } from "../../db/client";
 import { createCaller } from "../../routers/index";
 import { runAssistant } from "../loop";
@@ -16,7 +16,8 @@ export type CaseResult = {
 };
 
 const asArgs = (name: string, args: unknown): Record<string, unknown> => {
-  const parsed = parseToolCall(name, args);
+  // The same day-word resolution as the loop, so the recorded arguments are what the tool actually received.
+  const parsed = parseToolCall(name, resolveToolDates(args, EVAL_TODAY));
   return parsed.ok ? (parsed.call.args as Record<string, unknown>) : {};
 };
 
