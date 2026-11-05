@@ -183,6 +183,12 @@ const execute = async (context: Context, call: ToolCall): Promise<ToolResult> =>
 };
 
 // Read tools run as they are. Write tools run inside the journal, so what they change can be undone.
+// Every item and list entry the household has, for checks on what the model picked.
+export const knownNames = async (db: Db): Promise<string[]> => {
+  const api = createCaller({ db });
+  return [...(await api.inventory.list()).map(({ name }) => name), ...(await api.groceries.list()).map(({ text }) => text)];
+};
+
 export const runTool = async (db: Db, today: string, call: ToolCall): Promise<ToolRun> => {
   const context = { db, api: createCaller({ db }), today };
   if (readOnly.has(call.name)) return { result: await execute(context, call), actionId: null };

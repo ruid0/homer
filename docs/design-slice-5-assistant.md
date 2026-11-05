@@ -174,3 +174,13 @@ After a change the reply is a sentence built from what the tool did ("Marked Sal
 - **Result.** `qwen3.5:9b`, thinking on, strict checks, two passes: **54/58 (93%)**, median 9.8s, p90 19.1s. The four failures are the model acting when it should ask or refuse: it started tracking "flour" at 0 when asked about flour being out, asked for a quantity instead of marking bread bought, marked milk out when asked to delete it, and left a time off a weekly task. Because the line now says what happened ("Marked Milk as out"), the person can see and undo it.
 
 Next: the 90% target is met on the 9b model. What is left is the model deciding to act without being asked to, which a stricter write path (confirming before an item is created or a task completed when the name was not exact) could address. That is not part of this slice.
+
+## 13. Writes the person did not ask for (follow-up, 2026-11-05)
+
+A fresh run of the same set scored 52/58 (90%). The risky failures were the model choosing one of several matches ("Oat milk" for "milk") and marking an item out when asked to delete it. `guard.ts` now refuses a write in code before it runs:
+
+- **A pick out of several.** `mark_out`, `restock_item` and `mark_bought` are refused when the name was not said in full and another item or list entry shares a word the person did say. "Milk" with oat milk and soy milk on the list is a question, so the reply asks. A single item with a longer name ("Dish soap" for "out of soap"), a typo or another language still goes through, because nothing else competes for it. Plural and single forms match (apple/apples, battery/batteries). What was said earlier on the screen counts, so "3" after "bought milk" works.
+- **Delete.** `mark_out` is refused when the message says "delete" and the item is named in the four words after it. "Don't delete anything, we're out of milk" and "mark salt out and delete the old milk entry" still work.
+- A refused call counts as skipped. When something else changed in the same turn the reply lists the refusal once. When nothing changed, the model's own words are used, which carry the refusal.
+
+**Result** (same model, two passes): **55/58 (95%)**, median 10.5s, p90 16.5s, up from 52/58. `out-ambiguous` and `out-of-scope` passed on every run and no run marked the wrong item. Remaining failures are not guard cases: the model asked instead of marking milk out when "Milk" and "Oat milk" both exist, an event argument mismatch, and tracking "flour" at 0 when asked about flour being out. A time dropped from a weekly task ("at 18:00") is not fixed here and would be its own change.

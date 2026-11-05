@@ -114,7 +114,7 @@ export const composeReply = ({ done, skipped = [] }: Outcome, modelText: string)
   const said = modelText.trim();
   const question = closingQuestion(said);
   if (done.length > 0) {
-    const failures = skipped.map(skippedLine).filter((line) => line !== "");
+    const failures = [...new Set(skipped.map(skippedLine))].filter((line) => line !== "");
     const lines = [...done.map(({ name, result }) => reportLine(name, result)), ...failures];
     return [...lines, ...(question === null || failures.length > 0 ? [] : [question])].join("\n");
   }

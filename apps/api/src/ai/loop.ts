@@ -2,9 +2,10 @@ import { parseToolCall, resolveToolDates, toolDefinitions } from "@homer/shared"
 import type { Db } from "../db/client";
 import { assistantCopy } from "../messages";
 import type { ChatClient, ChatMessage, RawToolCall } from "./ollama";
+import { refuseWrite, type Said } from "./guard";
 import { systemPrompt } from "./prompt";
 import { composeReply, isWriteTool, withChanges, type DoneChange } from "./report";
-import { runTool } from "./tools";
+import { knownNames, runTool } from "./tools";
 
 export const MAX_ROUNDS = 6;
 const MAX_INVALID_RETRIES = 2;
@@ -17,13 +18,20 @@ const asContent = (value: unknown) => JSON.stringify(value);
 type Step = { messages: ChatMessage[]; actionIds: number[]; done: DoneChange[]; skipped: Record<string, unknown>[]; invalid: number };
 
 // Runs every call of one model turn. A bad call is answered with the reason so the model can fix it. Nothing is written for it.
-const runCalls = async (db: Db, today: string, calls: RawToolCall[]): Promise<Step> => {
+const runCalls = async (db: Db, today: string, said: Said, calls: RawToolCall[]): Promise<Step> => {
+  const known = await knownNames(db);
   const step: Step = { messages: [], actionIds: [], done: [], skipped: [], invalid: 0 };
   for (const call of calls) {
     const parsed = parseToolCall(call.name, resolveToolDates(call.args, today));
     if (!parsed.ok) {
       step.invalid += 1;
       step.messages.push({ role: "tool", toolName: call.name, content: asContent({ status: "error", message: parsed.error }) });
+      continue;
+    }
+    const refusal = isWriteTool(parsed.call.name) ? refuseWrite(parsed.call, said, known) : null;
+    if (refusal !== null) {
+      step.skipped.push(refusal);
+      step.messages.push({ role: "tool", toolName: call.name, content: asContent(refusal) });
       continue;
     }
     const { result, actionId } = await runTool(db, today, parsed.call);
@@ -41,6 +49,7 @@ const runCalls = async (db: Db, today: string, calls: RawToolCall[]): Promise<St
 // The model's loop: ask, run what it calls, show it the results, until it answers in words.
 export const runAssistant = async ({ db, chat, today, history, text }: Input): Promise<Outcome> => {
   const messages: ChatMessage[] = [{ role: "system", content: systemPrompt(today) }, ...history, { role: "user", content: text }];
+  const said = { now: text, recent: [...history.filter(({ role }) => role === "user").map(({ content }) => content), text].join(" ") };
   const actionIds: number[] = [];
   const done: DoneChange[] = [];
   const skipped: Record<string, unknown>[] = [];
@@ -57,7 +66,7 @@ export const runAssistant = async ({ db, chat, today, history, text }: Input): P
       if (reply.toolCalls.length === 0) {
         return { reply: composeReply({ done, skipped }, reply.content), actionIds };
       }
-      const step = await runCalls(db, today, reply.toolCalls);
+      const step = await runCalls(db, today, said, reply.toolCalls);
       actionIds.push(...step.actionIds);
       done.push(...step.done);
       skipped.push(...step.skipped);

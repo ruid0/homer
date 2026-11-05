@@ -73,6 +73,8 @@ export const assistantCopy = {
     unknownPerson: (name: string) => `I don't know ${name}.`,
     notOnList: (name: string) => `${name} isn't on the list.`,
     noTask: (title: string) => `No open task matches "${title}".`,
+    cannotDelete: "I can't delete items. You can remove it from the Items page.",
+    notSaid: (name: string) => `Nothing changed. Did you mean ${name}? Say its full name.`,
   },
   doneBefore: (lines: string, reply: string) => `${lines}\n${reply}`,
   undoChanged: (label: string) => `${label} changed since, so this can't be undone.`,
