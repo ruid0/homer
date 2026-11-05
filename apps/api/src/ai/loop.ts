@@ -37,9 +37,15 @@ export const runAssistant = async ({ db, chat, today, history, text }: Input): P
   const messages: ChatMessage[] = [{ role: "system", content: systemPrompt(today) }, ...history, { role: "user", content: text }];
   const actionIds: number[] = [];
   let invalid = 0;
+  let retriedEmpty = false;
   try {
     for (let round = 0; round < MAX_ROUNDS; round += 1) {
       const reply = await chat.chat(messages, toolDefinitions);
+      // A model sometimes returns nothing at all. Ask once more before giving up.
+      if (reply.toolCalls.length === 0 && reply.content.trim() === "" && !retriedEmpty) {
+        retriedEmpty = true;
+        continue;
+      }
       if (reply.toolCalls.length === 0) {
         return { reply: reply.content.trim() || assistantCopy.noReply, actionIds };
       }

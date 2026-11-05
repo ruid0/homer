@@ -7,7 +7,8 @@
     "dev": "concurrently -n api,web \"pnpm --filter @homer/api dev\" \"pnpm --filter @homer/web dev\"",
     "test": "vitest run",
     "db:migrate": "pnpm --filter @homer/api db:migrate",
-    "typecheck": "pnpm -r --if-present typecheck"
+    "typecheck": "pnpm -r --if-present typecheck",
+    "eval": "pnpm --filter @homer/api eval"
   },
   "keywords": [],
   "author": "",

@@ -9,7 +9,8 @@ const copyFiles = ["copy.ts", "messages.ts", "inlineText.ts"];
 const sourceFiles = (dir: string): string[] =>
   readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
     const path = join(dir, entry.name);
-    if (entry.isDirectory()) return sourceFiles(path);
+    // The eval folder holds test prompts and console output for developers, not text people read.
+    if (entry.isDirectory()) return path.endsWith(join("apps", "api", "src", "ai", "eval")) ? [] : sourceFiles(path);
     const isSource = /\.tsx?$/.test(entry.name) && !entry.name.includes(".test.");
     return isSource && !copyFiles.includes(entry.name) ? [path] : [];
   });
