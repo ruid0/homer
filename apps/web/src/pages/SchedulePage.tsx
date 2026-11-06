@@ -1,4 +1,5 @@
 import { keepPreviousData } from "@tanstack/react-query";
+import { PageHeader } from "../components/PageHeader";
 import { useState } from "react";
 import { EventEditor } from "../components/EventEditor";
 import { EventRow, TaskRow } from "../components/ScheduleRows";
@@ -61,17 +62,19 @@ export const SchedulePage = () => {
 
   return (
     <>
-      <header className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-page font-semibold">{copy.schedule.title}</h1>
-        <div className="flex gap-3">
-          <button type="button" className={secondaryButton} onClick={() => setEditing({ kind: "event" })}>
-            {copy.schedule.addEvent}
-          </button>
-          <button type="button" className={primaryButton} onClick={() => setEditing({ kind: "task" })}>
-            {copy.schedule.addTask}
-          </button>
-        </div>
-      </header>
+      <PageHeader
+        title={copy.schedule.title}
+        action={
+          <div className="flex gap-3">
+            <button type="button" className={secondaryButton} onClick={() => setEditing({ kind: "event" })}>
+              {copy.schedule.addEvent}
+            </button>
+            <button type="button" className={primaryButton} onClick={() => setEditing({ kind: "task" })}>
+              {copy.schedule.addTask}
+            </button>
+          </div>
+        }
+      />
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <div role="group" aria-label={copy.schedule.viewLabel} className="flex gap-3">

@@ -246,7 +246,7 @@ export const copy = {
 
   maintenance: {
     title: "Upkeep",
-    visibleToAll: "Jobs that come round every few weeks, months or years. Everyone in the household can see and change this list.",
+    blurb: "Jobs that come round every few weeks, months or years.",
     loading: "Loading the list.",
     loadFailed: "Couldn't load the list. Check that the api is running, then refresh.",
     empty: "Nothing here yet. Add what comes round every few weeks, months or years, like a furnace filter.",

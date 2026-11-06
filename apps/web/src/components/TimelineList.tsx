@@ -1,6 +1,6 @@
 import type { TimelineRow } from "../lib/timeline";
 import type { ScheduleEvent, ScheduleTask } from "../trpc";
-import { secondaryButton } from "./ui";
+import { doneSize, lateBar, secondaryButton, statusClass } from "./ui";
 import { copy } from "../copy";
 
 type Props = {
@@ -17,7 +17,7 @@ const subline = (parts: (string | null)[]) => parts.filter(Boolean).join(copy.co
 const DoneButton = ({ task, busy, onDone }: { task: ScheduleTask; busy: boolean; onDone: (task: ScheduleTask) => void }) => (
   <button
     type="button"
-    className={`${secondaryButton} shrink-0 px-6`}
+    className={`${secondaryButton} ${doneSize} shrink-0`}
     disabled={busy}
     aria-label={copy.home.doneLabel(task.title)}
     onClick={() => onDone(task)}
@@ -50,14 +50,11 @@ export const TimelineList = ({ rows, nowTime, busy, onDone }: Props) => (
       }
       const task = row.value;
       return (
-        <li key={`${row.kind}-${task.id}`} className={rowClass}>
-          {row.kind === "overdue" ? (
-            <span className="w-24 shrink-0 text-meta font-medium text-late">{copy.schedule.overdueBy(task.daysOverdue)}</span>
-          ) : (
-            <span className={timeClass}>{task.dueTime ?? copy.home.anyTime}</span>
-          )}
+        <li key={`${row.kind}-${task.id}`} className={`${rowClass} ${row.kind === "overdue" ? lateBar : ""}`}>
+          <span className={timeClass}>{task.dueTime ?? copy.home.anyTime}</span>
           <div className="min-w-0 flex-1">
             <p className="text-title font-semibold">{task.title}</p>
+            {row.kind === "overdue" && <p className={statusClass("late")}>{copy.schedule.overdueBy(task.daysOverdue)}</p>}
             {task.personName && <p className="text-meta text-muted">{task.personName}</p>}
           </div>
           <DoneButton task={task} busy={busy} onDone={onDone} />

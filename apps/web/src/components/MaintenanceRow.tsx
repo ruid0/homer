@@ -2,17 +2,19 @@ import { copy } from "../copy";
 import { dueWords, rowDetails } from "../lib/maintenanceText";
 import type { MaintenanceItem } from "../trpc";
 import { ListRow } from "./ListRow";
-import { quietButton, secondaryButton } from "./ui";
+import { doneSize, quietButton, secondaryButton, statusClass } from "./ui";
 
 type Props = { item: MaintenanceItem; busy: boolean; onDone: () => void; onEdit: () => void };
 
 export const MaintenanceRow = ({ item, busy, onDone, onEdit }: Props) => {
   const late = item.status === "overdue" || item.status === "due";
   const urgent = late || item.status === "soon";
+  const level = late ? "late" : urgent ? "warn" : "plain";
   return (
     <ListRow
       title={item.name}
-      status={<span className={urgent ? `text-answer font-semibold ${late ? "text-late" : "text-warn"}` : "text-answer"}>{dueWords(item)}</span>}
+      overdue={item.status === "overdue"}
+      status={<span className={statusClass(level)}>{dueWords(item)}</span>}
       details={rowDetails(item)}
       actions={
         <>
@@ -21,7 +23,7 @@ export const MaintenanceRow = ({ item, busy, onDone, onEdit }: Props) => {
           </button>
           <button
             type="button"
-            className={`${secondaryButton} px-6`}
+            className={`${secondaryButton} ${doneSize}`}
             disabled={busy}
             data-done-action
             onClick={onDone}

@@ -1,4 +1,5 @@
 import { useState, type SubmitEvent } from "react";
+import { PageHeader } from "../components/PageHeader";
 import { Link } from "react-router-dom";
 import { ListCard } from "../components/ListCard";
 import { ListRow } from "../components/ListRow";
@@ -39,8 +40,8 @@ export const PeoplePage = () => {
   };
 
   return (
-    <>
-      <h1 className="mb-4 text-page font-semibold">{copy.people.title}</h1>
+    <div className="mx-auto max-w-3xl">
+      <PageHeader title={copy.people.title} />
 
       <form onSubmit={submit} className="mb-4 flex items-end gap-3">
         <label className="grid flex-1 gap-1">
@@ -107,6 +108,6 @@ export const PeoplePage = () => {
           onClose={closeRename}
         />
       )}
-    </>
+    </div>
   );
 };

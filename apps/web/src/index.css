@@ -11,9 +11,11 @@
   --muted: var(--color-stone-600);
   --line: var(--color-stone-200);
   --line-strong: var(--color-stone-300);
+  /* The edge of a control (button, input): 3:1 against the card, where line-strong is only a divider. */
+  --control: #8a847e;
   --hover: var(--color-stone-100);
   --warn: var(--color-amber-700);
-  --late: var(--color-red-700);
+  --late: var(--color-red-800);
   --scrim: rgb(0 0 0 / 0.5);
 }
 
@@ -21,13 +23,14 @@
   :root {
     /* Charcoal: a soft warm grey, with off-white text and a calmer primary button than pure white. */
     --surface: #1f1d1b;
-    --card: #2a2725;
+    --card: #2d2a28;
     --ink: #e9e5e0;
     --primary: #d8d2ca;
     --on-primary: #1f1d1b;
     --muted: #aaa59d;
     --line: #3a3633;
     --line-strong: #4f4a45;
+    --control: #7f7972;
     --hover: #332f2c;
     --warn: #e6b04f;
     --late: #ef8c80;
@@ -43,6 +46,7 @@
   --color-muted: var(--muted);
   --color-line: var(--line);
   --color-line-strong: var(--line-strong);
+  --color-control: var(--control);
   --color-hover: var(--hover);
   --color-warn: var(--warn);
   --color-late: var(--late);

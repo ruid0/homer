@@ -1,4 +1,5 @@
 import { keepPreviousData } from "@tanstack/react-query";
+import { PageHeader } from "../components/PageHeader";
 import { useRef, useState } from "react";
 import { ListCard } from "../components/ListCard";
 import { MaintenanceDialog, type MaintenanceForm } from "../components/MaintenanceDialog";
@@ -65,12 +66,12 @@ export const MaintenancePage = () => {
   );
 
   return (
-    <>
-      <div className="mb-1 flex items-center justify-between gap-3">
-        <h1 className="text-page font-semibold">{copy.maintenance.title}</h1>
-        <button ref={addButton} type="button" className={primaryButton} onClick={() => open("new")}>{copy.maintenance.addItem}</button>
-      </div>
-      <p className="mb-4 text-muted">{copy.maintenance.visibleToAll}</p>
+    <div className="mx-auto max-w-3xl">
+      <PageHeader
+        title={copy.maintenance.title}
+        blurb={copy.maintenance.blurb}
+        action={<button ref={addButton} type="button" className={primaryButton} onClick={() => open("new")}>{copy.maintenance.addItem}</button>}
+      />
 
       {list.isPending && <p role="status">{copy.maintenance.loading}</p>}
       {list.error && <p role="alert" className="text-late">{copy.maintenance.loadFailed}</p>}
@@ -114,6 +115,6 @@ export const MaintenancePage = () => {
           action={{ label: copy.maintenance.undo, onClick: () => takeBack(undoable.doneId) }}
         />
       )}
-    </>
+    </div>
   );
 };

@@ -45,3 +45,13 @@ export const clearUpkeep = async (request: APIRequestContext) => {
 
 export const seedUpkeep = (request: APIRequestContext, item: { name: string; every: number; unit: Unit; lastDoneOn: string | null }) =>
   call<{ id: number }>(request, "maintenance.add", { ...item, today: todayUtc() });
+
+export const seedTask = (request: APIRequestContext, task: { title: string; dueDate: string | null; dueTime?: string | null }) =>
+  call<{ id: number }>(request, "tasks.add", { title: task.title, dueDate: task.dueDate, dueTime: task.dueTime ?? null });
+
+export const seedEvent = (request: APIRequestContext, event: { title: string; date: string; time?: string | null }) =>
+  call<{ id: number }>(request, "events.add", { title: event.title, date: event.date, time: event.time ?? null });
+
+// An item that runs out in two days (one unit, two days per unit), with a unique name.
+export const seedItem = (request: APIRequestContext, name: string) =>
+  call<{ id: number }>(request, "inventory.create", { name, unit: "bag", quantity: 1, daysPerUnit: 2 });
