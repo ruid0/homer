@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { addDays } from "@homer/shared";
+import { ReminderSetup } from "../components/ReminderSetup";
 import { RoutineGrid } from "../components/RoutineGrid";
 import { RoutineRowDialog } from "../components/RoutineRowDialog";
 import { primaryButton, secondaryButton } from "../components/ui";
@@ -11,7 +12,7 @@ import { trpc } from "../trpc";
 
 type Editing = "new" | number | null;
 
-const RoutineView = ({ personId, name }: { personId: number; name: string }) => {
+const RoutineView = ({ personId, name, remindersOn }: { personId: number; name: string; remindersOn: boolean }) => {
   const today = useToday();
   const utils = trpc.useUtils();
   const [weekStart, setWeekStart] = useState<string | null>(null);
@@ -119,10 +120,14 @@ const RoutineView = ({ personId, name }: { personId: number; name: string }) => 
       {week.data && items.length === 0 && <p>{copy.routine.empty}</p>}
       {week.data && items.length > 0 && <RoutineGrid week={week.data} today={today} onChange={change} onEdit={setEditing} />}
 
+      <ReminderSetup personId={personId} remindersOn={remindersOn} onTurnedOn={() => utils.people.list.invalidate()} />
+
       {editing !== null && (editing === "new" || editingRow) && (
         <RoutineRowDialog
           key={editing}
           row={editingRow}
+          personId={personId}
+          remindersOn={remindersOn}
           pending={addItem.isPending || updateItem.isPending || removeItem.isPending || moveItem.isPending}
           serverError={mutationError?.message}
           canMoveUp={rowIndex > 0}
@@ -146,5 +151,5 @@ export const RoutinePage = () => {
   if (people.isPending) return <p>{copy.routine.loading}</p>;
   if (people.error) return <p role="alert" className="text-late">{copy.routine.loadFailed}</p>;
   if (!person) return <p role="alert" className="text-late">{copy.routine.personMissing}</p>;
-  return <RoutineView personId={person.id} name={person.name} />;
+  return <RoutineView personId={person.id} name={person.name} remindersOn={person.remindersOn} />;
 };
