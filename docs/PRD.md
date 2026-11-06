@@ -137,7 +137,7 @@ Each slice goes through DEFINE → SHIP (see CLAUDE.md). A slice is shipped as s
 
 ## 9. Later (v2)
 
-Planned in `docs/v2-plan.md`, in this order: a daily automatic backup (built), per-person routines (built, `docs/design-routines.md`), jobs and notifications, maintenance schedules (filters, softener salt, cleaning), receipt photos (kept and viewable) to restock from a shopping trip, voice input, and Russian and English support. The vision model is chosen by benchmark, not fixed here. Some of these (notifications) change the "local only" rule in section 5, and that is amended only when the owner approves it.
+Planned in `docs/v2-plan.md`, in this order: a daily automatic backup (built), per-person routines (built, `docs/design-routines.md`), jobs and notifications (built, `docs/design-jobs-and-ntfy.md`), maintenance schedules (filters, softener salt, cleaning), receipt photos (kept and viewable) to restock from a shopping trip, voice input, and Russian and English support. The vision model is chosen by benchmark, not fixed here. Some of these (notifications) change the "local only" rule in section 5, and that is amended only when the owner approves it.
 
 ## 10. Decisions
 
