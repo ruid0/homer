@@ -110,7 +110,8 @@ test.describe("the Due soon card on Home", () => {
     await seedUpkeep(request, weekly("Fresh job", 7));
     await page.goto("/");
     await card(page).getByRole("button", { name: "Done: Fresh job" }).click();
-    await expect(card(page).getByText("Fresh job", { exact: true })).toBeVisible();
+    // The first save has to finish first: a button is disabled while it saves, so an early second tap does nothing.
+    await expect(page.getByRole("status").filter({ hasText: "Fresh job marked done." })).toBeVisible();
     await card(page).getByRole("button", { name: "Done: Fresh job" }).click();
     await expect(card(page).getByRole("alert")).toHaveText("Fresh job is already marked done today.");
   });
@@ -292,5 +293,124 @@ test.describe("one look across screens", () => {
     const heading = page.getByRole("heading", { name: "Chat" });
     await expect(heading).toBeAttached();
     expect((await heading.boundingBox())?.width ?? 99).toBeLessThanOrEqual(1);
+  });
+});
+
+const animationName = (locator: ReturnType<Page["locator"]>, pseudo?: string) =>
+  locator.evaluate((element, which) => getComputedStyle(element, which ?? null).animationName, pseudo);
+
+test.describe("motion", () => {
+  test("a dialog opens with a short fade and scale on a wide screen, centred", async ({ page, request }) => {
+    await seedUpkeep(request, weekly("Gutters", 7));
+    await page.goto("/upkeep");
+    await page.getByRole("button", { name: "Add an item" }).click();
+    const dialog = page.getByRole("dialog");
+    expect(await animationName(dialog)).toBe("dialog-in");
+    expect(await animationName(dialog, "::backdrop")).toBe("backdrop-in");
+    const box = await dialog.boundingBox();
+    expect(Math.round((box?.x ?? 0) + (box?.width ?? 0) / 2)).toBe(640);
+  });
+
+  test.describe("on a phone", () => {
+    test.use({ viewport: { width: 375, height: 700 } });
+
+    test("a dialog is a sheet that slides up from the bottom edge, full width", async ({ page }) => {
+      await page.goto("/upkeep");
+      await page.getByRole("button", { name: "Add an item" }).click();
+      const dialog = page.getByRole("dialog");
+      expect(await animationName(dialog)).toBe("sheet-up");
+      await expect.poll(async () => Math.round(((await dialog.boundingBox())?.y ?? 0) + ((await dialog.boundingBox())?.height ?? 0))).toBe(700);
+      expect(Math.round((await dialog.boundingBox())?.width ?? 0)).toBe(375);
+    });
+  });
+
+  test("a Done flashes the row that moved and slides the toast in, and nothing else flashes", async ({ page, request }) => {
+    await seedUpkeep(request, weekly("Moved job", 20));
+    await seedUpkeep(request, weekly("Other job", 10));
+    await page.goto("/upkeep");
+    await page.getByRole("button", { name: "Done: Moved job" }).click();
+    await expect(page.getByRole("status").filter({ hasText: "Moved job marked done." })).toBeVisible();
+    expect(await animationName(row(page, "Moved job"))).toBe("row-flash");
+    expect(await animationName(row(page, "Other job"))).toBe("none");
+    expect(await animationName(page.getByRole("status").filter({ hasText: "Moved job marked done." }))).toBe("toast-in");
+  });
+
+  test("the flash is one short moment: the row stops being marked once it has played", async ({ page, request }) => {
+    await seedUpkeep(request, weekly("Brief job", 20));
+    await page.goto("/upkeep");
+    await page.getByRole("button", { name: "Done: Brief job" }).click();
+    await expect.poll(() => animationName(row(page, "Brief job"))).toBe("row-flash");
+    await expect.poll(() => animationName(row(page, "Brief job")), { timeout: 5_000 }).toBe("none");
+  });
+
+  test("a done on Home flashes the row that stays on the card", async ({ page, request }) => {
+    await seedUpkeep(request, weekly("Stays job", 7));
+    await page.goto("/");
+    await card(page).getByRole("button", { name: "Done: Stays job" }).click();
+    await expect(page.getByRole("status").filter({ hasText: "Stays job marked done." })).toBeVisible();
+    expect(await animationName(card(page).getByRole("listitem").filter({ hasText: "Stays job" }))).toBe("row-flash");
+  });
+
+  test("a toast settles in the middle of the screen once it has slid in", async ({ page, request }) => {
+    await seedUpkeep(request, weekly("Centre job", 20));
+    await page.goto("/upkeep");
+    await page.getByRole("button", { name: "Done: Centre job" }).click();
+    const toast = page.getByRole("status").filter({ hasText: "Centre job marked done." });
+    await expect(toast).toBeVisible();
+    await expect
+      .poll(async () => {
+        const box = await toast.boundingBox();
+        return Math.round((box?.x ?? 0) + (box?.width ?? 0) / 2);
+      })
+      .toBe(640);
+  });
+
+  test("a button that is saving does not shrink when pressed", async ({ page, request }) => {
+    await seedUpkeep(request, weekly("Busy job", 7));
+    const held = gate();
+    await interceptCall(page, "maintenance.markDone", { when: held.when });
+    await page.goto("/upkeep");
+    try {
+      await page.getByRole("button", { name: "Done: Busy job" }).click();
+      const done = page.getByRole("button", { name: "Done: Busy job" });
+      await expect(done).toBeDisabled();
+      const box = await done.boundingBox();
+      await page.mouse.move((box?.x ?? 0) + 10, (box?.y ?? 0) + 10);
+      await page.mouse.down();
+      expect(await done.evaluate((element) => getComputedStyle(element).scale)).not.toBe("0.97");
+      await page.mouse.up();
+    } finally {
+      held.release();
+    }
+  });
+
+  test("a button gives a small press response while it is held down", async ({ page, request }) => {
+    await seedUpkeep(request, weekly("Press job", 7));
+    await page.goto("/upkeep");
+    const done = page.getByRole("button", { name: "Done: Press job" });
+    const box = await done.boundingBox();
+    await page.mouse.move((box?.x ?? 0) + 10, (box?.y ?? 0) + 10);
+    await page.mouse.down();
+    await expect.poll(() => done.evaluate((element) => getComputedStyle(element).scale)).toBe("0.97");
+    await page.mouse.move(0, 0);
+    await page.mouse.up();
+  });
+
+  test("with reduced motion asked for, the dialog, backdrop, toast, flash, press response and nav fade are all off", async ({ page, request }) => {
+    await seedUpkeep(request, weekly("Calm job", 20));
+    await page.emulateMedia({ reducedMotion: "reduce" });
+    await page.goto("/upkeep");
+    await page.getByRole("button", { name: "Done: Calm job" }).click();
+    const toast = page.getByRole("status").filter({ hasText: "Calm job marked done." });
+    await expect(toast).toBeVisible();
+    expect(await animationName(toast)).toBe("none");
+    expect(await animationName(row(page, "Calm job"))).toBe("none");
+    await page.getByRole("button", { name: "Add an item" }).click();
+    const dialog = page.getByRole("dialog");
+    expect(await animationName(dialog)).toBe("none");
+    expect(await animationName(dialog, "::backdrop")).toBe("none");
+    expect(await page.getByRole("button", { name: "Save" }).evaluate((element) => getComputedStyle(element).transitionDuration)).toBe("0s");
+    await page.getByRole("button", { name: "Cancel" }).click();
+    expect(await page.getByRole("link", { name: "Home" }).first().evaluate((element) => getComputedStyle(element).transitionDuration)).toBe("0s");
   });
 });

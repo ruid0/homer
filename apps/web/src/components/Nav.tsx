@@ -37,7 +37,7 @@ const NavIcon = ({ path, className }: { path: string; className: string }) => (
 );
 
 const linkClass = (layout: string) => ({ isActive }: { isActive: boolean }) =>
-  `flex flex-col items-center justify-center font-bold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${layout} ${
+  `flex flex-col items-center justify-center font-bold transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${layout} ${
     isActive ? "bg-primary text-on-primary" : "hover:bg-hover"
   }`;
 

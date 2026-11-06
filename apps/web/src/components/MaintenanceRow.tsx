@@ -4,9 +4,9 @@ import type { MaintenanceItem } from "../trpc";
 import { ListRow } from "./ListRow";
 import { doneSize, quietButton, secondaryButton, statusClass } from "./ui";
 
-type Props = { item: MaintenanceItem; busy: boolean; onDone: () => void; onEdit: () => void };
+type Props = { item: MaintenanceItem; busy: boolean; justDone?: boolean; onDone: () => void; onEdit: () => void };
 
-export const MaintenanceRow = ({ item, busy, onDone, onEdit }: Props) => {
+export const MaintenanceRow = ({ item, busy, justDone = false, onDone, onEdit }: Props) => {
   const late = item.status === "overdue" || item.status === "due";
   const urgent = late || item.status === "soon";
   const level = late ? "late" : urgent ? "warn" : "plain";
@@ -14,6 +14,7 @@ export const MaintenanceRow = ({ item, busy, onDone, onEdit }: Props) => {
     <ListRow
       title={item.name}
       overdue={item.status === "overdue"}
+      flash={justDone}
       status={<span className={statusClass(level)}>{dueWords(item)}</span>}
       details={rowDetails(item)}
       actions={

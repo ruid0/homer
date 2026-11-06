@@ -43,7 +43,7 @@ export const MaintenancePage = () => {
   const listArea = useRef<HTMLDivElement>(null);
   const addButton = useRef<HTMLButtonElement>(null);
   const focusNextDone = useFocusNextDone(listArea, addButton);
-  const { finish, takeBack, undoable, problem, busy, closeToast } = useMarkDone(today, focusNextDone);
+  const { finish, takeBack, undoable, justDoneId, problem, busy, closeToast } = useMarkDone(today, focusNextDone);
 
   const items = list.data ?? [];
   const editingItem = typeof editing === "number" ? (items.find((item) => item.id === editing) ?? null) : null;
@@ -60,7 +60,7 @@ export const MaintenancePage = () => {
   const rows = (group: MaintenanceItem[]) => (
     <ListCard>
       {group.map((item) => (
-        <MaintenanceRow key={item.id} item={item} busy={busy} onDone={() => finish(item)} onEdit={() => open(item.id)} />
+        <MaintenanceRow key={item.id} item={item} busy={busy} justDone={item.id === justDoneId} onDone={() => finish(item)} onEdit={() => open(item.id)} />
       ))}
     </ListCard>
   );

@@ -1,5 +1,5 @@
 const base =
-  "min-h-11 rounded-lg px-4 text-base font-medium focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:opacity-50";
+  "min-h-11 rounded-lg px-4 text-base font-medium transition-transform active:scale-[0.97] disabled:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:opacity-50";
 
 export const primaryButton = `${base} bg-primary text-on-primary hover:opacity-85`;
 
@@ -11,7 +11,7 @@ export const toggleButton = (selected: boolean) =>
   selected ? `${base} border-2 border-ink bg-hover` : `${base} border border-control hover:bg-hover`;
 
 export const quietButton =
-  "min-h-11 rounded-lg px-4 text-base font-medium text-muted hover:bg-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:opacity-50";
+  "min-h-11 rounded-lg px-4 text-base font-medium text-muted transition-transform hover:bg-hover active:scale-[0.97] disabled:active:scale-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:opacity-50";
 
 // The one-line answer on a row ("Due tomorrow", "Runs out in 2 days"): the same size everywhere, so urgency reads the same on every screen.
 // Late is the heavier and darker of the two, so the two do not differ by hue alone.
