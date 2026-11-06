@@ -6,7 +6,7 @@ import { doneSize, secondaryButton } from "./ui";
 
 type Props = { items: MaintenanceItem[]; busy: boolean; justDoneId?: number | null; onDone: (item: MaintenanceItem) => void };
 
-export const DueSoonList = ({ items, busy, justDoneId = null, onDone }: Props) => (
+export const UpkeepList = ({ items, busy, justDoneId = null, onDone }: Props) => (
   <ul>
     {items.map((item) => (
       <HomeRow

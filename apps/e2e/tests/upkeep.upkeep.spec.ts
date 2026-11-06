@@ -26,7 +26,7 @@ test.describe("the list", () => {
     await page.goto("/upkeep");
     await expect(page.getByRole("heading", { name: "Upkeep" })).toBeVisible();
     await expect(page.getByText(/^Nothing here yet/)).toBeVisible();
-    await expect(page.getByRole("button", { name: "Add an item" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Add job" })).toBeVisible();
   });
 
   test("shows a loading message, not the empty one, while the list loads", async ({ page, request }) => {
@@ -35,7 +35,7 @@ test.describe("the list", () => {
     await interceptCall(page, "maintenance.list", { when: held.when });
     try {
       await page.goto("/upkeep");
-      await expect(page.getByRole("status")).toHaveText("Loading the list.");
+      await expect(page.getByRole("status")).toHaveText("Loading.");
       await expect(page.getByText(/^Nothing here yet/)).toHaveCount(0);
     } finally {
       held.release();
@@ -59,7 +59,7 @@ test.describe("the list", () => {
     await seedUpkeep(request, { name: "Far job", every: 6, unit: "months", lastDoneOn: daysAgo(10) });
     await page.goto("/upkeep");
 
-    const needs = page.getByRole("region", { name: "Needs doing" });
+    const needs = page.getByRole("region", { name: "Due now" });
     // Overdue first (oldest due date first), then the never-done one (due the day it was added, today), then by due date.
     const names = await needs.getByRole("listitem").locator("p.text-title").allTextContents();
     expect(names).toEqual(["Overdue job", "Never job", "Today job", "Tomorrow job", "Soon job"]);
@@ -77,7 +77,7 @@ test.describe("the list", () => {
   test("says nothing is due when everything is later", async ({ page, request }) => {
     await seedUpkeep(request, { name: "Far job", every: 6, unit: "months", lastDoneOn: daysAgo(10) });
     await page.goto("/upkeep");
-    await expect(page.getByText("Nothing is due in the next week.")).toBeVisible();
+    await expect(page.getByText("Nothing due this week.")).toBeVisible();
   });
 });
 
@@ -183,7 +183,7 @@ test.describe("marking done", () => {
 test.describe("adding", () => {
   test("a suggestion fills the form, a last done date sets the due date, and the suggestion is then gone", async ({ page }) => {
     await page.goto("/upkeep");
-    await page.getByRole("button", { name: "Add an item" }).click();
+    await page.getByRole("button", { name: "Add job" }).click();
     const dialog = page.getByRole("dialog");
     await dialog.getByRole("button", { name: "Furnace filter" }).click();
     await expect(dialog.getByRole("textbox", { name: "Name" })).toHaveValue("Furnace filter");
@@ -196,14 +196,14 @@ test.describe("adding", () => {
     await expect(row(page, "Furnace filter")).toContainText("Every 3 months");
     await expect(row(page, "Furnace filter")).toContainText("last done");
 
-    await page.getByRole("button", { name: "Add an item" }).click();
+    await page.getByRole("button", { name: "Add job" }).click();
     await expect(page.getByRole("dialog").getByRole("button", { name: "Furnace filter" })).toHaveCount(0);
     await expect(page.getByRole("dialog").getByRole("button", { name: "Dryer vent" })).toBeVisible();
   });
 
   test("another suggestion in months reads as it is, and a year-long one as a year", async ({ page }) => {
     await page.goto("/upkeep");
-    await page.getByRole("button", { name: "Add an item" }).click();
+    await page.getByRole("button", { name: "Add job" }).click();
     const dialog = page.getByRole("dialog");
     await dialog.getByRole("button", { name: "Fridge coils" }).click();
     await expect(dialog.getByLabel("Unit")).toHaveValue("years");
@@ -214,17 +214,17 @@ test.describe("adding", () => {
 
   test("an item added as not done yet shows as not done yet", async ({ page }) => {
     await page.goto("/upkeep");
-    await page.getByRole("button", { name: "Add an item" }).click();
+    await page.getByRole("button", { name: "Add job" }).click();
     const dialog = page.getByRole("dialog");
     await dialog.getByRole("textbox", { name: "Name" }).fill("Gutters");
     await dialog.getByRole("button", { name: "Save" }).click();
     await expect(row(page, "Gutters")).toContainText("Not done yet");
-    await expect(page.getByRole("region", { name: "Needs doing" }).getByText("Gutters")).toBeVisible();
+    await expect(page.getByRole("region", { name: "Due now" }).getByText("Gutters")).toBeVisible();
   });
 
   test("asks for a name and a sensible interval before saving", async ({ page }) => {
     await page.goto("/upkeep");
-    await page.getByRole("button", { name: "Add an item" }).click();
+    await page.getByRole("button", { name: "Add job" }).click();
     const dialog = page.getByRole("dialog");
     await dialog.getByRole("button", { name: "Save" }).click();
     await expect(dialog.getByRole("alert")).toHaveText("Enter a name.");
@@ -238,7 +238,7 @@ test.describe("adding", () => {
   test("refuses a name already on the list and keeps the dialog open", async ({ page, request }) => {
     await seedUpkeep(request, weekly("Gutters", 1));
     await page.goto("/upkeep");
-    await page.getByRole("button", { name: "Add an item" }).click();
+    await page.getByRole("button", { name: "Add job" }).click();
     const dialog = page.getByRole("dialog");
     await dialog.getByRole("textbox", { name: "Name" }).fill("gutters");
     await dialog.getByRole("button", { name: "Save" }).click();
@@ -293,7 +293,7 @@ test.describe("editing, history and removing", () => {
     await dialog.getByRole("button", { name: "Yes, remove it" }).click();
     await expect(dialog.getByRole("alert")).toHaveText("Could not remove it.");
     await dialog.getByRole("button", { name: "Cancel" }).click();
-    await page.getByRole("button", { name: "Add an item" }).click();
+    await page.getByRole("button", { name: "Add job" }).click();
     await expect(page.getByRole("dialog").getByRole("alert")).toHaveCount(0);
     await expect(row(page, "Gutters")).toBeVisible();
   });
@@ -318,7 +318,7 @@ test.describe("failures and waiting", () => {
   test("a failed add keeps the dialog open with the error", async ({ page }) => {
     await interceptCall(page, "maintenance.add", { answer: failure("Could not add it.") });
     await page.goto("/upkeep");
-    await page.getByRole("button", { name: "Add an item" }).click();
+    await page.getByRole("button", { name: "Add job" }).click();
     const dialog = page.getByRole("dialog");
     await dialog.getByRole("textbox", { name: "Name" }).fill("Gutters");
     await dialog.getByRole("button", { name: "Save" }).click();
@@ -407,7 +407,7 @@ test.describe("failures and waiting", () => {
     const held = gate();
     await interceptCall(page, "maintenance.add", { when: held.when });
     await page.goto("/upkeep");
-    await page.getByRole("button", { name: "Add an item" }).click();
+    await page.getByRole("button", { name: "Add job" }).click();
     const dialog = page.getByRole("dialog");
     await dialog.getByRole("textbox", { name: "Name" }).fill("Gutters");
     try {
@@ -460,7 +460,7 @@ test.describe("dates, limits and focus", () => {
 
   test("the name box stops at 80 characters, so a longer name can never be sent", async ({ page }) => {
     await page.goto("/upkeep");
-    await page.getByRole("button", { name: "Add an item" }).click();
+    await page.getByRole("button", { name: "Add job" }).click();
     const dialog = page.getByRole("dialog");
     const name = dialog.getByRole("textbox", { name: "Name" });
     await expect(name).toHaveAttribute("maxlength", "80");
@@ -477,7 +477,7 @@ test.describe("dates, limits and focus", () => {
     await edit.click();
     await page.getByRole("dialog").getByRole("button", { name: "Cancel" }).click();
     await expect(edit).toBeFocused();
-    const add = page.getByRole("button", { name: "Add an item" });
+    const add = page.getByRole("button", { name: "Add job" });
     await add.click();
     await page.keyboard.press("Escape");
     await expect(add).toBeFocused();
@@ -506,7 +506,7 @@ test.describe("midnight", () => {
     await expect(row(page, "Today job")).toContainText("Due today");
     await page.clock.fastForward(120_000);
     await expect(row(page, "Today job")).toContainText("1 day overdue");
-    await expect(page.getByText("Loading the list.")).toHaveCount(0);
+    await expect(page.getByText("Loading.")).toHaveCount(0);
   });
 });
 
@@ -515,7 +515,7 @@ test.describe("fit, targets and themes", () => {
     await seedUpkeep(request, weekly("Gutters", 7));
     await page.goto("/upkeep");
     const controls = [
-      page.getByRole("button", { name: "Add an item" }),
+      page.getByRole("button", { name: "Add job" }),
       page.getByRole("button", { name: "Edit Gutters" }),
       page.getByRole("button", { name: "Done: Gutters" }),
     ];
@@ -619,7 +619,7 @@ test.describe("fit, targets and themes", () => {
       row(page, "Soon job").getByText("Due in 2 days"),
       row(page, "Far job").getByText(/^Due in \d+ months/),
       row(page, "Far job").getByText(/^Every 6 months/),
-      page.getByRole("heading", { name: "Needs doing" }),
+      page.getByRole("heading", { name: "Due now" }),
     ]) {
       expect(await contrastOf(text)).toBeGreaterThanOrEqual(4.5);
     }
@@ -646,7 +646,7 @@ test.describe("fit, targets and themes", () => {
   test("the row buttons can be reached from the keyboard and show a focus ring", async ({ page, request }) => {
     await seedUpkeep(request, weekly("Gutters", 1));
     await page.goto("/upkeep");
-    await page.getByRole("button", { name: "Add an item" }).focus();
+    await page.getByRole("button", { name: "Add job" }).focus();
     await page.keyboard.press("Tab");
     await expect(page.getByRole("button", { name: "Edit Gutters" })).toBeFocused();
     await page.keyboard.press("Tab");

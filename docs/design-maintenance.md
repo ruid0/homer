@@ -65,7 +65,7 @@ The local date comes from the caller's `today`, like routines, so the household'
 All text in `copy.ts`. Each screen goes through the `frontend-design` and `homer-ui` pass, has browser tests (`pnpm e2e`), and the `ui-reviewer`, per the UI rules in `CLAUDE.md`.
 
 - **Upkeep page** (`/upkeep`, nav label "Upkeep"): cards sorted by what is due first. Each card says what and when in words ("Furnace filter · Due in 3 days"), shows "Every 3 months · last done 10 Nov", and has one primary action, "Done". After "Done" a toast (the existing `Toast`) offers "Undo"; undo is also in the item's history in its dialog, where each done date can be removed, so it is still possible after the toast is gone. Overdue and due-soon are told in words, with colour only as a second signal. "Add item" opens a dialog (name, every N weeks/months/years, last done date or "Not done yet"); "Add a suggestion" lists the five common ones as prefilled forms. Editing, history and removing are in the item's dialog.
-- **Home**: a "Due soon" card next to "Running out" with overdue and next-7-days items and the same "Done" action; nothing there when nothing is due ("Nothing due.").
+- **Home**: an "Upkeep" card next to "Running out" with overdue and next-7-days items and the same "Done" action; nothing there when nothing is due ("Nothing due this week.").
 - States tested: loading, failed to load, empty, suggestions (all added, none left), overdue, due today, due soon, later, "Not done yet", saving, error on done, undo, name already used.
 
 ## 7. Notes (ntfy)
@@ -84,7 +84,7 @@ Each PR leaves `main` working and goes through VERIFY and REVIEW before the next
 2. **Shared domain**: `maintenance.ts`, schemas, property tests.
 3. **Database and api**: tables and migration, the router, tests with in-memory databases (including the name clash, backdated done, and undo of an exact row).
 4. **Maintenance page**: page, dialogs, suggestions, Done and Undo, its browser tests.
-5. **Home "Due soon"** card and its browser tests.
+5. **Home "Upkeep"** card and its browser tests.
 6. **The note job**, with tests for dedup by due date, the `MAINTENANCE_TIME` gate, a failed send and the never-done item, then `.env.example` and README, then this file and `docs/v2-plan.md`, the PRD and `CLAUDE.md` set to Built.
 
 ## 9. Risks

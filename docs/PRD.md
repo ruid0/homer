@@ -41,7 +41,7 @@ The household tracks consumables they care about running out of.
 - HOMER estimates **days remaining** for each item from quantity and usage, and flags it as **running low** when below a threshold (default: 7 days, adjustable per item).
 - Running-low items are added to the **grocery list** automatically. People can also add anything by hand, tracked or not.
 - **Bought it** on a grocery item restocks it (asks for quantity, defaulting to the usual amount) and removes it from the list.
-- **Out of it** sets an item's quantity to zero and adds it to the list.
+- **Ran out** sets an item's quantity to zero and adds it to the list.
 
 **Acceptance criteria**
 - Given milk at 1 litre lasting 2 days per litre, the dashboard shows "Milk runs out in 2 days" and it's on the grocery list.
@@ -128,9 +128,9 @@ Schemas live in `packages/shared/src/schemas.ts`; pure calculations (`daysRemain
 Each slice goes through DEFINE → SHIP (see CLAUDE.md). A slice is shipped as several small PRs, each a testable part that works by itself.
 
 1. **Items and days remaining** (built, see `docs/design-slice-1-items.md`): schema, `daysRemaining` with property tests, Items screen with forms. Restocks recorded from the start.
-2. **Grocery list** (built, see `docs/design-slice-2-groceries.md`): auto-add when low, manual add, Bought it / Out of it.
+2. **Grocery list** (built, see `docs/design-slice-2-groceries.md`): auto-add when low, manual add, Bought it / Ran out.
 3. **People, tasks and events** (built, see `docs/design-slice-3-schedule.md`): People setup page; create, assign, complete, repeat via `nextDueDate`; Today and Week views.
-4. **Home** (built, see `docs/design-slice-4-dashboard.md`): the app shell (left rail, bottom bar, a breakpoint for big touchscreens), and a Home page with a scrolling "Your day" timeline (overdue, a Now marker, today) and Running out, with Done and Bought it.
+4. **Home** (built, see `docs/design-slice-4-dashboard.md`): the app shell (left rail, bottom bar, a breakpoint for big touchscreens), and a Home page with a scrolling "Today" timeline (overdue, a Now marker, today) and Running out, with Done and Bought it.
 5. **Assistant** (built, see `docs/design-slice-5-assistant.md`): tool loop, MVP tools, Undo, eval harness with the first golden set.
 6. **PWA and Docker Compose** (built, see `docs/design-slice-6-packaging.md`): web and api; Ollama stays native; reached over Tailscale HTTPS; no service worker, so not offline.
 7. **Learned usage** (built, see `docs/design-slice-7-learned-usage.md`): estimate from restock history, shown as entered or learned.
