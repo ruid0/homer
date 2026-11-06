@@ -3,18 +3,9 @@ import { listBackups, runBackup } from "../backups/backup";
 import { backupName } from "../backups/retention";
 import type { Db } from "../db/client";
 import { backupLog } from "../messages";
+import { localDate, parseClockTime } from "../time";
 
-const pad = (n: number) => String(n).padStart(2, "0");
-
-export const localDate = (date: Date) => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-
-const TIME = /^([01]\d|2[0-3]):([0-5]\d)$/;
-
-export const parseBackupTime = (time: string): { hour: number; minute: number } => {
-  const match = TIME.exec(time);
-  if (!match) throw new Error(backupLog.badTime(time));
-  return { hour: Number(match[1]), minute: Number(match[2]) };
-};
+const parseBackupTime = (time: string) => parseClockTime(time, "BACKUP_TIME");
 
 // A Mac that slept through the scheduled time still gets today's backup when the api next starts.
 export const needsCatchUp = (now: Date, time: string, names: string[]): boolean => {

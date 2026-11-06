@@ -17,6 +17,7 @@ import { closeOpenEntry, removeOpenEntries, syncGrocery } from "../groceries/syn
 import { findActive, notFound, type ItemRow } from "../inventory/lookup";
 import { applyRestock, learnedFrom, usualRestock } from "../inventory/stock";
 import { messages } from "../messages";
+import { localDate } from "../time";
 import { publicProcedure, router } from "../trpc";
 
 const nameTaken = (name: string) =>
@@ -136,7 +137,8 @@ export const inventoryRouter = router({
     return ctx.db.transaction((tx) => {
       const restored = tx
         .update(items)
-        .set({ ...itemValues(input), ...restartLearning(archived, input), archivedAt: null })
+        // depletedOn restarts, so the days the item spent archived are not taken off the quantity just entered.
+        .set({ ...itemValues(input), ...restartLearning(archived, input), archivedAt: null, depletedOn: localDate(new Date()) })
         .where(eq(items.id, input.id))
         .returning()
         .get();

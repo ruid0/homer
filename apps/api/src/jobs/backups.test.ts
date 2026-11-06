@@ -3,14 +3,15 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import { createDb } from "../db/client";
-import { localDate, needsCatchUp, parseBackupTime, startBackups } from "./backups";
+import { needsCatchUp, startBackups } from "./backups";
+import { localDate, parseClockTime } from "../time";
 
 const at = (hour: number, minute = 0) => new Date(2026, 10, 5, hour, minute);
 
-describe("parseBackupTime", () => {
-  it("reads hours and minutes", () => expect(parseBackupTime("06:30")).toEqual({ hour: 6, minute: 30 }));
-  it.each(["6:00", "24:00", "06:60", "morning"])("rejects %s", (time) => {
-    expect(() => parseBackupTime(time)).toThrow(/BACKUP_TIME/);
+describe("parseClockTime", () => {
+  it("reads hours and minutes", () => expect(parseClockTime("06:30", "BACKUP_TIME")).toEqual({ hour: 6, minute: 30 }));
+  it.each(["6:00", "24:00", "06:60", "morning"])("rejects %s and names the setting", (time) => {
+    expect(() => parseClockTime(time, "BACKUP_TIME")).toThrow(/BACKUP_TIME/);
   });
 });
 

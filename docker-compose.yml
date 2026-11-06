@@ -14,6 +14,7 @@ services:
       DATABASE_PATH: /data/homer.db
       BACKUP_DIR: /backups
       BACKUP_TIME: ${BACKUP_TIME:-06:00}
+      DEPLETION_TIME: ${DEPLETION_TIME:-05:30}
       # A container runs in UTC. The assistant's "today" and "Friday" need the household's own time.
       TZ: ${TZ:-America/Edmonton}
     # Not published: only the web container talks to the api, and HOMER has no login.

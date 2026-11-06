@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import fc from "fast-check";
-import { daysRemaining, effectiveEstimate, groceryAction, isRunningLow, needsRestock } from "./domain";
+import { daysRemaining, depleteStock, effectiveEstimate, groceryAction, isRunningLow, needsRestock } from "./domain";
 
 const positive = fc.double({ min: 0.01, max: 1000, noNaN: true });
 const nonNegative = fc.double({ min: 0, max: 1000, noNaN: true });
@@ -168,5 +168,39 @@ describe("effectiveEstimate", () => {
       daysPerUnit: 20,
       source: "learned",
     });
+  });
+});
+
+describe("depleteStock", () => {
+  it("uses up one unit over its days per unit", () => {
+    expect(depleteStock(1, 30, 30)).toBe(0);
+    expect(depleteStock(2, 10, 5)).toBe(1.5);
+  });
+
+  it("never goes below zero", () => expect(depleteStock(1, 2, 10)).toBe(0));
+
+  it("leaves stock alone without an estimate or when no days passed", () => {
+    expect(depleteStock(3, null, 100)).toBe(3);
+    expect(depleteStock(3, 5, 0)).toBe(3);
+  });
+
+  it("never rises, never goes negative, and keeps days remaining from rising", () => {
+    fc.assert(
+      fc.property(nonNegative, positive, fc.integer({ min: 0, max: 400 }), (quantity, perUnit, days) => {
+        const after = depleteStock(quantity, perUnit, days);
+        expect(after).toBeGreaterThanOrEqual(0);
+        expect(after).toBeLessThanOrEqual(quantity);
+        expect(daysRemaining(after, perUnit) ?? 0).toBeLessThanOrEqual(daysRemaining(quantity, perUnit) ?? 0);
+      }),
+    );
+  });
+
+  it("matches taking the days one at a time", () => {
+    fc.assert(
+      fc.property(nonNegative, positive, fc.integer({ min: 0, max: 60 }), (quantity, perUnit, days) => {
+        const stepwise = Array.from({ length: days }).reduce<number>((q) => depleteStock(q, perUnit, 1), quantity);
+        expect(Math.abs(stepwise - depleteStock(quantity, perUnit, days))).toBeLessThan(1e-3);
+      }),
+    );
   });
 });

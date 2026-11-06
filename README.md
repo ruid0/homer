@@ -75,6 +75,9 @@ docker compose up -d --build
   ```
 
   Open the `https://<machine>.<tailnet>.ts.net` address it prints, then use "Add to Home Screen" (iOS) or "Install app" (Android).
+- **Daily usage.** Stock counts down: once a day (05:30 household time, `DEPLETION_TIME`) and when the api starts, each item
+  with a usage estimate loses what the days since the last run used up, and items that become low are added to the grocery
+  list. A Mac that slept catches up when the api next starts. Like `TZ`, set `DEPLETION_TIME` in your shell or a root `.env`.
 - **Backups.** The api copies the database once a day at 06:00 (household time) into `./backups` on this machine, as
   `homer-YYYY-MM-DD.db`. It keeps the last 14 days and one per week for six weeks before that, and never touches other
   files in the folder. If the Mac slept through 06:00, the api backs up when it next starts. Set `BACKUP_HOST_DIR` to use

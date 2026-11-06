@@ -1,4 +1,4 @@
-import { describeRunsOut } from "../lib/itemText";
+import { describeRunsOut, quantityText } from "../lib/itemText";
 import type { ListItem } from "../trpc";
 import { ListRow } from "./ListRow";
 import { quietButton, secondaryButton } from "./ui";
@@ -26,7 +26,7 @@ export const ItemRow = ({ item, busy, onList, onBought, onOut, onEdit }: Props) 
     <ListRow
       title={item.name}
       status={<span className={urgent ? "font-semibold text-warn" : undefined}>{describeRunsOut(item)}</span>}
-      details={[`${item.quantity} ${item.unit}`, onList ? copy.items.onGroceryList : null, note].filter(
+      details={[`${quantityText(item.quantity)} ${item.unit}`, onList ? copy.items.onGroceryList : null, note].filter(
         (part) => part !== null,
       )}
       actions={

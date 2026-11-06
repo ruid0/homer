@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { describeRunsOut, sortByUrgency } from "./itemText";
+import { describeRunsOut, quantityText, sortByUrgency } from "./itemText";
 
 describe("describeRunsOut", () => {
   it.each([
@@ -36,5 +36,13 @@ describe("sortByUrgency", () => {
     const input = [item("B", 1, 5), item("A", 1, 1)];
     sortByUrgency(input);
     expect(input.map((i) => i.name)).toEqual(["B", "A"]);
+  });
+});
+
+describe("quantityText", () => {
+  it("shows whole numbers as they are and fractions to two decimals", () => {
+    expect(quantityText(3)).toBe("3");
+    expect(quantityText(1.7)).toBe("1.7");
+    expect(quantityText(0.333333)).toBe("0.33");
   });
 });
