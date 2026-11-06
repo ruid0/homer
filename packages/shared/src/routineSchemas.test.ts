@@ -4,6 +4,7 @@ import {
   MAX_ROUTINE_TARGET,
   routineItemInputSchema,
   setRoutineCountInputSchema,
+  updateRoutineItemInputSchema,
 } from "./schemas";
 
 describe("routineItemInputSchema", () => {
@@ -18,6 +19,13 @@ describe("routineItemInputSchema", () => {
   it("rejects an empty or very long name", () => {
     expect(routineItemInputSchema.safeParse({ personId: 1, name: "  " }).success).toBe(false);
     expect(routineItemInputSchema.safeParse({ personId: 1, name: "x".repeat(81) }).success).toBe(false);
+  });
+});
+
+describe("updateRoutineItemInputSchema", () => {
+  it("needs the target, so a rename cannot reset it", () => {
+    expect(updateRoutineItemInputSchema.safeParse({ id: 1, name: "Row A" }).success).toBe(false);
+    expect(updateRoutineItemInputSchema.safeParse({ id: 1, name: "Row A", targetPerDay: 3 }).success).toBe(true);
   });
 });
 

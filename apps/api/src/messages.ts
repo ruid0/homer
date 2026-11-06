@@ -7,6 +7,9 @@ export const messages = {
   personNotFound: "That person doesn't exist. Refresh the list.",
   eventRemoved: "That event is already removed. Refresh the list.",
   taskClosed: "That task is already done or removed. Refresh the list.",
+  routineRowRemoved: "That routine row is already removed. Refresh the list.",
+  routineDateInFuture: "That day hasn't happened yet. Pick today or an earlier day.",
+  routineDateTooOld: (weeks: number) => `That day is before the last ${weeks} weeks. Pick a more recent day.`,
 };
 
 // Written to the api log.

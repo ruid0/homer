@@ -170,14 +170,17 @@ export const MAX_ROUTINE_TARGET = 20;
 export const MAX_ROUTINE_COUNT = 99;
 export const MAX_ROUTINE_WEEKS_BACK = 8;
 
-const routineFields = z.object({
-  name: text.max(80),
-  targetPerDay: z.number().int().min(1).max(MAX_ROUTINE_TARGET).default(1),
+const routineName = text.max(80);
+const routineTarget = z.number().int().min(1).max(MAX_ROUTINE_TARGET);
+
+export const routineItemInputSchema = z.object({
+  personId: personIdSchema,
+  name: routineName,
+  targetPerDay: routineTarget.default(1),
 });
 
-export const routineItemInputSchema = routineFields.extend({ personId: personIdSchema });
-
-export const updateRoutineItemInputSchema = routineFields.extend(idInputSchema.shape);
+// The target is required here, so a rename that leaves it out cannot silently reset it to 1.
+export const updateRoutineItemInputSchema = z.object({ name: routineName, targetPerDay: routineTarget }).extend(idInputSchema.shape);
 
 export const moveRoutineItemInputSchema = idInputSchema.extend({ direction: z.enum(["up", "down"]) });
 
