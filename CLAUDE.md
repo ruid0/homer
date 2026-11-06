@@ -24,7 +24,7 @@ pnpm db:generate   # new Drizzle migration from apps/api/src/db/schema.ts (run i
 pnpm db:migrate    # apply migrations by hand; the api also applies them on boot
 ```
 
-Household copy: `docker compose up -d --build` (see the README). Not set up yet: CI, lint, the browser UI tests (`pnpm e2e`, see "UI rules").
+Household copy: `docker compose up -d --build` (see the README). Browser UI tests: `pnpm e2e` (Playwright in `apps/e2e`, scratch in-memory servers, see "UI rules"; first run needs `pnpm --filter @homer/e2e exec playwright install chromium`). Not set up yet: CI, lint.
 
 - Requires Node 24+, pnpm (pinned to `pnpm@12.16.1` via `packageManager`), and Ollama at `127.0.0.1:11434` with `qwen3-vl:8b` (vision/OCR) and `qwen3.5:9b` (chat + tool calling) pulled.
 - TypeScript 7. Shared settings live in `tsconfig.base.json`; each package extends it. `packages/shared` loads no Node or DOM types on purpose, so domain code stays pure.
@@ -35,6 +35,7 @@ pnpm-workspace TypeScript monorepo:
 
 - `apps/web`: React + Vite + Tailwind; typed tRPC client (`src/trpc.ts`) with TanStack Query. Pages: Home, Items, Groceries, Schedule, People (with a Routine page per person), Assistant.
 - `apps/api`: Hono server with the tRPC adapter. `routers/` (inventory, groceries, schedule, tasks, routines, maintenance, assistant), `ai/` (Ollama client + tool-call loop), `jobs/` (node-cron daily ~06:00 depletion and due-maintenance checks), `db/` (Drizzle schema + migrations, SQLite via `better-sqlite3`).
+- `apps/e2e`: Playwright browser tests (`pnpm e2e`) against scratch copies of the api and web with in-memory data. The one-time browser download is dev-time only; the tests make no calls beyond 127.0.0.1.
 - `packages/shared`: the spine of the app. `schemas.ts` (Zod schemas shared by DB, tRPC, and LLM tools), `tools.ts` (LLM tool definitions + dispatcher types), `domain.ts` (pure functions such as `daysRemaining`, `nextDueDate`).
 
 Key design constraints:
@@ -48,7 +49,7 @@ Key design constraints:
 ## Claude Code setup
 
 - **Skills** (`.claude/skills/`): `coding-style` (the owner's code style), `homer-ui` (visual and interaction rules for `apps/web`), `frontend-design` (from [anthropics/skills](https://github.com/anthropics/skills/tree/main/skills/frontend-design), Apache 2.0; distinctive visual design, and where it conflicts with `homer-ui` the `homer-ui` rules win), `test-driven-development` (red-green-refactor loop).
-- **Subagent** (`.claude/agents/reviewer.md`): read-only, fresh-context review of the uncommitted diff.
+- **Subagents**: `reviewer` (`.claude/agents/reviewer.md`), read-only, fresh-context review of the uncommitted diff; `ui-reviewer` (`.claude/agents/ui-reviewer.md`), the strict UI expert for diffs under `apps/web` (runs `pnpm e2e`, blocks on missing tests or states).
 - **Hooks** (`.claude/settings.json`, `.claude/hooks/`):
   - `guard.sh` (before edits and shell commands) blocks touching `.env` files and the SQLite database directly. Change data through the app or a Drizzle migration.
   - `check.sh` (after editing `.ts`/`.tsx`) runs `pnpm typecheck` and the related tests. If it reports a failure, fix it before moving on.
@@ -65,7 +66,7 @@ Every piece of work moves through six phases, in order. **Name the phase you are
    **Ship in small PRs, not whole slices.** When a meaningful part is done, testable and works by itself (for example the shared domain code, or an api router with its tests, or one page), run VERIFY, REVIEW and SHIP for that part before starting the next. A slice is usually several PRs. Each PR must leave `main` working: typecheck and tests pass, and nothing half-wired is visible in the app. The PLAN names the PR boundaries up front.
 4. **VERIFY**: evidence, not claims. Run `pnpm typecheck` and `pnpm test`, and for anything visual, check the running app with the Playwright MCP and run the UI test (see "UI rules" below). Say what passed and what didn't.
 
-5. **REVIEW**: run the `reviewer` subagent on the diff and address its Must fix items. For UI changes the reviewer also confirms a UI test exists and the VERIFY evidence names it.
+5. **REVIEW**: run the `reviewer` subagent on the diff and address its Must fix items. For any change under `apps/web`, also run the `ui-reviewer` subagent and address its Must fix items (a BLOCK verdict stops the PR).
 6. **SHIP**: open a PR with `.github/pull_request_template.md` filled in, wait for CI (once it exists), merge, then rebuild with `docker compose up -d --build`.
 
 ## UI rules (every new screen and every UI change)
@@ -73,7 +74,8 @@ Every piece of work moves through six phases, in order. **Name the phase you are
 A UI change is anything a person sees or touches: layout, controls, states (loading, empty, error, off), dialogs, copy and colours.
 
 - **Design pass first.** Read `homer-ui`, then consult `frontend-design` for distinctiveness. Where they conflict, `homer-ui` wins. Say in the PLAN what the skill changed in the design.
-- **A UI test comes with every new screen or UI change.** Browser tests (Playwright) run against a scratch api started with its database path set through the process environment (a temporary or in-memory SQLite, never the household database; the guard hook blocks editing env or database files, so don't). They cover the happy path and each empty, error, loading or disabled state the change adds.
-- **Small tweaks.** A copy-only or colour-only change counts as tested when the existing guards pass (`apps/web/src/copy.test.ts`, `rawColors.test.ts`) and the result was looked at in the browser. Anything that changes behavior or adds a state needs a browser test.
-- **The suite does not exist yet.** The first UI PR after this rule adds the Playwright setup and its first test, in its own PR if it is large (nothing half-wired). No other UI PR ships without a test; until the suite exists, the exception is only for that setup PR, and everything else waits for it.
+- **A UI test comes with every new screen or UI change.** Browser tests (Playwright) run against scratch servers whose database path is set through the process environment (in-memory SQLite, never the household database; the guard hook blocks editing env or database files, so don't). They cover the happy path and each empty, error, loading or disabled state the change adds.
+- **Small tweaks.** A copy-only or colour-only change counts as tested when the existing guards pass (`apps/web/src/copy.test.ts`, `rawColors.test.ts`) and the result was looked at in the browser. Anything that changes behavior or adds a state needs a browser test, and the `ui-reviewer` still runs.
+- **The suite is `pnpm e2e`** (`apps/e2e`). It starts two scratch copies of the app (notifications on and off) with in-memory databases, in UTC, and never touches the household copy. Add a spec in `apps/e2e/tests/` named `<screen>.on.spec.ts` or `<screen>.off.spec.ts` for the copy it needs; seed data through the api in `tests/scratch.ts`, with unique names per test.
+- **The UI reviewer is strict.** For any diff under `apps/web`, run the `ui-reviewer` subagent in REVIEW, as well as `reviewer`. It runs `pnpm e2e`, checks every state against a test, looks at the change at phone and tablet widths, and blocks on a missing test, a missed state, a `homer-ui` violation or no recorded `frontend-design` pass. Address its Must fix items before SHIP.
 - **Evidence goes in the PR.** The Verification section of the PR names the UI test that ran and the states looked at in the browser, including loading, failed and off states.

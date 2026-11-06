@@ -86,6 +86,7 @@ export const RoutineReminders = ({ personId, itemId, state }: Props) => {
         </ul>
       )}
 
+      {state === "failed" && <p role="alert" className="text-late">{copy.reminders.statusFailed}</p>}
       {state === "notificationsOff" && <p className="text-muted">{copy.reminders.notificationsOff}</p>}
       {state === "needsSetup" && <p className="text-muted">{copy.reminders.needSetup}</p>}
       <div className="grid gap-3">

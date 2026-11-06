@@ -29,7 +29,7 @@ export const ReminderSetup = ({ personId, state, onTurnedOn }: Props) => {
     <section className="mt-6 grid gap-2 rounded-xl border border-line p-4" aria-labelledby="reminder-setup">
       <h2 id="reminder-setup" className="font-semibold">{copy.reminders.setupTitle}</h2>
       {state === "notificationsOff" && <p>{copy.reminders.notificationsOffSetup}</p>}
-      {state === "failed" && <p role="alert" className="text-late">{copy.reminders.loadFailed}</p>}
+      {state === "failed" && <p role="alert" className="text-late">{copy.reminders.statusFailed}</p>}
       {(state === "needsSetup" || state === "ready") && !shown && (
         <button
           type="button"
