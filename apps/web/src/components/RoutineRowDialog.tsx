@@ -4,11 +4,14 @@ import { copy } from "../copy";
 import type { RoutineRow } from "../trpc";
 import { Dialog } from "./Dialog";
 import { Field } from "./Field";
+import { RoutineReminders } from "./RoutineReminders";
 import { inputClass, primaryButton, quietButton, secondaryButton } from "./ui";
 
 type Props = {
   // Null means adding a new row.
   row: RoutineRow | null;
+  personId: number;
+  remindersOn: boolean;
   pending: boolean;
   serverError?: string;
   canMoveUp: boolean;
@@ -19,7 +22,7 @@ type Props = {
   onClose: () => void;
 };
 
-export const RoutineRowDialog = ({ row, pending, serverError, canMoveUp, canMoveDown, onSave, onMove, onRemove, onClose }: Props) => {
+export const RoutineRowDialog = ({ row, personId, remindersOn, pending, serverError, canMoveUp, canMoveDown, onSave, onMove, onRemove, onClose }: Props) => {
   const [name, setName] = useState(row?.name ?? "");
   const [target, setTarget] = useState(String(row?.targetPerDay ?? 1));
   const [error, setError] = useState<string>();
@@ -54,6 +57,7 @@ export const RoutineRowDialog = ({ row, pending, serverError, canMoveUp, canMove
           />
         </Field>
         {(error ?? serverError) && <p role="alert" className="text-late">{error ?? serverError}</p>}
+        {row && <RoutineReminders personId={personId} itemId={row.id} remindersOn={remindersOn} />}
         {row && (
           <div className="flex flex-wrap gap-2">
             <button type="button" className={secondaryButton} disabled={!canMoveUp || pending} onClick={() => onMove("up")}>
