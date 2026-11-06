@@ -1,6 +1,6 @@
 # Jobs and notifications: daily depletion, ntfy, routine reminders. Definition, technical plan and system design
 
-Status: In progress (PRs 1, 2 and 3a built: depletion, the sender and household notes, reminders without a screen) · Owner: Igor Bondarenko · Last updated: 2026-11-05 · Source: `docs/v2-plan.md` theme A, the owner's decisions of 2026-11-05, and the PRD §4.1 and §5. Builds on `docs/design-slice-1-items.md`, `docs/design-slice-2-groceries.md` and `docs/design-routines.md`.
+Status: Built (daily depletion, the sender and household notes, and routine reminders with their screen) · Owner: Igor Bondarenko · Last updated: 2026-11-05 · Source: `docs/v2-plan.md` theme A, the owner's decisions of 2026-11-05, and the PRD §4.1 and §5. Builds on `docs/design-slice-1-items.md`, `docs/design-slice-2-groceries.md` and `docs/design-routines.md`.
 
 The repo is public. Topics, tokens and the household's real data never go into this repo, its tests or its logs.
 
@@ -74,8 +74,8 @@ Quantities are now fractions, so the Items screen shows them to two decimals.
      - `people.reminderSetup` makes a person's secret topic (`homer-` plus 32 random hex digits) once, and returns it with the ntfy server so they can subscribe on their phone. The topic never appears in the people list, in renames or adds, or in the reminders list. `people.list` shows only `remindersOn`.
      - `routines.addReminder({ itemId, text, repeatDaily })` (needs reminders turned on for that person; "every day" needs a clock time), `routines.reminders({ personId })` and `routines.removeReminder`.
      - A job checks every minute (only when notifications are on). For each person with due reminders it sends one generic note, "Routine: 2 rows not done.", to that person's own topic, only when a row is below its target today. A one-off reminder is finished when it fires, a daily one moves to its next time. A reminder more than 30 minutes late is dropped (the Mac was asleep). A failed send leaves it in place and is retried each minute until it is too late.
-   - **3b, the screen.** In the row dialog: the list of reminders, an input ("in an hour", "at 13:30"), quick buttons (In 30 min, In an hour, In 2 hours), an "Every day" box, and remove. On the Routine screen: turning reminders on for the person and the steps to subscribe on their phone, or a note that notifications are off.
-4. **Docs.** This file set to Built, plus the PRD, v2 plan and `CLAUDE.md`.
+   - **3b, the screen (built).** In the row dialog: the list of reminders with remove, and a timer-style way to add one: hours and minutes pickers for a wait (up to 24 hours), or the native time picker for a time of day with an "Every day" box. The pickers send `in N minutes` or `HH:MM`, so nobody types a phrase. On the Routine screen, a card turns reminders on for the person and shows the ntfy server and the secret topic only while open. Row dialogs say reminders need turning on first.
+4. **Docs (built).** This file set to Built, plus the PRD, v2 plan, README and `CLAUDE.md`.
 
 ## 7. Risks
 

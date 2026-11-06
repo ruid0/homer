@@ -1,6 +1,6 @@
 # H.O.M.E.R. v2: plan
 
-Status: In progress (owner decisions recorded 2026-11-05; steps 1 and 2, backups and routines, are built) · Owner: Igor Bondarenko · Last updated: 2026-11-05 · Source: v1.0.0 release, PRD §3 and §9, and the owner's own earlier project `~/PetProjects/Assistant` (same household, different stack), which has working versions of several of these ideas.
+Status: In progress (owner decisions recorded 2026-11-05; steps 1 to 3, backups, routines and jobs with ntfy, are built) · Owner: Igor Bondarenko · Last updated: 2026-11-05 · Source: v1.0.0 release, PRD §3 and §9, and the owner's own earlier project `~/PetProjects/Assistant` (same household, different stack), which has working versions of several of these ideas.
 
 v1 is pull-only: HOMER shows what is due when someone opens it. v2 makes it push, keeps its data safe, and widens what it can read and hear, without breaking the rule that household data stays in the house.
 
@@ -73,7 +73,7 @@ The first step is a measurement: a golden set of Russian and mixed-language prom
 
 1. **Backups** (built): a daily copy at 06:00 from the api into a folder on the Mac, checked after writing, 14 daily plus 6 weekly kept, caught up at boot if the Mac slept, restore steps in the README (tried on a scratch stack). Receipt photos join the backup when receipts are built.
 2. **Routines** (built), on a person's page.
-3. **A. Jobs and notifications**, starting with the daily depletion check, then ntfy and the end-of-day notification.
+3. **A. Jobs and notifications** (built, `docs/design-jobs-and-ntfy.md`): the daily depletion check, ntfy, the end-of-day note, and per-row routine reminders set like a timer. Due-maintenance reminders join when maintenance is built.
 4. **B. Maintenance schedules.**
 5. **C. Receipts**, starting with the vision-model benchmark.
 6. **D. Voice**, starting with the dictation check, together with the first measurement for **F. Two languages**.
