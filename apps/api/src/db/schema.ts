@@ -70,6 +70,8 @@ export const people = sqliteTable(
     createdAt: text("created_at").notNull().$defaultFn(now),
     // Not used: people are not removed in this household. Kept so the applied migration stays as it is.
     archivedAt: text("archived_at"),
+    // The secret ntfy topic for this person's routine reminders. It leaves the api only when they set up their phone.
+    notifyTopic: text("notify_topic"),
   },
   (table) => [
     uniqueIndex("people_active_name_unique")
@@ -129,6 +131,24 @@ export const routineTicks = sqliteTable(
     count: integer("count").notNull(),
   },
   (table) => [uniqueIndex("routine_ticks_item_date_idx").on(table.routineItemId, table.date)],
+);
+
+// A reminder on a routine row. One-off ones are marked done when they fire, daily ones move to the next day.
+export const routineReminders = sqliteTable(
+  "routine_reminders",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    routineItemId: integer("routine_item_id")
+      .notNull()
+      .references(() => routineItems.id),
+    // When it next fires, as an ISO-8601 UTC time.
+    fireAt: text("fire_at").notNull(),
+    // HH:MM when it repeats every day, otherwise null.
+    dailyTime: text("daily_time"),
+    createdAt: text("created_at").notNull().$defaultFn(now),
+    removedAt: text("removed_at"),
+  },
+  (table) => [index("routine_reminders_fire_idx").on(table.removedAt, table.fireAt)],
 );
 
 // Small facts the daily jobs remember between runs, such as the day the end-of-day note was last sent.

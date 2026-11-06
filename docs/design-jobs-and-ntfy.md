@@ -1,6 +1,6 @@
 # Jobs and notifications: daily depletion, ntfy, routine reminders. Definition, technical plan and system design
 
-Status: In progress (PRs 1 and 2 of 4 built: depletion, the sender and the household notes) · Owner: Igor Bondarenko · Last updated: 2026-11-05 · Source: `docs/v2-plan.md` theme A, the owner's decisions of 2026-11-05, and the PRD §4.1 and §5. Builds on `docs/design-slice-1-items.md`, `docs/design-slice-2-groceries.md` and `docs/design-routines.md`.
+Status: In progress (PRs 1, 2 and 3a built: depletion, the sender and household notes, reminders without a screen) · Owner: Igor Bondarenko · Last updated: 2026-11-05 · Source: `docs/v2-plan.md` theme A, the owner's decisions of 2026-11-05, and the PRD §4.1 and §5. Builds on `docs/design-slice-1-items.md`, `docs/design-slice-2-groceries.md` and `docs/design-routines.md`.
 
 The repo is public. Topics, tokens and the household's real data never go into this repo, its tests or its logs.
 
@@ -67,7 +67,14 @@ Quantities are now fractions, so the Items screen shows them to two decimals.
 
 ## 6. Later PRs
 
-3. **Routine reminders.** `parseReminderWhen(text, now)` in `packages/shared`; a `routine_reminders` table (row, next fire time in UTC, optional daily time); `people.notify_topic` made by HOMER and shown on the person's Routine screen with subscribe steps; a job that checks every minute. A reminder more than 30 minutes late is dropped. A one-off reminder is removed after it fires.
+3. **Routine reminders**, in two PRs.
+   - **3a, parser, data, api and job (built).**
+     - `parseReminderWhen(text)` in `packages/shared/src/reminders.ts` reads "in an hour", "in half an hour", "in 30 minutes", "in 1 hour 30 minutes", "in 1.5 hours", "45 min", "13:30", "at 13:30", "1:30pm", "at 1pm". Relative times can be up to 24 hours. It returns null for anything else and never guesses. English only for now (Russian comes with theme F).
+     - `routine_reminders` (row, next fire time in UTC, optional `HH:MM` for daily, `removed_at`) and `people.notify_topic` (migration 0012).
+     - `people.reminderSetup` makes a person's secret topic (`homer-` plus 32 random hex digits) once, and returns it with the ntfy server so they can subscribe on their phone. The topic never appears in the people list, in renames or adds, or in the reminders list. `people.list` shows only `remindersOn`.
+     - `routines.addReminder({ itemId, text, repeatDaily })` (needs reminders turned on for that person; "every day" needs a clock time), `routines.reminders({ personId })` and `routines.removeReminder`.
+     - A job checks every minute (only when notifications are on). For each person with due reminders it sends one generic note, "Routine: 2 rows not done.", to that person's own topic, only when a row is below its target today. A one-off reminder is finished when it fires, a daily one moves to its next time. A reminder more than 30 minutes late is dropped (the Mac was asleep). A failed send leaves it in place and is retried each minute until it is too late.
+   - **3b, the screen.** In the row dialog: the list of reminders, an input ("in an hour", "at 13:30"), quick buttons (In 30 min, In an hour, In 2 hours), an "Every day" box, and remove. On the Routine screen: turning reminders on for the person and the steps to subscribe on their phone, or a note that notifications are off.
 4. **Docs.** This file set to Built, plus the PRD, v2 plan and `CLAUDE.md`.
 
 ## 7. Risks
