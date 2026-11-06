@@ -1,6 +1,8 @@
-import type { ItemInput } from "@homer/shared";
+import { MAX_MAINTENANCE_EVERY, type ItemInput } from "@homer/shared";
 
 const addItem = "Add item";
+const notDoneYet = "Not done yet";
+const unitNames = { weeks: "weeks", months: "months", years: "years" } as const;
 const editItem = (name: string) => `Edit ${name}`;
 
 const common = {
@@ -27,6 +29,7 @@ export const copy = {
     schedule: "Schedule",
     people: "People",
     assistant: "Assistant",
+    upkeep: "Upkeep",
   },
 
   home: {
@@ -236,6 +239,63 @@ export const copy = {
     confirmRemove: "Remove this row? Its past days stay saved, but it leaves the grid.",
     confirmYes: "Yes, remove it",
     keep: "Keep it",
+  },
+
+  maintenance: {
+    title: "Upkeep",
+    visibleToAll: "Jobs that come round every few weeks, months or years. Everyone in the household can see and change this list.",
+    loading: "Loading the list.",
+    loadFailed: "Couldn't load the list. Check that the api is running, then refresh.",
+    empty: "Nothing here yet. Add what comes round every few weeks, months or years, like a furnace filter.",
+    addItem: "Add an item",
+    needsDoing: "Needs doing",
+    nothingDue: "Nothing is due in the next week.",
+    later: "Later",
+    done: "Done",
+    doneLabel: (name: string) => `Done: ${name}`,
+    edit: "Edit",
+    editLabel: (name: string) => `Edit ${name}`,
+    neverDone: notDoneYet,
+    dueToday: "Due today",
+    dueTomorrow: "Due tomorrow",
+    dueInDays: (days: number) => `Due in ${days} days`,
+    overdueDays: (days: number) => (days === 1 ? "1 day overdue" : `${days} days overdue`),
+    dueOn: (date: string) => `Due ${date}`,
+    cycle: (every: number, unit: "weeks" | "months" | "years") =>
+      every === 1 ? { weeks: "Every week", months: "Every month", years: "Every year" }[unit] : `Every ${every} ${unitNames[unit]}`,
+    lastDone: (date: string) => `last done ${date}`,
+    doneToast: (name: string) => `${name} marked done.`,
+    undo: "Undo",
+    addTitle: "Add an item",
+    editTitle: (name: string) => `Edit ${name}`,
+    suggestionsLabel: "Start from a suggestion",
+    suggestions: [
+      { name: "Furnace filter", every: 3, unit: "months" },
+      { name: "Water softener salt", every: 1, unit: "months" },
+      { name: "Smoke alarm batteries", every: 6, unit: "months" },
+      { name: "Dryer vent", every: 12, unit: "months" },
+      { name: "Fridge coils", every: 12, unit: "months" },
+    ] as const,
+    name: "Name",
+    every: "Every",
+    unit: "Unit",
+    unitNames,
+    lastDoneLabel: "Last done",
+    notDoneYetLabel: notDoneYet,
+    blankName: "Enter a name.",
+    badEvery: `Enter a whole number from 1 to ${MAX_MAINTENANCE_EVERY}.`,
+    badDate: "Pick a date from today back to a year ago.",
+    historyTitle: "Done on",
+    noHistory: `${notDoneYet}.`,
+    markDoneOn: "Mark done on",
+    markDone: "Mark done",
+    removeDate: "Remove",
+    removeDateLabel: (date: string) => `Remove the done date ${date}`,
+    remove: "Remove item",
+    confirmRemove: "Remove this item? Its done dates stay saved, but it leaves the list.",
+    confirmYes: "Yes, remove it",
+    keep: "Keep it",
+    historyFailed: "Couldn't load the done dates. Check that the api is running, then refresh.",
   },
 
   reminders: {

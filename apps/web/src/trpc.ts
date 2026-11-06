@@ -18,6 +18,8 @@ export type RoutineWeek = inferRouterOutputs<AppRouter>["routines"]["week"];
 
 export type RoutineRow = RoutineWeek["items"][number];
 
+export type MaintenanceItem = inferRouterOutputs<AppRouter>["maintenance"]["list"][number];
+
 type ScheduleView = inferRouterOutputs<AppRouter>["schedule"]["view"];
 
 export type ScheduleTask = ScheduleView["overdue"][number];

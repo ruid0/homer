@@ -23,3 +23,25 @@ export const seedReminder = async (request: APIRequestContext, personId: number,
   await call(request, "people.reminderSetup", { id: personId });
   return call(request, "routines.addReminder", { itemId, text, repeatDaily: false });
 };
+
+type Unit = "weeks" | "months" | "years";
+
+// The household day on the scratch copies. The api and the browser both run in UTC.
+export const todayUtc = (): string => new Date().toISOString().slice(0, 10);
+
+export const daysAgo = (days: number): string => new Date(Date.now() - days * 86_400_000).toISOString().slice(0, 10);
+
+const query = async <T>(request: APIRequestContext, procedure: string, input: unknown): Promise<T> => {
+  const response = await request.get(`/trpc/${procedure}?input=${encodeURIComponent(JSON.stringify(input))}`);
+  const body = (await response.json()) as { result?: { data: T } };
+  if (!body.result) throw new Error(`${procedure} failed: ${JSON.stringify(body)}`);
+  return body.result.data;
+};
+
+export const clearUpkeep = async (request: APIRequestContext) => {
+  const items = await query<{ id: number }[]>(request, "maintenance.list", { today: todayUtc() });
+  for (const item of items) await call(request, "maintenance.remove", { id: item.id });
+};
+
+export const seedUpkeep = (request: APIRequestContext, item: { name: string; every: number; unit: Unit; lastDoneOn: string | null }) =>
+  call<{ id: number }>(request, "maintenance.add", { ...item, today: todayUtc() });

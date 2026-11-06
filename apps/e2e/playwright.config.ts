@@ -5,6 +5,8 @@ import { defineConfig, devices } from "@playwright/test";
 const copies = {
   on: { api: 3991, web: 3992 },
   off: { api: 3993, web: 3994 },
+  // Its own copy: the upkeep list is shared by everyone, so these tests run one after another and start by clearing it.
+  upkeep: { api: 3995, web: 3996 },
 };
 
 const apiServer = (name: keyof typeof copies) => ({
@@ -51,10 +53,16 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"], baseURL: `http://127.0.0.1:${copies.on.web}` },
     },
     {
+      name: "upkeep",
+      testMatch: /\.upkeep\.spec\.ts$/,
+      fullyParallel: false,
+      use: { ...devices["Desktop Chrome"], baseURL: `http://127.0.0.1:${copies.upkeep.web}` },
+    },
+    {
       name: "notifications-off",
       testMatch: /\.off\.spec\.ts$/,
       use: { ...devices["Desktop Chrome"], baseURL: `http://127.0.0.1:${copies.off.web}` },
     },
   ],
-  webServer: [apiServer("on"), webServer("on"), apiServer("off"), webServer("off")],
+  webServer: [apiServer("on"), webServer("on"), apiServer("off"), webServer("off"), apiServer("upkeep"), webServer("upkeep")],
 });
