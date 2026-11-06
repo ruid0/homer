@@ -7,12 +7,11 @@ import { Toast } from "../components/Toast";
 import { primaryButton } from "../components/ui";
 import { copy } from "../copy";
 import { needsDoing } from "../lib/maintenanceText";
+import { useMarkDone } from "../lib/useMarkDone";
 import { useToday } from "../lib/useToday";
 import { trpc, type MaintenanceItem } from "../trpc";
 
 type Editing = "new" | number | null;
-
-type Undoable = { doneId: number; message: string };
 
 export const MaintenancePage = () => {
   const today = useToday();
@@ -20,8 +19,7 @@ export const MaintenancePage = () => {
   // keepPreviousData: at midnight the day changes, and the list stays on screen until the new answer arrives.
   const list = trpc.maintenance.list.useQuery({ today }, { placeholderData: keepPreviousData });
   const [editing, setEditing] = useState<Editing>(null);
-  const [undoable, setUndoable] = useState<Undoable | null>(null);
-  const [problem, setProblem] = useState<string>();
+  const { finish, takeBack, undoable, problem, busy, closeToast } = useMarkDone(today);
 
   const refresh = () => utils.maintenance.list.invalidate();
 
@@ -40,27 +38,11 @@ export const MaintenancePage = () => {
     resetDialogErrors();
     setEditing(next);
   };
-  const markDone = trpc.maintenance.markDone.useMutation({ onError: (error) => setProblem(error.message), onSettled: refresh });
-  const undo = trpc.maintenance.undoDone.useMutation({ onError: (error) => setProblem(error.message), onSettled: refresh });
 
   const items = list.data ?? [];
   const editingItem = typeof editing === "number" ? (items.find((item) => item.id === editing) ?? null) : null;
   const dialogError = add.error ?? update.error ?? remove.error;
   const takenNames = items.filter((item) => item.id !== editingItem?.id).map((item) => item.name);
-
-  const finish = (item: MaintenanceItem) => {
-    setProblem(undefined);
-    markDone.mutate(
-      { id: item.id, doneOn: today, today },
-      { onSuccess: ({ doneId }) => setUndoable({ doneId, message: copy.maintenance.doneToast(item.name) }) },
-    );
-  };
-
-  const takeBack = (doneId: number) => {
-    setProblem(undefined);
-    // The toast stays until the undo worked, so a failed undo can be tried again.
-    undo.mutate({ doneId }, { onSuccess: () => setUndoable(null) });
-  };
 
   const save = (form: MaintenanceForm) =>
     editingItem
@@ -72,7 +54,7 @@ export const MaintenancePage = () => {
   const rows = (group: MaintenanceItem[]) => (
     <ListCard>
       {group.map((item) => (
-        <MaintenanceRow key={item.id} item={item} busy={markDone.isPending} onDone={() => finish(item)} onEdit={() => open(item.id)} />
+        <MaintenanceRow key={item.id} item={item} busy={busy} onDone={() => finish(item)} onEdit={() => open(item.id)} />
       ))}
     </ListCard>
   );
@@ -123,7 +105,7 @@ export const MaintenancePage = () => {
         <Toast
           key={undoable.doneId}
           message={undoable.message}
-          onClose={() => setUndoable(null)}
+          onClose={closeToast}
           action={{ label: copy.maintenance.undo, onClick: () => takeBack(undoable.doneId) }}
         />
       )}

@@ -55,6 +55,15 @@ export default defineConfig({
     {
       name: "upkeep",
       testMatch: /\.upkeep\.spec\.ts$/,
+      testIgnore: /home\.upkeep\.spec\.ts$/,
+      fullyParallel: false,
+      use: { ...devices["Desktop Chrome"], baseURL: `http://127.0.0.1:${copies.upkeep.web}` },
+    },
+    {
+      // The same copy and the same shared list, so it waits for the upkeep project instead of running beside it.
+      name: "upkeep-home",
+      testMatch: /home\.upkeep\.spec\.ts$/,
+      dependencies: ["upkeep"],
       fullyParallel: false,
       use: { ...devices["Desktop Chrome"], baseURL: `http://127.0.0.1:${copies.upkeep.web}` },
     },

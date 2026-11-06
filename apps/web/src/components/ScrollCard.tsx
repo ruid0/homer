@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { useCallback, useId, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 
 type Props = { title: string; children: ReactNode; className?: string };
 
@@ -9,6 +9,7 @@ export const ScrollCard = ({ title, children, className = "" }: Props) => {
   const body = useRef<HTMLDivElement>(null);
   const content = useRef<HTMLDivElement>(null);
   const [hasMore, setHasMore] = useState(false);
+  const headingId = useId();
 
   const measure = useCallback(() => {
     const element = body.current;
@@ -27,8 +28,8 @@ export const ScrollCard = ({ title, children, className = "" }: Props) => {
   }, [measure]);
 
   return (
-    <section className={`relative flex min-h-0 flex-col rounded-2xl border border-line bg-card ${className}`}>
-      <h2 className="px-5 pb-2 pt-4 text-section font-semibold">{title}</h2>
+    <section aria-labelledby={headingId} className={`relative flex min-h-0 flex-col rounded-2xl border border-line bg-card ${className}`}>
+      <h2 id={headingId} className="px-5 pb-2 pt-4 text-section font-semibold">{title}</h2>
       <div ref={body} onScroll={measure} className="min-h-0 flex-1 overflow-y-auto px-5 pb-4">
         <div ref={content}>{children}</div>
       </div>
