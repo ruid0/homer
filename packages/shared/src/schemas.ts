@@ -261,6 +261,8 @@ export const maintenanceItemInputSchema = z
     message: schemaMessages.maintenanceDateRange,
   });
 
+export const maintenanceListInputSchema = z.object({ today: dateSchema });
+
 // The interval is required here, so a rename cannot silently reset it. The last done date changes only through done and undo.
 export const updateMaintenanceItemInputSchema = z
   .object({ name: maintenanceName, every: maintenanceEvery, unit: maintenanceUnit })

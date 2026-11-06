@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { repeatValues } from "@homer/shared";
+import { maintenanceUnitValues, repeatValues } from "@homer/shared";
 import { localDate } from "../time";
 import { index, integer, real, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 
@@ -149,6 +149,45 @@ export const routineReminders = sqliteTable(
     removedAt: text("removed_at"),
   },
   (table) => [index("routine_reminders_fire_idx").on(table.removedAt, table.fireAt)],
+);
+
+// Things that come round on a long cycle. The interval is counted from the day it was last done.
+export const maintenanceItems = sqliteTable(
+  "maintenance_items",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    name: text("name").notNull(),
+    every: integer("every").notNull(),
+    unit: text("unit", { enum: maintenanceUnitValues }).notNull(),
+    // Always the latest done_on in maintenance_done, or null when it was never done.
+    lastDoneOn: text("last_done_on"),
+    // The due dates a note was already sent for, so each stage is sent once per due date.
+    notifiedSoonFor: text("notified_soon_for"),
+    notifiedDueFor: text("notified_due_for"),
+    // The household's local day it was added. A never-done item is due on this day.
+    createdOn: text("created_on").notNull(),
+    createdAt: text("created_at").notNull().$defaultFn(now),
+    removedAt: text("removed_at"),
+  },
+  (table) => [
+    uniqueIndex("maintenance_active_name_unique")
+      .on(sql`lower(${table.name})`)
+      .where(sql`${table.removedAt} is null`),
+  ],
+);
+
+// One row per time an item was marked done. Removed items keep theirs.
+export const maintenanceDone = sqliteTable(
+  "maintenance_done",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    itemId: integer("item_id")
+      .notNull()
+      .references(() => maintenanceItems.id),
+    doneOn: text("done_on").notNull(),
+    createdAt: text("created_at").notNull().$defaultFn(now),
+  },
+  (table) => [index("maintenance_done_item_idx").on(table.itemId, table.doneOn)],
 );
 
 // Small facts the daily jobs remember between runs, such as the day the end-of-day note was last sent.
