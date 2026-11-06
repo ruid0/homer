@@ -6,9 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 H.O.M.E.R. is a self-hosted, fully local household assistant: inventory, groceries, schedule, tasks, maintenance reminders, plus a local-LLM chat assistant.
 
-**v1 is built and released (v1.0.0).** It has items with learned usage, the grocery list, people, tasks and events, Home, the assistant (eleven tools, journal and Undo, eval harness via `pnpm eval`), a PWA (no service worker, not offline) and Docker Compose for the household copy (see the README). There are no notifications yet: HOMER is pull-only. **v2 is in progress**, in `docs/v2-plan.md`. **Built: the daily backup** (`apps/api/src/backups`, `jobs/backups.ts`, into `./backups` on the Mac; see the README). **Planned:** per-person routines, jobs and ntfy, maintenance schedules, receipts, voice, Russian and English. "Architecture" below is the target design, so check the actual tree before relying on it, and update this file as code lands.
+**v1 is built and released (v1.0.0).** It has items with learned usage, the grocery list, people, tasks and events, Home, the assistant (eleven tools, journal and Undo, eval harness via `pnpm eval`), a PWA (no service worker, not offline) and Docker Compose for the household copy (see the README). There are no notifications yet: HOMER is pull-only. **v2 is in progress**, in `docs/v2-plan.md`. **Built: the daily backup** (`apps/api/src/backups`, `jobs/backups.ts`, into `./backups` on the Mac; see the README). **Built: per-person routines** (a weekly grid at People, then Routine; see `docs/design-routines.md`). **Planned:** jobs and ntfy, maintenance schedules, receipts, voice, Russian and English. "Architecture" below is the target design, so check the actual tree before relying on it, and update this file as code lands.
 
-**Docs and their status.** Each file in `docs/` starts with `Status: <State> (<detail>) · Owner · Last updated · Source`. States: Draft, Ready (agreed, not started), In progress, Built, Superseded. Slice designs: `design-slice-1-items.md`, `-2-groceries`, `-3-schedule`, `-4-dashboard`, `-5-assistant`, `-6-packaging`, `-7-learned-usage` (all Built); `design-ui-pass.md` (Superseded by slice 4); `v2-plan.md` (In progress); `PRD.md` follows the same Status line (Built for v1 scope). Update the Status line when the state changes.
+**Docs and their status.** Each file in `docs/` starts with `Status: <State> (<detail>) · Owner · Last updated · Source`. States: Draft, Ready (agreed, not started), In progress, Built, Superseded. Slice designs: `design-slice-1-items.md`, `-2-groceries`, `-3-schedule`, `-4-dashboard`, `-5-assistant`, `-6-packaging`, `-7-learned-usage` (all Built); `design-routines.md` (Built); `design-ui-pass.md` (Superseded by slice 4); `v2-plan.md` (In progress); `PRD.md` follows the same Status line (Built for v1 scope). Update the Status line when the state changes.
 
 **Product requirements:** `docs/PRD.md` defines scope, acceptance criteria and open questions. Read it during DEFINE and PLAN, and update it when scope changes.
 
@@ -33,8 +33,8 @@ Household copy: `docker compose up -d --build` (see the README). Not set up yet:
 
 pnpm-workspace TypeScript monorepo:
 
-- `apps/web`: React + Vite + Tailwind; typed tRPC client (`src/trpc.ts`) with TanStack Query. Pages: Home, Items, Groceries, Schedule, People, Assistant.
-- `apps/api`: Hono server with the tRPC adapter. `routers/` (inventory, groceries, schedule, tasks, maintenance, assistant), `ai/` (Ollama client + tool-call loop), `jobs/` (node-cron daily ~06:00 depletion and due-maintenance checks), `db/` (Drizzle schema + migrations, SQLite via `better-sqlite3`).
+- `apps/web`: React + Vite + Tailwind; typed tRPC client (`src/trpc.ts`) with TanStack Query. Pages: Home, Items, Groceries, Schedule, People (with a Routine page per person), Assistant.
+- `apps/api`: Hono server with the tRPC adapter. `routers/` (inventory, groceries, schedule, tasks, routines, maintenance, assistant), `ai/` (Ollama client + tool-call loop), `jobs/` (node-cron daily ~06:00 depletion and due-maintenance checks), `db/` (Drizzle schema + migrations, SQLite via `better-sqlite3`).
 - `packages/shared`: the spine of the app. `schemas.ts` (Zod schemas shared by DB, tRPC, and LLM tools), `tools.ts` (LLM tool definitions + dispatcher types), `domain.ts` (pure functions such as `daysRemaining`, `nextDueDate`).
 
 Key design constraints:

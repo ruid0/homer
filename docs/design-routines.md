@@ -1,18 +1,18 @@
 # Routines: a daily checklist on a person's page. Definition, technical plan and system design
 
-Status: In progress (PRs 1 and 2 of 4 built: shared code, data and the api) · Owner: Igor Bondarenko · Last updated: 2026-11-05 · Source: `docs/v2-plan.md` theme B and the owner's decisions of 2026-11-05. Builds on `docs/design-slice-3-schedule.md`.
+Status: Built (PRs 1 to 4) · Owner: Igor Bondarenko · Last updated: 2026-11-05 · Source: `docs/v2-plan.md` theme B and the owner's decisions of 2026-11-05. Builds on `docs/design-slice-3-schedule.md`.
 
 The repo is public. This document and the tests describe routines in general terms and use made-up rows ("Row A"). The household's real routines never go into the repo.
 
 ## 1. Problem
 
-Someone in the household keeps a daily checklist on paper: several things to do or take each day, some more than once a day, on a grid of rows by days. They want it in HOMER, set up by that person, as they want it. HOMER's tasks and events are the wrong shape: a task is done once, and a repeating task disappears from view until it is due.
+Someone in the household keeps a daily checklist on paper: several things to do each day, some more than once a day, on a grid of rows by days. They want it in HOMER, set up by that person, as they want it. HOMER's tasks and events are the wrong shape: a task is done once, and a repeating task disappears from view until it is due.
 
 **Done when:**
 - A person has a Routine screen under their page in People, reached by `/people/:id/routine`.
 - The screen shows one week (Monday to Sunday) as a grid. Rows are the person's routine items, columns are days.
 - The person adds, renames, reorders and removes their own rows, and sets how many times a day each is done (the target).
-- Tapping a cell adds one to that day's count, and the cell shows "1 of 2". A control takes one off.
+- Tapping a cell adds one to that day's count, up to the target, and the cell shows "1 of 2". On a row with a target of 1 a tap toggles done and not done. A target-1 cell reads "Done" or "Not done" instead of "1 of 1". A "−" button next to any filled cell takes one off.
 - Earlier weeks can be opened with arrows. A missed day is an empty cell, with no warning or colour.
 - Routines do not appear on Home, in the assistant, in the schedule or in notifications.
 
@@ -74,9 +74,10 @@ Reading any week is allowed; the limits below apply to writes. Updating a row ne
 ## 7. Web (PR 3)
 
 - A "Routine" link on each person on the People page, and a `RoutinePage` at `/people/:id/routine`.
-- A grid following `homer-ui`: 44px cells, dark mode, keyboard reachable, an `aria-label` per cell like "Row A, Tuesday, 1 of 2". Today's column is marked.
+- A grid following `homer-ui`: 44px cells, dark mode, keyboard reachable, an `aria-label` per cell that starts with its visible text, like "1 of 2: Row A, Tue 3". Today's column is marked, and days that have not happened are greyed out and cannot be tapped.
+- Counts change on screen at once. The screen refetches only when the last pending save finishes, so a run of fast taps cannot show an older count.
 - On a phone the seven columns do not fit: the grid scrolls sideways, with the row names fixed, and opens on today.
-- Row editing in a dialog: name, target, move up and down, remove.
+- Row editing in a dialog: name, target, move up and down, and remove with a confirmation. Removing keeps the row's past days saved.
 - A line on the screen saying the routine is visible to everyone in the household.
 - All text in `copy.ts`.
 
@@ -84,8 +85,8 @@ Reading any week is allowed; the limits below apply to writes. Updating a row ne
 
 1. **Shared and data** (built): `weekDates`, schemas, tables and migration, tests. Nothing visible in the app.
 2. **API** (built): the `routines` router and its tests (`apps/api/src/routers/routines.ts`).
-3. **Page:** the People link, the Routine page and the grid, checked in the running app at phone and tablet width with scratch data only.
-4. **Docs:** this file set to Built, plus the PRD, `docs/v2-plan.md` and `CLAUDE.md`.
+3. **Page** (built): the People link, the Routine page and the grid, checked in the running app at phone and tablet width, light and dark, with scratch data only.
+4. **Docs** (built): this file set to Built, plus the PRD, `docs/v2-plan.md` and `CLAUDE.md`.
 
 ## 9. Risks
 
