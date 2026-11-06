@@ -24,7 +24,7 @@ pnpm db:generate   # new Drizzle migration from apps/api/src/db/schema.ts (run i
 pnpm db:migrate    # apply migrations by hand; the api also applies them on boot
 ```
 
-Household copy: `docker compose up -d --build` (see the README). Not set up yet: CI, lint.
+Household copy: `docker compose up -d --build` (see the README). Not set up yet: CI, lint, the browser UI tests (`pnpm e2e`, see "UI rules").
 
 - Requires Node 24+, pnpm (pinned to `pnpm@12.16.1` via `packageManager`), and Ollama at `127.0.0.1:11434` with `qwen3-vl:8b` (vision/OCR) and `qwen3.5:9b` (chat + tool calling) pulled.
 - TypeScript 7. Shared settings live in `tsconfig.base.json`; each package extends it. `packages/shared` loads no Node or DOM types on purpose, so domain code stays pure.
@@ -59,10 +59,21 @@ Every piece of work moves through six phases, in order. **Name the phase you are
 
 1. **DEFINE**: the problem, who it's for, what's in and out of scope, and what "done" means.
    Output: a short written definition plus the open questions for the owner. No design and no code yet.
-2. **PLAN**: the approach: files, schema or interface changes, risks, and the order of work.
+2. **PLAN**: the approach: files, schema or interface changes, risks, and the order of work. For UI work, follow "UI rules" below (design pass first).
    Output: a plan the owner approves or changes. Nothing is built before the plan is agreed.
 3. **BUILD**: implement the agreed plan in small, coherent commits, each one buildable. The post-edit hook typechecks and runs related tests automatically.
    **Ship in small PRs, not whole slices.** When a meaningful part is done, testable and works by itself (for example the shared domain code, or an api router with its tests, or one page), run VERIFY, REVIEW and SHIP for that part before starting the next. A slice is usually several PRs. Each PR must leave `main` working: typecheck and tests pass, and nothing half-wired is visible in the app. The PLAN names the PR boundaries up front.
-4. **VERIFY**: evidence, not claims. Run `pnpm typecheck` and `pnpm test`, and for anything visual, check the running app with the Playwright MCP. Say what passed and what didn't.
-5. **REVIEW**: run the `reviewer` subagent on the diff and address its Must fix items.
+4. **VERIFY**: evidence, not claims. Run `pnpm typecheck` and `pnpm test`, and for anything visual, check the running app with the Playwright MCP and run the UI test (see "UI rules" below). Say what passed and what didn't.
+
+5. **REVIEW**: run the `reviewer` subagent on the diff and address its Must fix items. For UI changes the reviewer also confirms a UI test exists and the VERIFY evidence names it.
 6. **SHIP**: open a PR with `.github/pull_request_template.md` filled in, wait for CI (once it exists), merge, then rebuild with `docker compose up -d --build`.
+
+## UI rules (every new screen and every UI change)
+
+A UI change is anything a person sees or touches: layout, controls, states (loading, empty, error, off), dialogs, copy and colours.
+
+- **Design pass first.** Read `homer-ui`, then consult `frontend-design` for distinctiveness. Where they conflict, `homer-ui` wins. Say in the PLAN what the skill changed in the design.
+- **A UI test comes with every new screen or UI change.** Browser tests (Playwright) run against a scratch api started with its database path set through the process environment (a temporary or in-memory SQLite, never the household database; the guard hook blocks editing env or database files, so don't). They cover the happy path and each empty, error, loading or disabled state the change adds.
+- **Small tweaks.** A copy-only or colour-only change counts as tested when the existing guards pass (`apps/web/src/copy.test.ts`, `rawColors.test.ts`) and the result was looked at in the browser. Anything that changes behavior or adds a state needs a browser test.
+- **The suite does not exist yet.** The first UI PR after this rule adds the Playwright setup and its first test, in its own PR if it is large (nothing half-wired). No other UI PR ships without a test; until the suite exists, the exception is only for that setup PR, and everything else waits for it.
+- **Evidence goes in the PR.** The Verification section of the PR names the UI test that ran and the states looked at in the browser, including loading, failed and off states.
