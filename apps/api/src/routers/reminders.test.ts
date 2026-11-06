@@ -51,6 +51,13 @@ describe("people.reminderSetup", () => {
   });
 });
 
+describe("people.notificationsOn", () => {
+  it("says whether the household has notifications set up", async () => {
+    expect(await (await setup()).api.people.notificationsOn()).toBe(true);
+    expect(await (await setup(null)).api.people.notificationsOn()).toBe(false);
+  });
+});
+
 describe("routines.addReminder", () => {
   it("needs reminders turned on for the person", async () => {
     const { api, row } = await setup();

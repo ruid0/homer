@@ -1,6 +1,7 @@
 import { useState, type SubmitEvent } from "react";
 import { MAX_ROUTINE_TARGET, updateRoutineItemInputSchema } from "@homer/shared";
 import { copy } from "../copy";
+import type { ReminderState } from "../lib/reminderText";
 import type { RoutineRow } from "../trpc";
 import { Dialog } from "./Dialog";
 import { Field } from "./Field";
@@ -11,7 +12,7 @@ type Props = {
   // Null means adding a new row.
   row: RoutineRow | null;
   personId: number;
-  remindersOn: boolean;
+  state: ReminderState;
   pending: boolean;
   serverError?: string;
   canMoveUp: boolean;
@@ -22,7 +23,7 @@ type Props = {
   onClose: () => void;
 };
 
-export const RoutineRowDialog = ({ row, personId, remindersOn, pending, serverError, canMoveUp, canMoveDown, onSave, onMove, onRemove, onClose }: Props) => {
+export const RoutineRowDialog = ({ row, personId, state, pending, serverError, canMoveUp, canMoveDown, onSave, onMove, onRemove, onClose }: Props) => {
   const [name, setName] = useState(row?.name ?? "");
   const [target, setTarget] = useState(String(row?.targetPerDay ?? 1));
   const [error, setError] = useState<string>();
@@ -57,7 +58,7 @@ export const RoutineRowDialog = ({ row, personId, remindersOn, pending, serverEr
           />
         </Field>
         {(error ?? serverError) && <p role="alert" className="text-late">{error ?? serverError}</p>}
-        {row && <RoutineReminders personId={personId} itemId={row.id} remindersOn={remindersOn} />}
+        {row && <RoutineReminders personId={personId} itemId={row.id} state={state} />}
         {row && (
           <div className="flex flex-wrap gap-2">
             <button type="button" className={secondaryButton} disabled={!canMoveUp || pending} onClick={() => onMove("up")}>

@@ -1,12 +1,12 @@
 import { useState, type KeyboardEvent } from "react";
 import { copy } from "../copy";
 import { useClock } from "../lib/clock";
-import { durationAsText, isValidDuration, reminderWhenLabel } from "../lib/reminderText";
+import { durationAsText, isValidDuration, reminderWhenLabel, type ReminderState } from "../lib/reminderText";
 import { trpc } from "../trpc";
 import { Field } from "./Field";
 import { inputClass, quietButton, secondaryButton, toggleButton } from "./ui";
 
-type Props = { personId: number; itemId: number; remindersOn: boolean };
+type Props = { personId: number; itemId: number; state: ReminderState };
 
 type Kind = "in" | "at";
 
@@ -14,7 +14,7 @@ const MAX_HOURS = 24;
 const HOURS = Array.from({ length: MAX_HOURS + 1 }, (_, hour) => hour);
 const MINUTES = Array.from({ length: 60 }, (_, minute) => minute);
 
-export const RoutineReminders = ({ personId, itemId, remindersOn }: Props) => {
+export const RoutineReminders = ({ personId, itemId, state }: Props) => {
   const utils = trpc.useUtils();
   const now = useClock();
   const [kind, setKind] = useState<Kind>("in");
@@ -36,6 +36,8 @@ export const RoutineReminders = ({ personId, itemId, remindersOn }: Props) => {
     if (next === MAX_HOURS) setMinutes(0);
   };
 
+  const ready = state === "ready";
+
   const mine = (list.data ?? []).filter((reminder) => reminder.itemId === itemId);
 
   const submit = () => {
@@ -49,7 +51,7 @@ export const RoutineReminders = ({ personId, itemId, remindersOn }: Props) => {
   const enter = (event: KeyboardEvent) => {
     if (event.key.toLowerCase() !== "enter" || (event.target as HTMLElement).tagName === "BUTTON") return;
     event.preventDefault();
-    if (remindersOn) submit();
+    if (ready) submit();
   };
 
   const pickKind = (next: Kind) => {
@@ -84,49 +86,48 @@ export const RoutineReminders = ({ personId, itemId, remindersOn }: Props) => {
         </ul>
       )}
 
-      {!remindersOn && <p className="text-muted">{copy.reminders.needSetup}</p>}
-      {remindersOn && (
-        <div className="grid gap-3">
-          <div className="flex gap-2" role="group" aria-label={copy.reminders.kindLabel}>
-            <button type="button" aria-pressed={kind === "in"} className={toggleButton(kind === "in")} onClick={() => pickKind("in")}>
-              {copy.reminders.inKind}
-            </button>
-            <button type="button" aria-pressed={kind === "at"} className={toggleButton(kind === "at")} onClick={() => pickKind("at")}>
-              {copy.reminders.atKind}
-            </button>
-          </div>
-          {kind === "in" && (
-            <div className="grid grid-cols-2 gap-3">
-              <Field label={copy.reminders.hours}>
-                <select className={inputClass} value={hours} onChange={(event) => pickHours(Number(event.target.value))}>
-                  {HOURS.map((hour) => <option key={hour} value={hour}>{copy.reminders.hoursOption(hour)}</option>)}
-                </select>
-              </Field>
-              <Field label={copy.reminders.minutes}>
-                <select className={inputClass} value={minutes} disabled={hours === MAX_HOURS} onChange={(event) => setMinutes(Number(event.target.value))}>
-                  {MINUTES.map((minute) => <option key={minute} value={minute}>{copy.reminders.minutesOption(minute)}</option>)}
-                </select>
-              </Field>
-            </div>
-          )}
-          {kind === "at" && (
-            <>
-              <Field label={copy.reminders.timeLabel}>
-                <input className={inputClass} type="time" value={time} onChange={(event) => setTime(event.target.value)} />
-              </Field>
-              <label className="flex min-h-11 items-center gap-2">
-                <input type="checkbox" className="size-5" checked={everyDay} onChange={(event) => setEveryDay(event.target.checked)} />
-                {copy.reminders.everyDayLabel}
-              </label>
-            </>
-          )}
-          {error && <p role="alert" className="text-late">{error}</p>}
-          <button type="button" className={`${secondaryButton} justify-self-start`} disabled={add.isPending} onClick={submit}>
-            {copy.reminders.add}
+      {state === "notificationsOff" && <p className="text-muted">{copy.reminders.notificationsOff}</p>}
+      {state === "needsSetup" && <p className="text-muted">{copy.reminders.needSetup}</p>}
+      <div className="grid gap-3">
+        <div className="flex gap-2" role="group" aria-label={copy.reminders.kindLabel}>
+          <button type="button" aria-pressed={kind === "in"} className={toggleButton(kind === "in")} onClick={() => pickKind("in")}>
+            {copy.reminders.inKind}
           </button>
-          <p className="text-muted">{copy.reminders.privacyNote}</p>
+          <button type="button" aria-pressed={kind === "at"} className={toggleButton(kind === "at")} onClick={() => pickKind("at")}>
+            {copy.reminders.atKind}
+          </button>
         </div>
-      )}
+        {kind === "in" && (
+          <div className="grid grid-cols-2 gap-3">
+            <Field label={copy.reminders.hours}>
+              <select className={inputClass} disabled={!ready} value={hours} onChange={(event) => pickHours(Number(event.target.value))}>
+                {HOURS.map((hour) => <option key={hour} value={hour}>{copy.reminders.hoursOption(hour)}</option>)}
+              </select>
+            </Field>
+            <Field label={copy.reminders.minutes}>
+              <select className={inputClass} value={minutes} disabled={!ready || hours === MAX_HOURS} onChange={(event) => setMinutes(Number(event.target.value))}>
+                {MINUTES.map((minute) => <option key={minute} value={minute}>{copy.reminders.minutesOption(minute)}</option>)}
+              </select>
+            </Field>
+          </div>
+        )}
+        {kind === "at" && (
+          <>
+            <Field label={copy.reminders.timeLabel}>
+              <input className={inputClass} type="time" disabled={!ready} value={time} onChange={(event) => setTime(event.target.value)} />
+            </Field>
+            <label className="flex min-h-11 items-center gap-2">
+              <input type="checkbox" className="size-5" disabled={!ready} checked={everyDay} onChange={(event) => setEveryDay(event.target.checked)} />
+              {copy.reminders.everyDayLabel}
+            </label>
+          </>
+        )}
+        {error && <p role="alert" className="text-late">{error}</p>}
+        <button type="button" className={`${secondaryButton} justify-self-start`} disabled={add.isPending || !ready} onClick={submit}>
+          {copy.reminders.add}
+        </button>
+        <p className="text-muted">{copy.reminders.privacyNote}</p>
+      </div>
     </section>
   );
 };

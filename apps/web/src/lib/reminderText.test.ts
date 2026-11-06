@@ -1,12 +1,27 @@
 import { describe, expect, it } from "vitest";
 import { MAX_REMINDER_MINUTES, parseReminderWhen } from "@homer/shared";
-import { durationAsText, isValidDuration, reminderWhenLabel } from "./reminderText";
+import { durationAsText, isValidDuration, reminderState, reminderWhenLabel } from "./reminderText";
 
 describe("durationAsText", () => {
   it("builds words the api reads back as the same number of minutes", () => {
     expect(parseReminderWhen(durationAsText(1, 30))).toEqual({ kind: "in", minutes: 90 });
     expect(parseReminderWhen(durationAsText(0, 5))).toEqual({ kind: "in", minutes: 5 });
     expect(parseReminderWhen(durationAsText(24, 0))).toEqual({ kind: "in", minutes: MAX_REMINDER_MINUTES });
+  });
+});
+
+describe("reminderState", () => {
+  it("puts notifications first, then setup", () => {
+    const known = (data: boolean) => ({ isPending: false, isError: false, data });
+    expect(reminderState(known(false), true)).toBe("notificationsOff");
+    expect(reminderState(known(false), false)).toBe("notificationsOff");
+    expect(reminderState(known(true), false)).toBe("needsSetup");
+    expect(reminderState(known(true), true)).toBe("ready");
+  });
+
+  it("does not call it off while loading or when the question failed", () => {
+    expect(reminderState({ isPending: true, isError: false }, true)).toBe("loading");
+    expect(reminderState({ isPending: false, isError: true }, true)).toBe("failed");
   });
 });
 
