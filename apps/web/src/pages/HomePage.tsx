@@ -1,5 +1,6 @@
 import { keepPreviousData } from "@tanstack/react-query";
 import { useState } from "react";
+import { DueSoonList } from "../components/DueSoonList";
 import { RestockDialog } from "../components/RestockDialog";
 import { RunningOutList } from "../components/RunningOutList";
 import { ScrollCard } from "../components/ScrollCard";
@@ -9,8 +10,10 @@ import { timeOfDay, useClock } from "../lib/clock";
 import { dateName, dayHeading } from "../lib/dayHeading";
 import { dayItems } from "../lib/dayItems";
 import { localDate } from "../lib/localDate";
+import { needsDoing } from "../lib/maintenanceText";
 import { runningOut } from "../lib/runningOut";
 import { timelineRows } from "../lib/timeline";
+import { useMarkDone } from "../lib/useMarkDone";
 import { trpc, type ListItem, type ScheduleTask } from "../trpc";
 import { copy } from "../copy";
 
@@ -29,6 +32,9 @@ export const HomePage = () => {
   const view = trpc.schedule.view.useQuery({ today, days: 1 }, { ...refetch, placeholderData: keepPreviousData });
   const items = trpc.inventory.list.useQuery(undefined, refetch);
   const groceries = trpc.groceries.list.useQuery(undefined, refetch);
+  const upkeep = trpc.maintenance.list.useQuery({ today }, { ...refetch, placeholderData: keepPreviousData });
+  const upkeepDone = useMarkDone(today);
+  const { undoable } = upkeepDone;
 
   const complete = trpc.tasks.complete.useMutation({ onSuccess: () => utils.schedule.view.invalidate() });
   const restock = trpc.inventory.restock.useMutation();
@@ -38,6 +44,7 @@ export const HomePage = () => {
   const nothingPlanned = view.data !== undefined && rows.length === 1;
   const listedIds = new Set((groceries.data ?? []).flatMap((entry) => (entry.itemId === null ? [] : [entry.itemId])));
   const running = runningOut(items.data ?? [], listedIds);
+  const due = (upkeep.data ?? []).filter((item) => needsDoing(item.status));
 
   const finish = (task: ScheduleTask) =>
     complete.mutate(
@@ -78,14 +85,24 @@ export const HomePage = () => {
           {complete.error && <p role="alert" className="py-2 text-late">{complete.error.message}</p>}
         </ScrollCard>
 
-        <ScrollCard title={copy.home.runningOut} className="max-h-[50dvh] md:max-h-none">
-          {items.isPending && <p role="status">{copy.home.loading}</p>}
-          {items.error && <p role="alert">{copy.home.runningOutFailed}</p>}
-          {items.data && <RunningOutList rows={running} onBought={setRestocking} />}
-          {items.data && running.length === 0 && (
-            <p className="border-t border-line py-4 text-muted">{copy.home.nothingRunningOut}</p>
-          )}
-        </ScrollCard>
+        <div className="grid min-h-0 gap-4 md:grid-rows-[minmax(0,1fr)_minmax(0,1fr)]">
+          <ScrollCard title={copy.home.runningOut} className="max-h-[50dvh] md:max-h-none">
+            {items.isPending && <p role="status">{copy.home.loading}</p>}
+            {items.error && <p role="alert">{copy.home.runningOutFailed}</p>}
+            {items.data && <RunningOutList rows={running} onBought={setRestocking} />}
+            {items.data && running.length === 0 && (
+              <p className="border-t border-line py-4 text-muted">{copy.home.nothingRunningOut}</p>
+            )}
+          </ScrollCard>
+
+          <ScrollCard title={copy.home.dueSoon} className="max-h-[50dvh] md:max-h-none">
+            {upkeep.isPending && <p role="status">{copy.home.loading}</p>}
+            {upkeep.error && <p role="alert">{copy.home.dueSoonFailed}</p>}
+            {upkeep.data && <DueSoonList items={due} busy={upkeepDone.busy} onDone={upkeepDone.finish} />}
+            {upkeep.data && due.length === 0 && <p className="border-t border-line py-4 text-muted">{copy.home.nothingDue}</p>}
+            {upkeepDone.problem && <p role="alert" className="py-2 text-late">{upkeepDone.problem}</p>}
+          </ScrollCard>
+        </div>
       </div>
 
       {restocking && (
@@ -99,7 +116,16 @@ export const HomePage = () => {
           onClose={closeRestock}
         />
       )}
-      {message && <Toast message={message} onClose={() => setMessage(null)} />}
+      {/* One toast at a time: the Undo toast wins, since it is the only way back. */}
+      {message && !undoable && <Toast message={message} onClose={() => setMessage(null)} />}
+      {undoable && (
+        <Toast
+          key={undoable.doneId}
+          message={undoable.message}
+          onClose={upkeepDone.closeToast}
+          action={{ label: copy.maintenance.undo, onClick: () => upkeepDone.takeBack(undoable.doneId) }}
+        />
+      )}
     </div>
   );
 };

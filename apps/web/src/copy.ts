@@ -35,10 +35,13 @@ export const copy = {
   home: {
     yourDay: "Your day",
     runningOut: "Running out",
+    dueSoon: "Due soon",
     now: (time: string) => `Now · ${time}`,
     anyTime: "Any time",
     nothingPlanned: "Nothing planned today.",
     nothingRunningOut: "Nothing running out.",
+    nothingDue: "Nothing due.",
+    dueSoonFailed: "Couldn't load what is due. Check that the api is running, then refresh.",
     loading: "Loading.",
     timelineFailed: "Couldn't load your day. Check that the api is running, then refresh.",
     runningOutFailed: "Couldn't load what is running out. Check that the api is running, then refresh.",
