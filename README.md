@@ -78,6 +78,13 @@ docker compose up -d --build
 - **Daily usage.** Stock counts down: once a day (05:30 household time, `DEPLETION_TIME`) and when the api starts, each item
   with a usage estimate loses what the days since the last run used up, and items that become low are added to the grocery
   list. A Mac that slept catches up when the api next starts. Like `TZ`, set `DEPLETION_TIME` in your shell or a root `.env`.
+- **Notifications (optional, off by default).** HOMER can send short notes to your phone through [ntfy](https://ntfy.sh): an
+  end-of-day note at 20:00 ("Today: 1 task left, 2 items running low.") and a note when the daily job puts items on the grocery
+  list. They say counts only, never names. To turn them on, make a long random topic name (`openssl rand -hex 16`), put
+  `NTFY_HOUSEHOLD_TOPIC=<that name>` in `.env.local` (and optionally `HOMER_PUBLIC_URL` so a tap opens HOMER), run
+  `docker compose up -d --build`, and subscribe to the same topic in the ntfy app on each phone. On the public ntfy.sh server the
+  topic name is the only secret, so keep it private. Set `NTFY_SERVER` to use your own ntfy server instead. Change the time with
+  `END_OF_DAY_TIME` in your shell or a root `.env`.
 - **Backups.** The api copies the database once a day at 06:00 (household time) into `./backups` on this machine, as
   `homer-YYYY-MM-DD.db`. It keeps the last 14 days and one per week for six weeks before that, and never touches other
   files in the folder. If the Mac slept through 06:00, the api backs up when it next starts. Set `BACKUP_HOST_DIR` to use
