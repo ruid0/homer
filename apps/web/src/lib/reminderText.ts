@@ -3,6 +3,17 @@ import { copy } from "../copy";
 import { timeOfDay } from "./clock";
 import { localDate } from "./localDate";
 
+export type ReminderState = "loading" | "failed" | "notificationsOff" | "needsSetup" | "ready";
+
+type Known = { isPending: boolean; isError: boolean; data?: boolean };
+
+// Not knowing whether notifications are on is not the same as them being off.
+export const reminderState = (notifications: Known, remindersOn: boolean): ReminderState => {
+  if (notifications.isPending) return "loading";
+  if (notifications.isError || notifications.data === undefined) return "failed";
+  return !notifications.data ? "notificationsOff" : remindersOn ? "ready" : "needsSetup";
+};
+
 export const durationMinutes = (hours: number, minutes: number): number => hours * 60 + minutes;
 
 export const isValidDuration = (hours: number, minutes: number): boolean => {

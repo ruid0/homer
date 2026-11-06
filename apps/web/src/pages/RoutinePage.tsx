@@ -6,6 +6,7 @@ import { RoutineGrid } from "../components/RoutineGrid";
 import { RoutineRowDialog } from "../components/RoutineRowDialog";
 import { primaryButton, secondaryButton } from "../components/ui";
 import { copy } from "../copy";
+import { reminderState } from "../lib/reminderText";
 import { canGoEarlier, canGoLater, mondayOf, takeOneOff, tapCount, weekRange } from "../lib/routineWeek";
 import { useToday } from "../lib/useToday";
 import { trpc } from "../trpc";
@@ -14,6 +15,8 @@ type Editing = "new" | number | null;
 
 const RoutineView = ({ personId, name, remindersOn }: { personId: number; name: string; remindersOn: boolean }) => {
   const today = useToday();
+  const notifications = trpc.people.notificationsOn.useQuery();
+  const state = reminderState(notifications, remindersOn);
   const utils = trpc.useUtils();
   const [weekStart, setWeekStart] = useState<string | null>(null);
   const [editing, setEditing] = useState<Editing>(null);
@@ -120,14 +123,14 @@ const RoutineView = ({ personId, name, remindersOn }: { personId: number; name: 
       {week.data && items.length === 0 && <p>{copy.routine.empty}</p>}
       {week.data && items.length > 0 && <RoutineGrid week={week.data} today={today} onChange={change} onEdit={setEditing} />}
 
-      <ReminderSetup personId={personId} remindersOn={remindersOn} onTurnedOn={() => utils.people.list.invalidate()} />
+      <ReminderSetup personId={personId} state={state} onTurnedOn={() => utils.people.list.invalidate()} />
 
       {editing !== null && (editing === "new" || editingRow) && (
         <RoutineRowDialog
           key={editing}
           row={editingRow}
           personId={personId}
-          remindersOn={remindersOn}
+          state={state}
           pending={addItem.isPending || updateItem.isPending || removeItem.isPending || moveItem.isPending}
           serverError={mutationError?.message}
           canMoveUp={rowIndex > 0}

@@ -54,6 +54,9 @@ export const peopleRouter = router({
     }),
   ),
 
+  // Whether the household has notifications set up at all. The screen says so before offering reminders.
+  notificationsOn: publicProcedure.query(({ ctx }) => Boolean(ctx.ntfyServer)),
+
   // Gives the person a secret topic for their phone the first time, and the same one on every later call (no rotation).
   // The topic is shown only here, to set the phone up.
   reminderSetup: publicProcedure.input(idInputSchema).mutation(({ ctx, input }) => {
