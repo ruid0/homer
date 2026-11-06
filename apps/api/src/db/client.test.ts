@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 import { createDb } from "./client";
-import { groceryEntries, items, people, restocks } from "./schema";
+import { groceryEntries, items, people, restocks, routineItems, routineTicks } from "./schema";
 
 const salt = { name: "Salt", unit: "bag", quantity: 1 };
 
@@ -84,5 +84,31 @@ describe("grocery_entries", () => {
     const db = createDb(":memory:");
     db.insert(people).values({ name: "Sam" }).run();
     expect(() => db.insert(people).values({ name: "sam" }).run()).toThrow();
+  });
+});
+
+describe("routine tables", () => {
+  const withRow = () => {
+    const db = createDb(":memory:");
+    const [person] = db.insert(people).values({ name: "Person A" }).returning().all();
+    const [row] = db.insert(routineItems).values({ personId: person!.id, name: "Row A", position: 0 }).returning().all();
+    return { db, row: row! };
+  };
+
+  it("defaults the target to one a day and starts not removed", () => {
+    expect(withRow().row).toMatchObject({ targetPerDay: 1, removedAt: null });
+  });
+
+  it("allows one tick row per routine row and day", () => {
+    const { db, row } = withRow();
+    db.insert(routineTicks).values({ routineItemId: row.id, date: "2026-11-05", count: 1 }).run();
+    expect(() => db.insert(routineTicks).values({ routineItemId: row.id, date: "2026-11-05", count: 2 }).run()).toThrow();
+    expect(() => db.insert(routineTicks).values({ routineItemId: row.id, date: "2026-11-06", count: 2 }).run()).not.toThrow();
+  });
+
+  it("rejects a routine row for a person who does not exist, and a tick for a row that does not exist", () => {
+    const db = createDb(":memory:");
+    expect(() => db.insert(routineItems).values({ personId: 99, name: "Row A", position: 0 }).run()).toThrow();
+    expect(() => db.insert(routineTicks).values({ routineItemId: 99, date: "2026-11-05", count: 1 }).run()).toThrow();
   });
 });

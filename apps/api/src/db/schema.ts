@@ -96,6 +96,37 @@ export const events = sqliteTable("events", {
   removedAt: text("removed_at"),
 });
 
+export const routineItems = sqliteTable(
+  "routine_items",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    personId: integer("person_id")
+      .notNull()
+      .references(() => people.id),
+    name: text("name").notNull(),
+    targetPerDay: integer("target_per_day").notNull().default(1),
+    position: integer("position").notNull(),
+    createdAt: text("created_at").notNull().$defaultFn(now),
+    // A removed row is hidden from the grid but keeps its past ticks.
+    removedAt: text("removed_at"),
+  },
+  (table) => [index("routine_items_person_idx").on(table.personId)],
+);
+
+// One row per routine row per day, holding how many times it was done, so setting a count twice is harmless.
+export const routineTicks = sqliteTable(
+  "routine_ticks",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    routineItemId: integer("routine_item_id")
+      .notNull()
+      .references(() => routineItems.id),
+    date: text("date").notNull(),
+    count: integer("count").notNull(),
+  },
+  (table) => [uniqueIndex("routine_ticks_item_date_idx").on(table.routineItemId, table.date)],
+);
+
 // One row per assistant change, with the rows it touched, so Undo can put them back.
 export const assistantActions = sqliteTable("assistant_actions", {
   id: integer("id").primaryKey({ autoIncrement: true }),
