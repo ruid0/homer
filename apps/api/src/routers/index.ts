@@ -3,6 +3,7 @@ import { assistantRouter } from "./assistant";
 import { eventsRouter } from "./events";
 import { groceriesRouter } from "./groceries";
 import { inventoryRouter } from "./inventory";
+import { maintenanceRouter } from "./maintenance";
 import { peopleRouter } from "./people";
 import { routinesRouter } from "./routines";
 import { scheduleRouter } from "./schedule";
@@ -16,6 +17,7 @@ export const appRouter = router({
   events: eventsRouter,
   schedule: scheduleRouter,
   routines: routinesRouter,
+  maintenance: maintenanceRouter,
   assistant: assistantRouter,
 });
 
