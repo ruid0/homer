@@ -5,7 +5,7 @@ export const primaryButton = `${base} bg-primary text-on-primary hover:opacity-8
 
 export const secondaryButton = `${base} border border-control hover:bg-hover`;
 
-export const inputClass = "min-h-11 w-full rounded-lg border border-control bg-card px-3 text-base";
+export const inputClass = "h-11 w-full min-w-0 max-w-full rounded-lg border border-control bg-card px-3 text-base";
 
 export const toggleButton = (selected: boolean) =>
   selected ? `${base} border-2 border-ink bg-hover` : `${base} border border-control hover:bg-hover`;
