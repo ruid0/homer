@@ -23,6 +23,7 @@ export const MaintenanceRow = ({ item, busy, onDone, onEdit }: Props) => {
             type="button"
             className={`${secondaryButton} px-6`}
             disabled={busy}
+            data-done-action
             onClick={onDone}
             aria-label={copy.maintenance.doneLabel(item.name)}
           >

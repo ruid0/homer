@@ -5,7 +5,7 @@ import { trpc, type MaintenanceItem } from "../trpc";
 type Undoable = { doneId: number; message: string };
 
 // Done today and Undo for an upkeep item, shared by the Upkeep page and the Home card.
-export const useMarkDone = (today: string) => {
+export const useMarkDone = (today: string, onDone?: () => void) => {
   const utils = trpc.useUtils();
   const [undoable, setUndoable] = useState<Undoable | null>(null);
   const [problem, setProblem] = useState<string>();
@@ -17,7 +17,12 @@ export const useMarkDone = (today: string) => {
     setProblem(undefined);
     markDone.mutate(
       { id: item.id, doneOn: today, today },
-      { onSuccess: ({ doneId }) => setUndoable({ doneId, message: copy.maintenance.doneToast(item.name) }) },
+      {
+        onSuccess: ({ doneId }) => {
+          setUndoable({ doneId, message: copy.maintenance.doneToast(item.name) });
+          onDone?.();
+        },
+      },
     );
   };
 

@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { and, isNull } from "drizzle-orm";
 import { ZodError } from "zod";
+import { issueMessages } from "../issues";
 import { MAX_SCHEDULE_DAYS, daysBetween, resolveName, toolDefinitions, type Named, type Resolution, type ToolCall, type ToolName } from "@homer/shared";
 import type { Db } from "../db/client";
 import { tasks } from "../db/schema";
@@ -170,7 +171,7 @@ const readOnly = new Set(toolDefinitions.filter((tool) => !tool.writes).map((too
 
 // What went wrong, in words the model can act on.
 const errorMessage = (error: TRPCError): string =>
-  error.cause instanceof ZodError ? error.cause.issues.map((issue) => issue.message).join(" ") : error.message;
+  error.cause instanceof ZodError ? issueMessages(error.cause) : error.message;
 
 const execute = async (context: Context, call: ToolCall): Promise<ToolResult> => {
   try {

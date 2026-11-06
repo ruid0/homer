@@ -1,13 +1,24 @@
-import { useEffect, useRef, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 type Props = { title: string; onClose: () => void; children: ReactNode };
 
 export const Dialog = ({ title, onClose, children }: Props) => {
   const ref = useRef<HTMLDialogElement>(null);
+  // Taken while rendering, before this dialog or any dialog it replaces has touched focus.
+  const [opener] = useState(() => document.activeElement);
 
   useEffect(() => {
     if (ref.current && !ref.current.open) ref.current.showModal();
-  }, []);
+    // Closing removes the dialog, so focus goes back to the control that opened it instead of the top of the page.
+    // It waits a tick: while the dialog is still open, everything behind it cannot take focus.
+    // If that control is gone (its row was removed), focus goes to the page content.
+    return () => {
+      window.setTimeout(() => {
+        const target = opener instanceof HTMLElement && opener.isConnected ? opener : document.querySelector<HTMLElement>("main");
+        target?.focus();
+      }, 0);
+    };
+  }, [opener]);
 
   return (
     <dialog

@@ -69,7 +69,7 @@ test.describe("the list", () => {
     await expect(row(page, "Tomorrow job")).toContainText("Due tomorrow");
     await expect(row(page, "Soon job")).toContainText("Due in 2 days");
     await expect(row(page, "Never job")).toContainText("Not done yet");
-    await expect(row(page, "Far job")).toContainText(/^Far job\s*Due \d+ \w+/);
+    await expect(row(page, "Far job")).toContainText(/^Far job\s*Due in \d+ months/);
     await expect(page.getByRole("region", { name: "Later" }).getByText("Far job", { exact: true })).toBeVisible();
     await expect(needs.getByText("Far job")).toHaveCount(0);
   });
@@ -119,11 +119,54 @@ test.describe("marking done", () => {
     await page.getByRole("button", { name: "Done: Today job" }).click();
     await saved;
     await expect(page.getByRole("button", { name: "Done: Today job" })).toBeEnabled();
-    await page.clock.fastForward(8_000);
-    // Eleven seconds after the first done, but only eight after the second: its toast and Undo are still there.
+    await page.clock.fastForward(10_000);
+    // Thirteen seconds after the first done, but only ten after the second: its toast and Undo are still there.
     await expect(toast.getByRole("button", { name: "Undo" })).toBeVisible();
-    await page.clock.fastForward(3_000);
+    await page.clock.fastForward(6_000);
     await expect(toast).toHaveCount(0);
+  });
+
+  test("the Undo toast waits while the pointer is on it, and goes after it leaves", async ({ page, request }) => {
+    await seedUpkeep(request, weekly("Today job", 7));
+    await page.clock.install({ time: new Date(`${todayUtc()}T12:00:00Z`) });
+    await page.goto("/upkeep");
+    await page.getByRole("button", { name: "Done: Today job" }).click();
+    const toast = page.getByRole("status").filter({ hasText: "Today job marked done." });
+    await expect(toast).toBeVisible();
+    await toast.hover();
+    await page.clock.fastForward(30_000);
+    await expect(toast).toBeVisible();
+    await page.mouse.move(0, 0);
+    await page.clock.fastForward(16_000);
+    await expect(toast).toHaveCount(0);
+  });
+
+  test("a second done on the same day is refused in words and the first stays", async ({ page, request }) => {
+    await seedUpkeep(request, weekly("Fresh job", 0));
+    await page.goto("/upkeep");
+    await expect(row(page, "Fresh job")).toContainText("Due in 7 days");
+    await page.getByRole("button", { name: "Done: Fresh job" }).click();
+    await expect(page.getByRole("alert")).toHaveText("Fresh job is already marked done today.");
+    await expect(page.getByRole("button", { name: "Undo" })).toHaveCount(0);
+  });
+
+  test("marking done on a day that already has a done date says so in the dialog and keeps one entry", async ({ page, request }) => {
+    await seedUpkeep(request, weekly("Gutters", 0));
+    await page.goto("/upkeep");
+    await page.getByRole("button", { name: "Edit Gutters" }).click();
+    const dialog = page.getByRole("dialog");
+    await dialog.getByRole("button", { name: "Mark done" }).click();
+    await expect(dialog.getByRole("alert")).toHaveText("Gutters is already marked done today.");
+    await expect(dialog.getByRole("listitem")).toHaveCount(1);
+  });
+
+  test("after a done, focus moves on to the next Done button instead of the top of the page", async ({ page, request }) => {
+    await seedUpkeep(request, weekly("Overdue job", 20));
+    await seedUpkeep(request, weekly("Second job", 10));
+    await page.goto("/upkeep");
+    await page.getByRole("button", { name: "Done: Overdue job" }).click();
+    await expect(row(page, "Overdue job")).toContainText("Due in 7 days");
+    await expect(page.locator(":focus")).toHaveAttribute("data-done-action");
   });
 
   test("shows the error and no Undo when marking done fails", async ({ page, request }) => {
@@ -405,6 +448,56 @@ test.describe("failures and waiting", () => {
   });
 });
 
+test.describe("dates, limits and focus", () => {
+  test("a far date is told in months, and one a year or more away carries its year", async ({ page, request }) => {
+    await seedUpkeep(request, { name: "Half year job", every: 6, unit: "months", lastDoneOn: daysAgo(10) });
+    await seedUpkeep(request, { name: "Year job", every: 1, unit: "years", lastDoneOn: daysAgo(2) });
+    await page.goto("/upkeep");
+    await expect(row(page, "Half year job")).toContainText(/Due in [56] months/);
+    await expect(row(page, "Year job")).toContainText(/Due \d+ \w+ \d{4}/);
+    await expect(row(page, "Year job")).toContainText(/last done \d+ \w+(?! \d{4})/);
+  });
+
+  test("the name box stops at 80 characters, so a longer name can never be sent", async ({ page }) => {
+    await page.goto("/upkeep");
+    await page.getByRole("button", { name: "Add an item" }).click();
+    const dialog = page.getByRole("dialog");
+    const name = dialog.getByRole("textbox", { name: "Name" });
+    await expect(name).toHaveAttribute("maxlength", "80");
+    await name.pressSequentially("x".repeat(85));
+    expect(await name.inputValue()).toHaveLength(80);
+    await dialog.getByRole("button", { name: "Save" }).click();
+    await expect(dialog).toHaveCount(0);
+  });
+
+  test("closing a dialog returns focus to the button that opened it", async ({ page, request }) => {
+    await seedUpkeep(request, weekly("Gutters", 1));
+    await page.goto("/upkeep");
+    const edit = page.getByRole("button", { name: "Edit Gutters" });
+    await edit.click();
+    await page.getByRole("dialog").getByRole("button", { name: "Cancel" }).click();
+    await expect(edit).toBeFocused();
+    const add = page.getByRole("button", { name: "Add an item" });
+    await add.click();
+    await page.keyboard.press("Escape");
+    await expect(add).toBeFocused();
+  });
+
+  test("adding, marking done and opening Edit while the toast shows raises no console error", async ({ page, request }) => {
+    const problems: string[] = [];
+    page.on("console", (message) => message.type() === "error" && problems.push(message.text()));
+    page.on("pageerror", (error) => problems.push(error.message));
+    await seedUpkeep(request, weekly("Gutters", 7));
+    await page.goto("/upkeep");
+    await page.getByRole("button", { name: "Done: Gutters" }).click();
+    await expect(page.getByRole("status").filter({ hasText: "Gutters marked done." })).toBeVisible();
+    await page.getByRole("button", { name: "Edit Gutters" }).click();
+    await expect(page.getByRole("dialog").getByRole("listitem")).toHaveCount(2);
+    await page.getByRole("dialog").getByRole("button", { name: "Cancel" }).click();
+    expect(problems).toEqual([]);
+  });
+});
+
 test.describe("midnight", () => {
   test("when the day changes, the list stays on screen and the words move on", async ({ page, request }) => {
     await seedUpkeep(request, weekly("Today job", 7));
@@ -439,6 +532,30 @@ test.describe("fit, targets and themes", () => {
     ]) {
       expect((await control.boundingBox())?.height).toBeGreaterThanOrEqual(44);
     }
+  });
+
+  test.describe("on a landscape tablet", () => {
+    test.use({ viewport: { width: 1024, height: 768 } });
+
+    test("all seven nav links fit the screen height, and the page does not grow past it", async ({ page }) => {
+      await page.goto("/upkeep");
+      const rail = page.getByRole("navigation", { name: "Main" });
+      const last = await rail.getByRole("link", { name: "Assistant" }).boundingBox();
+      expect((last?.y ?? 0) + (last?.height ?? 0)).toBeLessThanOrEqual(768);
+      expect(await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight)).toBeLessThanOrEqual(0);
+    });
+  });
+
+  test.describe("on a small phone", () => {
+    test.use({ viewport: { width: 360, height: 700 } });
+
+    test("every nav label fits its cell and keeps clear of the next one", async ({ page }) => {
+      await page.goto("/upkeep");
+      const links = page.getByRole("navigation", { name: "Main" }).getByRole("link");
+      for (const link of await links.all()) {
+        expect(await link.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
+      }
+    });
   });
 
   test.describe("on a phone", () => {
@@ -500,7 +617,7 @@ test.describe("fit, targets and themes", () => {
     for (const text of [
       row(page, "Overdue job").getByText("13 days overdue"),
       row(page, "Soon job").getByText("Due in 2 days"),
-      row(page, "Far job").getByText(/^Due \d+ \w+/),
+      row(page, "Far job").getByText(/^Due in \d+ months/),
       row(page, "Far job").getByText(/^Every 6 months/),
       page.getByRole("heading", { name: "Needs doing" }),
     ]) {

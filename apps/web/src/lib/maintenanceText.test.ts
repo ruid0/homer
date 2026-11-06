@@ -10,9 +10,16 @@ describe("dueWords", () => {
     [{ status: "due", daysUntil: 0 }, "Due today"],
     [{ status: "soon", daysUntil: 1 }, "Due tomorrow"],
     [{ status: "soon", daysUntil: 5 }, "Due in 5 days"],
-    [{ status: "later", daysUntil: 88 }, "Due 1 Feb"],
+    [{ status: "later", daysUntil: 60 }, "Due 1 Feb"],
+    [{ status: "later", daysUntil: 61 }, "Due in 2 months"],
+    [{ status: "later", daysUntil: 88 }, "Due in 3 months"],
+    [{ status: "later", daysUntil: 330 }, "Due in 11 months"],
   ] as const)("%j reads %s", (when, words) => {
     expect(dueWords({ ...base, ...when })).toBe(words);
+  });
+
+  it("tells a due date a year or more away with its year, so it is not read as last year", () => {
+    expect(dueWords({ lastDoneOn: "2026-11-05", dueOn: "2027-11-05", status: "later", daysUntil: 365 })).toBe("Due 5 Nov 2027");
   });
 
   it("says an item never done is not done yet, whatever its due date", () => {
@@ -23,9 +30,17 @@ describe("dueWords", () => {
 
 describe("rowDetails", () => {
   it("names the cycle, singular or plural, and the last done date when there is one", () => {
-    expect(rowDetails({ every: 3, unit: "months", lastDoneOn: "2026-11-10" })).toEqual(["Every 3 months", "last done 10 Nov"]);
-    expect(rowDetails({ every: 1, unit: "weeks", lastDoneOn: null })).toEqual(["Every week"]);
-    expect(rowDetails({ every: 1, unit: "years", lastDoneOn: null })).toEqual(["Every year"]);
+    const when = { dueOn: "2027-02-10", daysUntil: 97 };
+    expect(rowDetails({ every: 3, unit: "months", lastDoneOn: "2026-11-10", ...when })).toEqual(["Every 3 months", "last done 10 Nov"]);
+    expect(rowDetails({ every: 1, unit: "weeks", lastDoneOn: null, ...when })).toEqual(["Every week"]);
+    expect(rowDetails({ every: 1, unit: "years", lastDoneOn: null, ...when })).toEqual(["Every year"]);
+  });
+
+  it("adds the year to a last done date that is not in this year", () => {
+    // Today is 2027-01-05 here (due date minus days until).
+    const when = { dueOn: "2027-02-10", daysUntil: 36 };
+    expect(rowDetails({ every: 3, unit: "months", lastDoneOn: "2026-11-10", ...when })[1]).toBe("last done 10 Nov 2026");
+    expect(rowDetails({ every: 3, unit: "months", lastDoneOn: "2027-01-02", ...when })[1]).toBe("last done 2 Jan");
   });
 });
 

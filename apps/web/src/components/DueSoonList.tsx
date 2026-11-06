@@ -17,6 +17,7 @@ export const DueSoonList = ({ items, busy, onDone }: Props) => (
           type="button"
           className={`${secondaryButton} shrink-0 px-5`}
           disabled={busy}
+          data-done-action
           aria-label={copy.maintenance.doneLabel(item.name)}
           onClick={() => onDone(item)}
         >

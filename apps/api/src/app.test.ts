@@ -33,4 +33,21 @@ describe("api over http", () => {
     const res = await app.request(post("/trpc/inventory.create", { name: "", unit: "bag", quantity: 1, daysPerUnit: null }));
     expect(res.status).toBe(400);
   });
+
+  it("says what to fix in plain words, not a dump of the validation issues", async () => {
+    const app = createApp(createDb(":memory:"));
+    const res = await app.request(
+      post("/trpc/maintenance.add", { name: "x".repeat(81), every: 3, unit: "months", lastDoneOn: null, today: "2026-11-05" }),
+    );
+    const body = (await res.json()) as { error: { message: string } };
+    expect(res.status).toBe(400);
+    expect(body.error.message).toBe("Keep the name to 80 characters or fewer.");
+  });
+
+  it("keeps the default message, which names the field, when the schema wrote none", async () => {
+    const app = createApp(createDb(":memory:"));
+    const res = await app.request(post("/trpc/inventory.create", { name: "", unit: "bag", quantity: 1, daysPerUnit: null }));
+    const body = (await res.json()) as { error: { message: string } };
+    expect(body.error.message).toContain("name");
+  });
 });

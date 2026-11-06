@@ -262,6 +262,7 @@ export const copy = {
     dueToday: "Due today",
     dueTomorrow: "Due tomorrow",
     dueInDays: (days: number) => `Due in ${days} days`,
+    dueInMonths: (months: number) => `Due in ${months} months`,
     overdueDays: (days: number) => (days === 1 ? "1 day overdue" : `${days} days overdue`),
     dueOn: (date: string) => `Due ${date}`,
     cycle: (every: number, unit: "weeks" | "months" | "years") =>

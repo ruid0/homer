@@ -120,6 +120,20 @@ describe("maintenance.markDone and undoDone", () => {
     await expect(api.maintenance.markDone({ id, doneOn: today, today })).rejects.toMatchObject({ code: "NOT_FOUND" });
   });
 
+  it("refuses a second done on a day that is already marked, and says so", async () => {
+    const api = setup();
+    const { id } = await addFilter(api, "2026-11-01");
+    await expect(api.maintenance.markDone({ id, doneOn: "2026-11-01", today })).rejects.toMatchObject({
+      code: "CONFLICT",
+      message: messages.maintenanceAlreadyDone("Filter", false),
+    });
+    await api.maintenance.markDone({ id, doneOn: today, today });
+    await expect(api.maintenance.markDone({ id, doneOn: today, today })).rejects.toMatchObject({
+      message: "Filter is already marked done today.",
+    });
+    expect(await api.maintenance.history({ id })).toHaveLength(2);
+  });
+
   it("undo removes exactly that done record and puts the previous date back", async () => {
     const api = setup();
     const { id } = await addFilter(api, "2026-11-01");
@@ -175,7 +189,7 @@ describe("maintenance.markDone and undoDone", () => {
 describe("maintenance edges", () => {
   it("accepts a date exactly a year back for add and done, and no further", async () => {
     const api = setup();
-    const { id } = await addFilter(api, "2025-11-05");
+    const { id } = await addFilter(api, null);
     await expect(api.maintenance.markDone({ id, doneOn: "2025-11-05", today })).resolves.toBeDefined();
     await expect(addFilter(api, "2025-11-04")).rejects.toThrow();
   });
