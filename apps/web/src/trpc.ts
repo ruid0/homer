@@ -14,6 +14,10 @@ export type ListEntry = inferRouterOutputs<AppRouter>["groceries"]["list"][numbe
 
 export type ListPerson = inferRouterOutputs<AppRouter>["people"]["list"][number];
 
+export type RoutineWeek = inferRouterOutputs<AppRouter>["routines"]["week"];
+
+export type RoutineRow = RoutineWeek["items"][number];
+
 type ScheduleView = inferRouterOutputs<AppRouter>["schedule"]["view"];
 
 export type ScheduleTask = ScheduleView["overdue"][number];

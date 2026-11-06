@@ -6,6 +6,7 @@ import { GroceriesPage } from "./pages/GroceriesPage";
 import { HomePage } from "./pages/HomePage";
 import { ItemsPage } from "./pages/ItemsPage";
 import { PeoplePage } from "./pages/PeoplePage";
+import { RoutinePage } from "./pages/RoutinePage";
 import { SchedulePage } from "./pages/SchedulePage";
 
 export const App = () => (
@@ -23,6 +24,7 @@ export const App = () => (
           <Route path="/groceries" element={<GroceriesPage />} />
           <Route path="/schedule" element={<SchedulePage />} />
           <Route path="/people" element={<PeoplePage />} />
+          <Route path="/people/:id/routine" element={<RoutinePage />} />
           <Route path="/assistant" element={<AssistantPage />} />
         </Routes>
       </main>

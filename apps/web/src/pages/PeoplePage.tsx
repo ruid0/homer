@@ -1,4 +1,5 @@
 import { useState, type SubmitEvent } from "react";
+import { Link } from "react-router-dom";
 import { ListCard } from "../components/ListCard";
 import { ListRow } from "../components/ListRow";
 import { RenamePersonDialog } from "../components/RenamePersonDialog";
@@ -74,14 +75,23 @@ export const PeoplePage = () => {
               title={person.name}
               details={[]}
               actions={
-                <button
-                  type="button"
-                  className={secondaryButton}
-                  onClick={() => setRenaming(person)}
-                  aria-label={copy.people.renameLabel(person.name)}
-                >
-                  {copy.people.rename}
-                </button>
+                <>
+                  <Link
+                    to={`/people/${person.id}/routine`}
+                    className={`${secondaryButton} inline-flex items-center`}
+                    aria-label={copy.people.routineLabel(person.name)}
+                  >
+                    {copy.people.routine}
+                  </Link>
+                  <button
+                    type="button"
+                    className={secondaryButton}
+                    onClick={() => setRenaming(person)}
+                    aria-label={copy.people.renameLabel(person.name)}
+                  >
+                    {copy.people.rename}
+                  </button>
+                </>
               }
             />
           ))}
