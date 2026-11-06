@@ -4,6 +4,7 @@ import { eventsRouter } from "./events";
 import { groceriesRouter } from "./groceries";
 import { inventoryRouter } from "./inventory";
 import { peopleRouter } from "./people";
+import { routinesRouter } from "./routines";
 import { scheduleRouter } from "./schedule";
 import { tasksRouter } from "./tasks";
 
@@ -14,6 +15,7 @@ export const appRouter = router({
   tasks: tasksRouter,
   events: eventsRouter,
   schedule: scheduleRouter,
+  routines: routinesRouter,
   assistant: assistantRouter,
 });
 

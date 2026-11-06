@@ -1,6 +1,6 @@
 # Routines: a daily checklist on a person's page. Definition, technical plan and system design
 
-Status: In progress (PR 1 of 4, shared code and data) · Owner: Igor Bondarenko · Last updated: 2026-11-05 · Source: `docs/v2-plan.md` theme B and the owner's decisions of 2026-11-05. Builds on `docs/design-slice-3-schedule.md`.
+Status: In progress (PRs 1 and 2 of 4 built: shared code, data and the api) · Owner: Igor Bondarenko · Last updated: 2026-11-05 · Source: `docs/v2-plan.md` theme B and the owner's decisions of 2026-11-05. Builds on `docs/design-slice-3-schedule.md`.
 
 The repo is public. This document and the tests describe routines in general terms and use made-up rows ("Row A"). The household's real routines never go into the repo.
 
@@ -62,14 +62,14 @@ Migration: `apps/api/drizzle/0009_cloudy_morg.sql`. It only adds the two tables.
 - `schemas.ts`: `routineItemInputSchema`, `updateRoutineItemInputSchema`, `moveRoutineItemInputSchema`, `routineWeekInputSchema`, `setRoutineCountInputSchema`, `routineItemSchema`, `routineTickSchema`, and the limits `MAX_ROUTINE_TARGET` (20), `MAX_ROUTINE_COUNT` (99) and `MAX_ROUTINE_WEEKS_BACK` (8).
 - Like tasks, the client sends `today` so the server never guesses the household's time zone.
 
-## 6. API (PR 2)
+## 6. API
 
 A `routines` router:
-- `week({ personId, today, weekOf? })`: the person's rows (not removed, in order) with the ticks for the seven days of the week that contains `weekOf`, or today.
+- `week({ personId, today, weekOf? })`: `{ days, items }`. `days` is the seven dates of the week that contains `weekOf`, or today. Each item is the row plus `counts`, one number per day in the same order (0 where nothing was done). Removed rows are left out.
 - `addItem`, `updateItem` (name and target), `moveItem` (up or down), `removeItem`.
 - `setCount({ itemId, date, today, count })`: sets the day's count. Count 0 is stored as 0, not deleted.
 
-Rules, each tested: a date after `today` is refused; a date more than `MAX_ROUTINE_WEEKS_BACK` weeks before the start of this week is refused; an item that does not exist or is removed is refused with a message that says to refresh; a person who does not exist is refused; the new row goes to the end of the list.
+Reading any week is allowed; the limits below apply to writes. Updating a row needs both the name and the target, so a rename cannot reset the target. Rules, each tested: a date after `today` is refused; a date more than `MAX_ROUTINE_WEEKS_BACK` weeks before the start of this week is refused; an item that does not exist or is removed is refused with a message that says to refresh; a person who does not exist is refused; the new row goes to the end of the list.
 
 ## 7. Web (PR 3)
 
@@ -82,8 +82,8 @@ Rules, each tested: a date after `today` is refused; a date more than `MAX_ROUTI
 
 ## 8. Pull requests
 
-1. **Shared and data** (this PR): `weekDates`, schemas, tables and migration, tests. Nothing visible in the app.
-2. **API:** the `routines` router and its tests.
+1. **Shared and data** (built): `weekDates`, schemas, tables and migration, tests. Nothing visible in the app.
+2. **API** (built): the `routines` router and its tests (`apps/api/src/routers/routines.ts`).
 3. **Page:** the People link, the Routine page and the grid, checked in the running app at phone and tablet width with scratch data only.
 4. **Docs:** this file set to Built, plus the PRD, `docs/v2-plan.md` and `CLAUDE.md`.
 
