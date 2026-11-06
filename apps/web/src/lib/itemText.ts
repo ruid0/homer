@@ -1,5 +1,8 @@
 import { copy } from "../copy";
 
+// Stock counts down in fractions of a unit, so it is shown to two decimals.
+export const quantityText = (quantity: number): string => String(Math.round(quantity * 100) / 100);
+
 type Stock = { quantity: number; daysRemaining: number | null };
 
 export const describeRunsOut = ({ quantity, daysRemaining }: Stock): string => {

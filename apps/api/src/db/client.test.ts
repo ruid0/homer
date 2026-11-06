@@ -87,6 +87,13 @@ describe("grocery_entries", () => {
   });
 });
 
+describe("items depleted_on", () => {
+  it("starts on the day the item was added", () => {
+    const [row] = createDb(":memory:").insert(items).values(salt).returning().all();
+    expect(row?.depletedOn).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+});
+
 describe("routine tables", () => {
   const withRow = () => {
     const db = createDb(":memory:");

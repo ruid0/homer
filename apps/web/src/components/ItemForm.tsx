@@ -1,4 +1,5 @@
 import { useState, type SubmitEvent } from "react";
+import { quantityText } from "../lib/itemText";
 import { DEFAULT_LOW_THRESHOLD_DAYS, itemInputSchema, type ItemInput } from "@homer/shared";
 import type { ListItem } from "../trpc";
 import { Dialog } from "./Dialog";
@@ -25,7 +26,7 @@ const invalidFields = (issues: readonly { path: readonly PropertyKey[] }[]) =>
 export const ItemForm = ({ item, pending, serverError, onSave, onRemove, onClose }: Props) => {
   const [name, setName] = useState(item?.name ?? "");
   const [unit, setUnit] = useState(item?.unit ?? "");
-  const [quantity, setQuantity] = useState(String(item?.quantity ?? 0));
+  const [quantity, setQuantity] = useState(quantityText(item?.quantity ?? 0));
   const [daysPerUnit, setDaysPerUnit] = useState(String(item?.daysPerUnitEntered ?? ""));
   const [threshold, setThreshold] = useState(String(item?.lowThresholdDays ?? DEFAULT_LOW_THRESHOLD_DAYS));
   const [error, setError] = useState<string>();

@@ -1,5 +1,6 @@
 import { sql } from "drizzle-orm";
 import { repeatValues } from "@homer/shared";
+import { localDate } from "../time";
 import { index, integer, real, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core";
 
 const now = () => new Date().toISOString();
@@ -16,6 +17,9 @@ export const items = sqliteTable(
     // When the entered estimate was last set by hand. Learning only looks at restocks from then on.
     learningSince: text("learning_since"),
     lowThresholdDays: integer("low_threshold_days").notNull().default(7),
+    // The last day the daily job took usage off the quantity. Restocks and edits leave it alone; restoring an archived item resets it.
+    // Null means "stamp the day, take nothing off".
+    depletedOn: text("depleted_on").$defaultFn(() => localDate(new Date())),
     createdAt: text("created_at").notNull().$defaultFn(now),
     archivedAt: text("archived_at"),
   },

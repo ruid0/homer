@@ -17,7 +17,17 @@ export const backupLog = {
   written: (file: string, removed: number) => `backup written to ${file}${removed ? `, removed ${removed} old` : ""}`,
   failed: (reason: string) => `backup failed: ${reason}`,
   corrupt: (file: string) => `The backup copy failed its integrity check and was deleted: ${file}`,
-  badTime: (time: string) => `BACKUP_TIME must look like 06:00, got "${time}"`,
+};
+
+// Written to the api log.
+export const settingLog = {
+  badTime: (setting: string, time: string) => `${setting} must look like 06:00, got "${time}"`,
+};
+
+// Written to the api log.
+export const depletionLog = {
+  done: (changed: number) => `daily usage applied, ${changed} items changed`,
+  failed: (reason: string) => `daily usage failed: ${reason}`,
 };
 
 // Read by the model, not shown to people.
