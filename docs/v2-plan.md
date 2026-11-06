@@ -29,7 +29,7 @@ Each step below is its own DEFINE, PLAN and PRs (see `CLAUDE.md`).
 
 - **Routines (built, see `docs/design-routines.md`):** a daily checklist that lives under one person, on People, then Routine. They set up the rows, each with a target per day, and tap cells in a Monday-to-Sunday grid. There are no accounts, so everyone in the household can see and change it, and the screen says so. A missed day is an empty cell. It does not use up stock yet.
 - A later link from a routine row to an item would use up stock on a tick, and would also give the learned-usage estimate (slice 7) real consumption to learn from, instead of only restock gaps.
-- **Maintenance:** things that come round on a longer cycle: furnace filter every 3 months, softener salt, cleaning. Needs repeats the task model does not have yet ("every N weeks or months", not only daily, weekly, monthly), a "due soon" view, and a reminder through theme A. Fits the existing tasks and `nextDueDate` logic.
+- **Maintenance:** things that come round on a longer cycle: furnace filter every 3 months, softener salt, cleaning. Designed in `docs/design-maintenance.md`: a separate list whose cycle counts from the day it was last done (a filter is changed on a day, not on a fixed calendar slot), so it does not use the tasks repeat or `nextDueDate`. It has its own page, a "due soon" card on Home, and a note through theme A.
 
 ### C. Receipts
 
