@@ -166,6 +166,47 @@ export const scheduleViewInputSchema = z.object({
   personId: personIdSchema.optional(),
 });
 
+export const MAX_ROUTINE_TARGET = 20;
+export const MAX_ROUTINE_COUNT = 99;
+export const MAX_ROUTINE_WEEKS_BACK = 8;
+
+const routineFields = z.object({
+  name: text.max(80),
+  targetPerDay: z.number().int().min(1).max(MAX_ROUTINE_TARGET).default(1),
+});
+
+export const routineItemInputSchema = routineFields.extend({ personId: personIdSchema });
+
+export const updateRoutineItemInputSchema = routineFields.extend(idInputSchema.shape);
+
+export const moveRoutineItemInputSchema = idInputSchema.extend({ direction: z.enum(["up", "down"]) });
+
+export const routineWeekInputSchema = z.object({ personId: personIdSchema, today: dateSchema, weekOf: dateSchema.optional() });
+
+export const setRoutineCountInputSchema = z.object({
+  itemId: z.number().int(),
+  date: dateSchema,
+  today: dateSchema,
+  count: z.number().int().min(0).max(MAX_ROUTINE_COUNT),
+});
+
+export const routineItemSchema = z.object({
+  id: z.number().int(),
+  personId: personIdSchema,
+  name: text,
+  targetPerDay: z.number().int().min(1),
+  position: z.number().int(),
+  createdAt: z.string(),
+  removedAt: z.string().nullable(),
+});
+
+export const routineTickSchema = z.object({
+  id: z.number().int(),
+  routineItemId: z.number().int(),
+  date: dateSchema,
+  count: z.number().int().min(0),
+});
+
 export type PersonInput = z.infer<typeof personInputSchema>;
 export type Person = z.infer<typeof personSchema>;
 export type TaskInput = z.infer<typeof taskInputSchema>;
@@ -176,3 +217,9 @@ export type EventInput = z.infer<typeof eventInputSchema>;
 export type UpdateEventInput = z.infer<typeof updateEventInputSchema>;
 export type ScheduleEvent = z.infer<typeof eventSchema>;
 export type ScheduleViewInput = z.infer<typeof scheduleViewInputSchema>;
+export type RoutineItemInput = z.infer<typeof routineItemInputSchema>;
+export type UpdateRoutineItemInput = z.infer<typeof updateRoutineItemInputSchema>;
+export type RoutineWeekInput = z.infer<typeof routineWeekInputSchema>;
+export type SetRoutineCountInput = z.infer<typeof setRoutineCountInputSchema>;
+export type RoutineItem = z.infer<typeof routineItemSchema>;
+export type RoutineTick = z.infer<typeof routineTickSchema>;
