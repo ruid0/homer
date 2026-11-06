@@ -30,6 +30,32 @@ export const depletionLog = {
   failed: (reason: string) => `daily usage failed: ${reason}`,
 };
 
+const taskPart = (tasks: number) => (tasks > 0 ? `${tasks} ${tasks === 1 ? "task" : "tasks"} left` : null);
+
+const lowPart = (low: number) => (low > 0 ? `${low} ${low === 1 ? "item" : "items"} running low` : null);
+
+// Shown on a phone's lock screen, so it says counts and never names.
+export const notifyText = {
+  title: "HOMER",
+  addedToList: (count: number) => `${count} ${count === 1 ? "item" : "items"} added to the grocery list.`,
+  endOfDay: (tasks: number, low: number) => `Today: ${[taskPart(tasks), lowPart(low)].filter(Boolean).join(", ")}.`,
+};
+
+// Fixed text of the ntfy protocol, kept here so no literal text sits in the code.
+export const ntfyWire = {
+  defaultServer: "https://ntfy.sh",
+  bearer: (token: string) => `Bearer ${token}`,
+};
+
+// Written to the api log.
+export const notifyLog = {
+  off: "notifications are off (NTFY_HOUSEHOLD_TOPIC is not set)",
+  sendFailed: (what: string) => `notification not sent: ${what}`,
+  endOfDay: { sent: "end-of-day note sent", quiet: "end-of-day note: nothing to say", failed: "end-of-day note could not be sent, it will be tried again when the api next starts" },
+  insecureServer: "NTFY_SERVER is plain http with a token set: the token and text cross the network unencrypted",
+  endOfDayError: (reason: string) => `end-of-day note failed: ${reason}`,
+};
+
 // Read by the model, not shown to people.
 export const toolMessages = {
   rangeBackwards: "The end date is before the start date. Swap them.",

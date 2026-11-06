@@ -131,6 +131,12 @@ export const routineTicks = sqliteTable(
   (table) => [uniqueIndex("routine_ticks_item_date_idx").on(table.routineItemId, table.date)],
 );
 
+// Small facts the daily jobs remember between runs, such as the day the end-of-day note was last sent.
+export const jobState = sqliteTable("job_state", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+});
+
 // One row per assistant change, with the rows it touched, so Undo can put them back.
 export const assistantActions = sqliteTable("assistant_actions", {
   id: integer("id").primaryKey({ autoIncrement: true }),

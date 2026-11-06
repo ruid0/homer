@@ -78,6 +78,13 @@
       "when": 1793927904863,
       "tag": "0010_sudden_chronomancer",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1793928112400,
+      "tag": "0011_hesitant_zeigeist",
+      "breakpoints": true
     }
   ]
 }

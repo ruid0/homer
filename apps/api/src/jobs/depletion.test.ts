@@ -21,14 +21,14 @@ const withItem = (values: Partial<typeof items.$inferInsert> = {}) => {
 describe("depleteAll", () => {
   it("takes the days that passed off the quantity and stamps the day", () => {
     const { db, read } = withItem();
-    expect(depleteAll(db, today)).toBe(1);
+    expect(depleteAll(db, today).changed).toBe(1);
     expect(read()).toMatchObject({ quantity: 1.7, depletedOn: today });
   });
 
   it("does nothing a second time on the same day", () => {
     const { db, read } = withItem();
     depleteAll(db, today);
-    expect(depleteAll(db, today)).toBe(0);
+    expect(depleteAll(db, today).changed).toBe(0);
     expect(read().quantity).toBe(1.7);
   });
 
@@ -46,7 +46,7 @@ describe("depleteAll", () => {
 
   it("only stamps the day for an item with no estimate", () => {
     const { db, read } = withItem({ daysPerUnitEntered: null });
-    expect(depleteAll(db, today)).toBe(0);
+    expect(depleteAll(db, today).changed).toBe(0);
     expect(read()).toMatchObject({ quantity: 2, depletedOn: today });
   });
 
@@ -126,6 +126,15 @@ describe("startDepletion", () => {
     void task?.stop();
     expect(read()).toMatchObject({ quantity: 1.7, depletedOn: today });
     expect(logged).toEqual(["daily usage applied, 1 items changed"]);
+  });
+
+  it("tells onListed how many entries a run put on the list, and stays quiet otherwise", () => {
+    const listed: number[] = [];
+    const { db } = withItem({ quantity: 0.2 });
+    startDepletion(db, { time: "05:30", now: () => new Date(2026, 10, 5, 9), log: () => undefined, onListed: (n) => listed.push(n) })?.stop();
+    expect(listed).toEqual([1]);
+    startDepletion(db, { time: "05:30", now: () => new Date(2026, 10, 6, 9), log: () => undefined, onListed: (n) => listed.push(n) })?.stop();
+    expect(listed).toEqual([1]);
   });
 
   it("logs and carries on when the time is invalid", () => {

@@ -1,6 +1,6 @@
 # Jobs and notifications: daily depletion, ntfy, routine reminders. Definition, technical plan and system design
 
-Status: In progress (PR 1 of 4, daily depletion) · Owner: Igor Bondarenko · Last updated: 2026-11-05 · Source: `docs/v2-plan.md` theme A, the owner's decisions of 2026-11-05, and the PRD §4.1 and §5. Builds on `docs/design-slice-1-items.md`, `docs/design-slice-2-groceries.md` and `docs/design-routines.md`.
+Status: In progress (PRs 1 and 2 of 4 built: depletion, the sender and the household notes) · Owner: Igor Bondarenko · Last updated: 2026-11-05 · Source: `docs/v2-plan.md` theme A, the owner's decisions of 2026-11-05, and the PRD §4.1 and §5. Builds on `docs/design-slice-1-items.md`, `docs/design-slice-2-groceries.md` and `docs/design-routines.md`.
 
 The repo is public. Topics, tokens and the household's real data never go into this repo, its tests or its logs.
 
@@ -54,15 +54,23 @@ Restocks, edits and "Out of it" change the quantity and leave `depleted_on` alon
 - `apps/api/src/time.ts`: `localDate` and `parseClockTime`, shared by the jobs and the schema default.
 - `apps/api/src/jobs/depletion.ts`: `depleteAll(db, today)` (one transaction) and `startDepletion(db, options)`: runs once at boot (catches up missed days), then daily at `DEPLETION_TIME` (default 05:30, household time zone). Never throws at boot, and logs failures. The database library is synchronous, so the boot run and the schedule cannot overlap.
 
-## 5. Later PRs
+Quantities are now fractions, so the Items screen shows them to two decimals.
 
-2. **The sender and the household topic.** `Notifier` interface, ntfy implementation (off unless `NTFY_HOUSEHOLD_TOPIC` is set, `NTFY_SERVER` defaults to `https://ntfy.sh`, never throws, 10 s timeout), the end-of-day job at 20:00 and the morning note. The PRD rule "no outbound calls except Ollama" becomes "plus ntfy, only when turned on, with generic text".
+## 5. PR 2: the sender and the household notes
+
+- `apps/api/src/notify/ntfy.ts`: `Notifier` (`(note) => Promise<boolean>`, never throws), `ntfyConfig(env)` (null, so off, unless `NTFY_HOUSEHOLD_TOPIC` is set; `NTFY_SERVER` defaults to `https://ntfy.sh`; optional `NTFY_TOKEN` and `HOMER_PUBLIC_URL` for the tap link), `createNtfyNotifier` (JSON POST, 10 s timeout). A sturdier channel can replace it by implementing `Notifier`.
+- `notify/summary.ts`: `dayCounts` (tasks due today or overdue that are still open, and items that are low or out) and `endOfDayMessage`, which is null on a quiet day. Text: "Today: 1 task left, 2 items running low." Counts only, no names.
+- `jobs/endOfDay.ts`: daily at `END_OF_DAY_TIME` (default 20:00). The day it was last handled is kept in the new `job_state` table (migration 0011), so a Mac that wakes after 20:00 sends it once that day and never twice. A quiet day counts as handled. A failed send is logged as a failure (not as a quiet day) and is not recorded, so the next api start the same day tries again. It is not retried while the api keeps running, so a short outage at 20:00 can lose that day's note.
+- Morning note: when a depletion run puts items on the grocery list, "2 items added to the grocery list." goes to the household topic (it also fires if that happens at start-up). The count is the net rise in open list entries during the run. Nothing is sent when the run adds nothing.
+- If `NTFY_SERVER` is plain `http://` to a non-local address and a token is set, the api logs a warning at start, because the token and text would cross the network unencrypted.
+- Phones subscribe to the household topic in the ntfy app. Setup steps are in the README.
+
+## 6. Later PRs
+
 3. **Routine reminders.** `parseReminderWhen(text, now)` in `packages/shared`; a `routine_reminders` table (row, next fire time in UTC, optional daily time); `people.notify_topic` made by HOMER and shown on the person's Routine screen with subscribe steps; a job that checks every minute. A reminder more than 30 minutes late is dropped. A one-off reminder is removed after it fires.
 4. **Docs.** This file set to Built, plus the PRD, v2 plan and `CLAUDE.md`.
 
-Quantities are now fractions, so the Items screen shows them to two decimals.
-
-## 6. Risks
+## 7. Risks
 
 - **Behaviour change:** after PR 1 stock counts down and items start appearing on the list. The household copy's data is the owner's, so this is tested on scratch data only.
 - **Time zone:** days are the household's local days (`TZ`), the same as the backups.
