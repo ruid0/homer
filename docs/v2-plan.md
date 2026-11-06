@@ -1,6 +1,6 @@
 # H.O.M.E.R. v2: plan
 
-Status: In progress (owner decisions recorded 2026-11-05; step 1, backups, is built) · Owner: Igor Bondarenko · Last updated: 2026-11-05 · Source: v1.0.0 release, PRD §3 and §9, and the owner's own earlier project `~/PetProjects/Assistant` (same household, different stack), which has working versions of several of these ideas.
+Status: In progress (owner decisions recorded 2026-11-05; steps 1 and 2, backups and routines, are built) · Owner: Igor Bondarenko · Last updated: 2026-11-05 · Source: v1.0.0 release, PRD §3 and §9, and the owner's own earlier project `~/PetProjects/Assistant` (same household, different stack), which has working versions of several of these ideas.
 
 v1 is pull-only: HOMER shows what is due when someone opens it. v2 makes it push, keeps its data safe, and widens what it can read and hear, without breaking the rule that household data stays in the house.
 
@@ -27,8 +27,8 @@ Each step below is its own DEFINE, PLAN and PRs (see `CLAUDE.md`).
 
 ### B. Maintenance schedules and routines
 
-- **Routines (second step):** a daily checklist that lives under one person: a screen on that person's own page where they set up what is on it, tick it off per day and give counts where needed. The layout is a grid: rows are the routine items, columns are days. HOMER has no accounts, so "under a person" means on that person's page, not behind a login. The first DEFINE decides whether anyone else can see it, whether a tick can use up stock (an item's quantity), and what a missed day looks like.
-- A tick that uses up stock would also give the learned-usage estimate (slice 7) real consumption to learn from, instead of only restock gaps.
+- **Routines (built, see `docs/design-routines.md`):** a daily checklist that lives under one person, on People, then Routine. They set up the rows, each with a target per day, and tap cells in a Monday-to-Sunday grid. There are no accounts, so everyone in the household can see and change it, and the screen says so. A missed day is an empty cell. It does not use up stock yet.
+- A later link from a routine row to an item would use up stock on a tick, and would also give the learned-usage estimate (slice 7) real consumption to learn from, instead of only restock gaps.
 - **Maintenance:** things that come round on a longer cycle: furnace filter every 3 months, softener salt, cleaning. Needs repeats the task model does not have yet ("every N weeks or months", not only daily, weekly, monthly), a "due soon" view, and a reminder through theme A. Fits the existing tasks and `nextDueDate` logic.
 
 ### C. Receipts
@@ -72,7 +72,7 @@ The first step is a measurement: a golden set of Russian and mixed-language prom
 ## 3. Order
 
 1. **Backups** (built): a daily copy at 06:00 from the api into a folder on the Mac, checked after writing, 14 daily plus 6 weekly kept, caught up at boot if the Mac slept, restore steps in the README (tried on a scratch stack). Receipt photos join the backup when receipts are built.
-2. **Routines**, on a person's page.
+2. **Routines** (built), on a person's page.
 3. **A. Jobs and notifications**, starting with the daily depletion check, then ntfy and the end-of-day notification.
 4. **B. Maintenance schedules.**
 5. **C. Receipts**, starting with the vision-model benchmark.
