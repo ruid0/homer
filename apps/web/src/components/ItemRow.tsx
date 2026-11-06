@@ -1,7 +1,7 @@
 import { describeRunsOut, quantityText } from "../lib/itemText";
 import type { ListItem } from "../trpc";
 import { ListRow } from "./ListRow";
-import { quietButton, secondaryButton } from "./ui";
+import { doneSize, quietButton, secondaryButton, statusClass } from "./ui";
 import { copy } from "../copy";
 
 type Props = {
@@ -25,7 +25,7 @@ export const ItemRow = ({ item, busy, onList, onBought, onOut, onEdit }: Props) 
   return (
     <ListRow
       title={item.name}
-      status={<span className={urgent ? "font-semibold text-warn" : undefined}>{describeRunsOut(item)}</span>}
+      status={<span className={statusClass(urgent ? "warn" : "plain")}>{describeRunsOut(item)}</span>}
       details={[`${quantityText(item.quantity)} ${item.unit}`, onList ? copy.items.onGroceryList : null, note].filter(
         (part) => part !== null,
       )}
@@ -47,7 +47,7 @@ export const ItemRow = ({ item, busy, onList, onBought, onOut, onEdit }: Props) 
           )}
           <button
             type="button"
-            className={`${secondaryButton} px-6`}
+            className={`${secondaryButton} ${doneSize}`}
             onClick={onBought}
             aria-label={copy.common.boughtLabel(item.name)}
           >

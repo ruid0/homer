@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { PageHeader } from "../components/PageHeader";
 import type { ItemInput } from "@homer/shared";
 import { ItemRow } from "../components/ItemRow";
 import { ItemForm } from "../components/ItemForm";
@@ -65,11 +66,11 @@ export const ItemsPage = () => {
   const actionError = markOut.error?.message ?? archive.error?.message;
 
   return (
-    <>
-      <header className="mb-4 flex items-center justify-between gap-3">
-        <h1 className="text-page font-semibold">{copy.items.title}</h1>
-        <button type="button" className={primaryButton} onClick={() => setEditing("new")}>{copy.items.addItem}</button>
-      </header>
+    <div className="mx-auto max-w-3xl">
+      <PageHeader
+        title={copy.items.title}
+        action={<button type="button" className={primaryButton} onClick={() => setEditing("new")}>{copy.items.addItem}</button>}
+      />
 
       {items.isPending && <p>{copy.items.loading}</p>}
       {items.error && <p role="alert">{copy.items.loadFailed}</p>}
@@ -134,6 +135,6 @@ export const ItemsPage = () => {
           onClose={closeRestock}
         />
       )}
-    </>
+    </div>
   );
 };

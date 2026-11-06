@@ -1,4 +1,5 @@
 import { useState, type SubmitEvent } from "react";
+import { PageHeader } from "../components/PageHeader";
 import { GroceryRow } from "../components/GroceryRow";
 import { ListCard } from "../components/ListCard";
 import { RestockDialog } from "../components/RestockDialog";
@@ -46,8 +47,8 @@ export const GroceriesPage = () => {
   const actionError = add.error?.message ?? remove.error?.message ?? (buying ? undefined : bought.error?.message);
 
   return (
-    <>
-      <h1 className="mb-4 text-page font-semibold">{copy.groceries.title}</h1>
+    <div className="mx-auto max-w-3xl">
+      <PageHeader title={copy.groceries.title} />
 
       <form onSubmit={submit} className="mb-4 flex items-end gap-3">
         <label className="grid flex-1 gap-1">
@@ -95,6 +96,6 @@ export const GroceriesPage = () => {
           onClose={closeBuying}
         />
       )}
-    </>
+    </div>
   );
 };

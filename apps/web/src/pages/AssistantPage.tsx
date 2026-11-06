@@ -116,7 +116,7 @@ export const AssistantPage = () => {
 
   return (
     <div className="flex h-[calc(100dvh-12rem)] min-h-96 flex-col gap-4 md:h-[calc(100dvh-3rem)]">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex min-h-11 items-center justify-between gap-3">
         <h1 className="text-page font-semibold">{copy.assistant.title}</h1>
         {hasChat && (
           <button type="button" className={quietButton} disabled={clear.isPending} onClick={clearChat}>
@@ -131,7 +131,7 @@ export const AssistantPage = () => {
         </p>
       )}
 
-      <ScrollCard title={copy.assistant.chat} className="flex-1">
+      <ScrollCard title={copy.assistant.chat} hideTitle className="flex-1">
         {history.isPending && <p role="status">{copy.home.loading}</p>}
         {history.error && <p role="alert">{copy.assistant.loadFailed}</p>}
         {earlier.length > 0 && (
