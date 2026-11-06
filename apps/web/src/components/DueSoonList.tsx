@@ -4,9 +4,9 @@ import type { MaintenanceItem } from "../trpc";
 import { HomeRow } from "./HomeRow";
 import { doneSize, secondaryButton } from "./ui";
 
-type Props = { items: MaintenanceItem[]; busy: boolean; onDone: (item: MaintenanceItem) => void };
+type Props = { items: MaintenanceItem[]; busy: boolean; justDoneId?: number | null; onDone: (item: MaintenanceItem) => void };
 
-export const DueSoonList = ({ items, busy, onDone }: Props) => (
+export const DueSoonList = ({ items, busy, justDoneId = null, onDone }: Props) => (
   <ul>
     {items.map((item) => (
       <HomeRow
@@ -15,6 +15,7 @@ export const DueSoonList = ({ items, busy, onDone }: Props) => (
         status={dueWords(item)}
         level={item.status === "soon" ? "warn" : "late"}
         overdue={item.status === "overdue"}
+        flash={item.id === justDoneId}
         action={
           <button
             type="button"

@@ -102,7 +102,7 @@ export const HomePage = () => {
             {upkeep.isPending && <p role="status">{copy.home.loading}</p>}
             {upkeep.error && <p role="alert">{copy.home.dueSoonFailed}</p>}
             <div ref={dueArea} tabIndex={-1} className="outline-none">
-              {upkeep.data && <DueSoonList items={due} busy={upkeepDone.busy} onDone={upkeepDone.finish} />}
+              {upkeep.data && <DueSoonList items={due} busy={upkeepDone.busy} justDoneId={upkeepDone.justDoneId} onDone={upkeepDone.finish} />}
             </div>
             {upkeep.data && due.length === 0 && <p className="border-t border-line py-4 text-muted">{copy.home.nothingDue}</p>}
             {upkeepDone.problem && <p role="alert" className="py-2 text-late">{upkeepDone.problem}</p>}

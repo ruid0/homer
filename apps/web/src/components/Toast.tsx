@@ -36,7 +36,7 @@ export const Toast = ({ message, onClose, action }: Props) => {
       onPointerLeave={() => setHeld(false)}
       onFocus={() => setHeld(true)}
       onBlur={() => setHeld(false)}
-      className="fixed bottom-24 left-1/2 z-20 flex w-[calc(100%-2rem)] max-w-xl -translate-x-1/2 items-center justify-between gap-3 rounded-xl bg-primary py-2 pl-4 pr-2 text-on-primary shadow-lg md:bottom-6"
+      className="fixed bottom-24 left-1/2 z-20 flex w-[calc(100%-2rem)] max-w-xl -translate-x-1/2 items-center justify-between gap-3 rounded-xl bg-primary py-2 pl-4 pr-2 text-on-primary shadow-lg animate-toast-in md:bottom-6"
     >
       <span className="font-medium">{message}</span>
       <div className="flex gap-2">
