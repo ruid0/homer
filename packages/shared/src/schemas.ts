@@ -1,5 +1,7 @@
 import { z } from "zod";
 import { schemaMessages } from "./copy";
+import { maintenanceUnitValues } from "./maintenance";
+import { addDays } from "./schedule";
 
 export const DEFAULT_LOW_THRESHOLD_DAYS = 7;
 
@@ -235,3 +237,37 @@ export type SetRoutineCountInput = z.infer<typeof setRoutineCountInputSchema>;
 export type RoutineItem = z.infer<typeof routineItemSchema>;
 export type RoutineTick = z.infer<typeof routineTickSchema>;
 export type AddReminderInput = z.infer<typeof addReminderInputSchema>;
+
+export const MAX_MAINTENANCE_EVERY = 99;
+export const MAX_MAINTENANCE_DAYS_BACK = 365;
+
+const maintenanceName = text.max(80);
+const maintenanceEvery = z.number().int().min(1).max(MAX_MAINTENANCE_EVERY);
+const maintenanceUnit = z.enum(maintenanceUnitValues);
+
+// A done or last-done date: a real date, not after today, and not more than a year before it.
+const withinYearUpTo = (date: string, today: string) => date <= today && date >= addDays(today, -MAX_MAINTENANCE_DAYS_BACK);
+
+export const maintenanceItemInputSchema = z
+  .object({
+    name: maintenanceName,
+    every: maintenanceEvery,
+    unit: maintenanceUnit,
+    lastDoneOn: dateSchema.nullable().default(null),
+    today: dateSchema,
+  })
+  .refine(({ lastDoneOn, today }) => lastDoneOn === null || withinYearUpTo(lastDoneOn, today), {
+    path: ["lastDoneOn"],
+    message: schemaMessages.maintenanceDateRange,
+  });
+
+// The interval is required here, so a rename cannot silently reset it. The last done date changes only through done and undo.
+export const updateMaintenanceItemInputSchema = z
+  .object({ name: maintenanceName, every: maintenanceEvery, unit: maintenanceUnit })
+  .extend(idInputSchema.shape);
+
+export const markMaintenanceDoneInputSchema = idInputSchema
+  .extend({ doneOn: dateSchema, today: dateSchema })
+  .refine(({ doneOn, today }) => withinYearUpTo(doneOn, today), { path: ["doneOn"], message: schemaMessages.maintenanceDateRange });
+
+export const undoMaintenanceDoneInputSchema = z.object({ doneId: z.number().int().positive() });
