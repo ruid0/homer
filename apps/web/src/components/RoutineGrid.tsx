@@ -19,19 +19,25 @@ const filled = "border-2 border-ink bg-hover font-semibold";
 
 // The seven columns do not fit a phone, so the grid scrolls sideways and opens on today.
 const useScrollToToday = (week: RoutineWeek, today: string) => {
+  const scroller = useRef<HTMLDivElement>(null);
   const todayHeader = useRef<HTMLTableCellElement>(null);
   const hasRows = week.items.length > 0;
   useEffect(() => {
-    if (hasRows && week.days.includes(today)) todayHeader.current?.scrollIntoView({ inline: "center", block: "nearest" });
+    const box = scroller.current;
+    const header = todayHeader.current;
+    if (!hasRows || !box || !header) return;
+    // Today's column starts right after the sticky name column, so the name column never covers it.
+    const stickyWidth = box.querySelector("th")?.getBoundingClientRect().width ?? 0;
+    box.scrollLeft = header.offsetLeft - stickyWidth;
   }, [week.days, today, hasRows]);
-  return todayHeader;
+  return { scroller, todayHeader };
 };
 
 export const RoutineGrid = ({ week, today, onChange, onEdit }: Props) => {
-  const todayHeader = useScrollToToday(week, today);
+  const { scroller, todayHeader } = useScrollToToday(week, today);
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-line bg-card">
+    <div ref={scroller} className="overflow-x-auto rounded-xl border border-line bg-card">
       <table className="w-full border-collapse">
         <thead>
           <tr>

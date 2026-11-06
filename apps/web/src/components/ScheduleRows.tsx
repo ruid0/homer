@@ -58,7 +58,7 @@ export const EventRow = ({ event, onEdit }: EventRowProps) => (
           {copy.schedule.edit}
         </button>
         {/* The space a Done button takes on a task row, so Edit lines up down the list. */}
-        <span aria-hidden="true" className={doneSize} />
+        <span aria-hidden="true" className={`hidden sm:block ${doneSize}`} />
       </>
     }
   />
