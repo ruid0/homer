@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { keyboardFit } from "../lib/keyboardFit";
 
 type Props = { title: string; onClose: () => void; children: ReactNode };
 
@@ -20,6 +21,27 @@ export const Dialog = ({ title, onClose, children }: Props) => {
       }, 0);
     };
   }, [opener]);
+
+  // With the keyboard up, the sheet is fitted to the visible area so the first fields stay on screen.
+  useEffect(() => {
+    const visual = window.visualViewport;
+    const dialog = ref.current;
+    if (!visual || !dialog) return;
+    const fit = () => {
+      const size = keyboardFit(visual, window.innerHeight, window.innerWidth);
+      dialog.style.top = size ? `${size.top}px` : "";
+      dialog.style.bottom = size ? "auto" : "";
+      dialog.style.marginBlock = size ? "0" : "";
+      dialog.style.maxHeight = size ? `${size.maxHeight}px` : "";
+    };
+    visual.addEventListener("resize", fit);
+    visual.addEventListener("scroll", fit);
+    fit();
+    return () => {
+      visual.removeEventListener("resize", fit);
+      visual.removeEventListener("scroll", fit);
+    };
+  }, []);
 
   return (
     <dialog
