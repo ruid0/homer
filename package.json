@@ -8,7 +8,8 @@
     "test": "vitest run",
     "db:migrate": "pnpm --filter @homer/api db:migrate",
     "typecheck": "pnpm -r --if-present typecheck",
-    "eval": "pnpm --filter @homer/api eval"
+    "eval": "pnpm --filter @homer/api eval",
+    "e2e": "pnpm --filter @homer/e2e e2e"
   },
   "keywords": [],
   "author": "",

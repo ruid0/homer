@@ -245,6 +245,7 @@ export const copy = {
     everyDay: (time: string) => `Every day at ${time}`,
     none: "No reminders on this row.",
     loadFailed: "Couldn't load the reminders. Check that the api is running, then refresh.",
+    statusFailed: "Couldn't check whether notifications are on. Check that the api is running, then refresh.",
     needSetup: "Turn on reminders for this person first, in the card below the grid.",
     notificationsOff: "Notifications are off, so reminders can't be sent yet. See the card below the grid.",
     notificationsOffSetup: "Notifications are off for this household, so reminders can't be sent yet. Set NTFY_HOUSEHOLD_TOPIC in .env.local, then rebuild.",

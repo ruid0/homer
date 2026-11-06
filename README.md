@@ -50,6 +50,15 @@ Ollama: http://localhost:11434
 
 ```
 
+### Tests
+
+```bash
+pnpm test        # unit and api tests (Vitest)
+pnpm e2e         # browser tests (Playwright) on scratch servers with in-memory data
+```
+
+The first `pnpm e2e` needs a browser: `pnpm --filter @homer/e2e exec playwright install chromium`. The browser tests never touch your real data.
+
 ### Docker Compose (the household copy)
 
 Ollama keeps running natively on the Mac (Docker on macOS has no GPU access). Compose runs only the web and the api.
@@ -138,6 +147,7 @@ homer/
 │   │       ├── pages/        Dashboard, Inventory, Schedule, Tasks, Assistant
 │   │       ├── components/
 │   │       └── trpc.ts       typed tRPC client
+│   ├── e2e/                  Playwright browser tests (pnpm e2e)
 │   └── api/                  Hono + tRPC backend
 │       └── src/
 │           ├── routers/      inventory, groceries, schedule, tasks, maintenance, assistant

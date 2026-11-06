@@ -48,3 +48,8 @@ vite.config.ts.timestamp-*
 # Daily database backups
 /backups/
 apps/api/backups/
+
+# Playwright UI tests
+apps/e2e/test-results/
+apps/e2e/.tmp/
+apps/api/.tmp/
