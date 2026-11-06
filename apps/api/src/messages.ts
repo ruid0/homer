@@ -14,6 +14,7 @@ export const messages = {
   reminderGone: "That reminder is already gone. Refresh the list.",
   maintenanceNameTaken: (name: string) => `${name} is already on the list. Use another name.`,
   maintenanceGone: "That item is already removed. Refresh the list.",
+  maintenanceAlreadyDone: (name: string, today: boolean) => `${name} is already marked done ${today ? "today" : "on that day"}.`,
   maintenanceDoneGone: "That done date is already removed. Refresh the list.",
   routineRowRemoved: "That routine row is already removed. Refresh the list.",
   routineDateInFuture: "That day hasn't happened yet. Pick today or an earlier day.",

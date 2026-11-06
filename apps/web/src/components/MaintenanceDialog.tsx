@@ -1,5 +1,5 @@
 import { useState, type SubmitEvent } from "react";
-import { MAX_MAINTENANCE_EVERY, addDays, maintenanceUnitValues, type MaintenanceUnit } from "@homer/shared";
+import { MAX_MAINTENANCE_EVERY, MAX_MAINTENANCE_NAME, addDays, maintenanceUnitValues, type MaintenanceUnit } from "@homer/shared";
 import { copy } from "../copy";
 import type { MaintenanceItem } from "../trpc";
 import { Dialog } from "./Dialog";
@@ -61,7 +61,7 @@ export const MaintenanceDialog = ({ item, today, takenNames, pending, serverErro
       <form onSubmit={submit} noValidate className="grid gap-4">
         {!item && <MaintenanceSuggestions takenNames={takenNames} selectedName={name} onPick={pick} />}
         <Field label={copy.maintenance.name}>
-          <input className={inputClass} value={name} onChange={(event) => setName(event.target.value)} autoFocus />
+          <input className={inputClass} value={name} maxLength={MAX_MAINTENANCE_NAME} onChange={(event) => setName(event.target.value)} autoFocus />
         </Field>
         <div className="grid grid-cols-2 gap-3">
           <Field label={copy.maintenance.every}>

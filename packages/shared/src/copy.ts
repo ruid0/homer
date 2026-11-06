@@ -1,6 +1,7 @@
 export const schemaMessages = {
   invalidDate: "Enter a real date, like 2026-11-03.",
   invalidTime: "Enter a time like 09:30.",
+  maintenanceNameLength: "Keep the name to 80 characters or fewer.",
   maintenanceDateRange: "Pick a date from today back to a year ago.",
   dueDateNeeded: "Pick a due date first. A time or a repeat needs one.",
 };

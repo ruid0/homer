@@ -241,7 +241,8 @@ export type AddReminderInput = z.infer<typeof addReminderInputSchema>;
 export const MAX_MAINTENANCE_EVERY = 99;
 export const MAX_MAINTENANCE_DAYS_BACK = 365;
 
-const maintenanceName = text.max(80);
+export const MAX_MAINTENANCE_NAME = 80;
+const maintenanceName = text.max(MAX_MAINTENANCE_NAME, schemaMessages.maintenanceNameLength);
 const maintenanceEvery = z.number().int().min(1).max(MAX_MAINTENANCE_EVERY);
 const maintenanceUnit = z.enum(maintenanceUnitValues);
 

@@ -42,19 +42,19 @@ const linkClass = (layout: string) => ({ isActive }: { isActive: boolean }) =>
   }`;
 
 // The rail is w-32, which fits "Groceries" at text-base; a longer label needs a wider rail.
-const railLink = linkClass("gap-1.5 rounded-2xl py-3 text-base");
-// Seven labels share the width of a phone, so the bar uses text-xs and a tight track.
-const barLink = linkClass("min-h-14 min-w-0 gap-0.5 rounded-xl text-xs tracking-tight");
+const railLink = linkClass("gap-1 rounded-2xl py-2 text-base");
+// Seven labels share the width of a phone, so the bar uses a small size and a tight track. the nav token keeps "Groceries" inside its cell at 360px.
+const barLink = linkClass("min-h-14 min-w-0 gap-0.5 rounded-xl text-nav tracking-tight");
 
 export const RailNav = ({ header }: { header: React.ReactNode }) => (
   <nav
     aria-label={copy.nav.label}
-    className="sticky top-0 hidden h-dvh w-32 shrink-0 flex-col gap-2 border-r border-line p-3 md:flex"
+    className="sticky top-0 hidden h-dvh w-32 shrink-0 flex-col gap-1 overflow-y-auto border-r border-line p-3 md:flex"
   >
-    <div className="flex justify-center pb-6 pt-2">{header}</div>
+    <div className="flex justify-center pb-3 pt-2">{header}</div>
     {navItems.map((item) => (
       <NavLink key={item.to} to={item.to} end={item.end} className={railLink}>
-        <NavIcon path={item.icon} className="size-7" />
+        <NavIcon path={item.icon} className="size-6" />
         {item.label}
       </NavLink>
     ))}

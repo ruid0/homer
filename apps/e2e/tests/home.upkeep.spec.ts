@@ -95,6 +95,23 @@ test.describe("the Due soon card on Home", () => {
     await expect(card(page).getByText("Nothing due.")).toBeVisible();
   });
 
+  test("after the last due item is done, focus stays on the card instead of dropping to the top of the page", async ({ page, request }) => {
+    await seedUpkeep(request, fortnightly("Today job"));
+    await page.goto("/");
+    await card(page).getByRole("button", { name: "Done: Today job" }).click();
+    await expect(card(page).getByText("Nothing due.")).toBeVisible();
+    await expect(card(page).locator(":focus")).toHaveCount(1);
+  });
+
+  test("a second done on the same day is refused in words, and the item stays", async ({ page, request }) => {
+    await seedUpkeep(request, weekly("Fresh job", 7));
+    await page.goto("/");
+    await card(page).getByRole("button", { name: "Done: Fresh job" }).click();
+    await expect(card(page).getByText("Fresh job", { exact: true })).toBeVisible();
+    await card(page).getByRole("button", { name: "Done: Fresh job" }).click();
+    await expect(card(page).getByRole("alert")).toHaveText("Fresh job is already marked done today.");
+  });
+
   test("the Done button is at least 44px tall and keyboard reachable", async ({ page, request }) => {
     await seedUpkeep(request, weekly("Today job", 7));
     await page.goto("/");

@@ -1,5 +1,5 @@
 import { keepPreviousData } from "@tanstack/react-query";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { DueSoonList } from "../components/DueSoonList";
 import { RestockDialog } from "../components/RestockDialog";
 import { RunningOutList } from "../components/RunningOutList";
@@ -13,6 +13,7 @@ import { localDate } from "../lib/localDate";
 import { needsDoing } from "../lib/maintenanceText";
 import { runningOut } from "../lib/runningOut";
 import { timelineRows } from "../lib/timeline";
+import { useFocusNextDone } from "../lib/useFocusNextDone";
 import { useMarkDone } from "../lib/useMarkDone";
 import { trpc, type ListItem, type ScheduleTask } from "../trpc";
 import { copy } from "../copy";
@@ -33,7 +34,9 @@ export const HomePage = () => {
   const items = trpc.inventory.list.useQuery(undefined, refetch);
   const groceries = trpc.groceries.list.useQuery(undefined, refetch);
   const upkeep = trpc.maintenance.list.useQuery({ today }, { ...refetch, placeholderData: keepPreviousData });
-  const upkeepDone = useMarkDone(today);
+  const dueArea = useRef<HTMLDivElement>(null);
+  const focusNextDone = useFocusNextDone(dueArea, dueArea);
+  const upkeepDone = useMarkDone(today, focusNextDone);
   const { undoable } = upkeepDone;
 
   const complete = trpc.tasks.complete.useMutation({ onSuccess: () => utils.schedule.view.invalidate() });
@@ -98,7 +101,9 @@ export const HomePage = () => {
           <ScrollCard title={copy.home.dueSoon} className="max-h-[50dvh] md:max-h-none">
             {upkeep.isPending && <p role="status">{copy.home.loading}</p>}
             {upkeep.error && <p role="alert">{copy.home.dueSoonFailed}</p>}
-            {upkeep.data && <DueSoonList items={due} busy={upkeepDone.busy} onDone={upkeepDone.finish} />}
+            <div ref={dueArea} tabIndex={-1} className="outline-none">
+              {upkeep.data && <DueSoonList items={due} busy={upkeepDone.busy} onDone={upkeepDone.finish} />}
+            </div>
             {upkeep.data && due.length === 0 && <p className="border-t border-line py-4 text-muted">{copy.home.nothingDue}</p>}
             {upkeepDone.problem && <p role="alert" className="py-2 text-late">{upkeepDone.problem}</p>}
           </ScrollCard>

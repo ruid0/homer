@@ -62,6 +62,8 @@
   --text-title--line-height: 1.5rem;
   --text-answer: 1.25rem;
   --text-answer--line-height: 1.75rem;
+  --text-nav: 0.6875rem;
+  --text-nav--line-height: 0.875rem;
   --text-meta: 0.875rem;
   --text-meta--line-height: 1.25rem;
 }

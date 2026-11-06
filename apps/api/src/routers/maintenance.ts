@@ -109,7 +109,14 @@ export const maintenanceRouter = router({
 
   markDone: publicProcedure.input(markMaintenanceDoneInputSchema).mutation(({ ctx, input }) =>
     ctx.db.transaction((tx) => {
-      requireShown(tx, input.id);
+      const item = requireShown(tx, input.id);
+      // A second record for the same day would only make Undo remove the wrong one.
+      const sameDay = tx
+        .select({ id: maintenanceDone.id })
+        .from(maintenanceDone)
+        .where(and(eq(maintenanceDone.itemId, input.id), eq(maintenanceDone.doneOn, input.doneOn)))
+        .get();
+      if (sameDay) throw new TRPCError({ code: "CONFLICT", message: messages.maintenanceAlreadyDone(item.name, input.doneOn === input.today) });
       const { id: doneId } = tx
         .insert(maintenanceDone)
         .values({ itemId: input.id, doneOn: input.doneOn })

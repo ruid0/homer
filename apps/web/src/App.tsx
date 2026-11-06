@@ -18,7 +18,7 @@ export const App = () => (
         <Wordmark />
       </header>
       {/* pb-28 clears the fixed bottom bar (BottomNav). */}
-      <main className="mx-auto max-w-5xl p-4 pb-28 sm:p-6 md:pb-6">
+      <main tabIndex={-1} className="mx-auto max-w-5xl p-4 pb-28 outline-none sm:p-6 md:pb-6">
         <Routes>
           <Route path="/" element={<HomePage />} />
           <Route path="/items" element={<ItemsPage />} />
