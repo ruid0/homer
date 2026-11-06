@@ -40,3 +40,26 @@ test("on a phone, the routine grid opens with today's column fully visible besid
   const names = await page.locator("tbody th").first().boundingBox();
   expect(today?.x ?? 0).toBeGreaterThanOrEqual((names?.x ?? 0) + (names?.width ?? 0) - 1);
 });
+
+test("on a phone, with the keyboard up the sheet fits above it and the first field stays on screen", async ({ page }) => {
+  // Chromium has no on-screen keyboard, so the visible area is faked the way iOS reports it.
+  await page.addInitScript(() => {
+    const fake = Object.assign(new EventTarget(), { height: 844, offsetTop: 0, width: 390, offsetLeft: 0, scale: 1 });
+    Object.defineProperty(window, "visualViewport", { value: fake, configurable: true });
+    (window as unknown as { fakeKeyboard: (height: number) => void }).fakeKeyboard = (height) => {
+      fake.height = height;
+      fake.dispatchEvent(new Event("resize"));
+    };
+  });
+  await page.goto("/upkeep");
+  await page.getByRole("button", { name: "Add job" }).click();
+  const dialog = page.getByRole("dialog");
+  await page.evaluate(() => (window as unknown as { fakeKeyboard: (height: number) => void }).fakeKeyboard(400));
+  // Wait out the slide-in, then measure.
+  await expect.poll(async () => ((await dialog.boundingBox())?.y ?? 9999)).toBeLessThanOrEqual(8);
+  const box = await dialog.boundingBox();
+  expect((box?.y ?? 0) + (box?.height ?? 9999)).toBeLessThanOrEqual(400);
+  await expect(page.getByLabel("Name")).toBeInViewport();
+  await page.evaluate(() => (window as unknown as { fakeKeyboard: (height: number) => void }).fakeKeyboard(844));
+  expect((await dialog.boundingBox())?.height ?? 0).toBeGreaterThan(400);
+});
