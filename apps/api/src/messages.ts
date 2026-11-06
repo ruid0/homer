@@ -7,6 +7,11 @@ export const messages = {
   personNotFound: "That person doesn't exist. Refresh the list.",
   eventRemoved: "That event is already removed. Refresh the list.",
   taskClosed: "That task is already done or removed. Refresh the list.",
+  notificationsOff: "Notifications are turned off for this household. Set NTFY_HOUSEHOLD_TOPIC to turn them on.",
+  remindersOff: "Turn on reminders for this person first.",
+  reminderWhenUnknown: "Enter a time like \"in an hour\", \"in 30 minutes\", \"13:30\" or \"1:30pm\".",
+  reminderDailyNeedsClock: "Every day needs a clock time, like 13:30.",
+  reminderGone: "That reminder is already gone. Refresh the list.",
   routineRowRemoved: "That routine row is already removed. Refresh the list.",
   routineDateInFuture: "That day hasn't happened yet. Pick today or an earlier day.",
   routineDateTooOld: (weeks: number) => `That day is before the last ${weeks} weeks. Pick a more recent day.`,
@@ -37,6 +42,7 @@ const lowPart = (low: number) => (low > 0 ? `${low} ${low === 1 ? "item" : "item
 // Shown on a phone's lock screen, so it says counts and never names.
 export const notifyText = {
   title: "HOMER",
+  routine: (rows: number) => `Routine: ${rows} ${rows === 1 ? "row" : "rows"} not done.`,
   addedToList: (count: number) => `${count} ${count === 1 ? "item" : "items"} added to the grocery list.`,
   endOfDay: (tasks: number, low: number) => `Today: ${[taskPart(tasks), lowPart(low)].filter(Boolean).join(", ")}.`,
 };
@@ -53,6 +59,7 @@ export const notifyLog = {
   sendFailed: (what: string) => `notification not sent: ${what}`,
   endOfDay: { sent: "end-of-day note sent", quiet: "end-of-day note: nothing to say", failed: "end-of-day note could not be sent, it will be tried again when the api next starts" },
   insecureServer: "NTFY_SERVER is plain http with a token set: the token and text cross the network unencrypted",
+  reminderError: (reason: string) => `routine reminders failed: ${reason}`,
   endOfDayError: (reason: string) => `end-of-day note failed: ${reason}`,
 };
 

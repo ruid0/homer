@@ -6,6 +6,7 @@ import { backfillGrocery } from "./groceries/backfill";
 import { startBackups } from "./jobs/backups";
 import { startDepletion } from "./jobs/depletion";
 import { startEndOfDay } from "./jobs/endOfDay";
+import { startRoutineReminders } from "./jobs/routineReminders";
 import { householdNotifications } from "./notify/household";
 
 export type { AppRouter } from "./routers";
@@ -21,6 +22,7 @@ const household = householdNotifications(process.env);
 startDepletion(db, { time: process.env.DEPLETION_TIME || "05:30", onListed: household?.announceListed });
 if (household) {
   startEndOfDay(db, { time: process.env.END_OF_DAY_TIME || "20:00", topic: household.topic, notify: household.notify });
+  startRoutineReminders(db, { notify: household.notify });
 }
 startBackups(db, { dir: process.env.BACKUP_DIR || "./backups", time: process.env.BACKUP_TIME || "06:00" });
 
@@ -31,6 +33,6 @@ const chat = createOllamaClient({
   timeoutMs: Number(process.env.LOCAL_LLM_TIMEOUT_MS) || 300_000,
 });
 
-serve({ fetch: createApp(db, { chat, now: () => new Date() }).fetch, port }, () => {
+serve({ fetch: createApp(db, { chat, now: () => new Date() }, household?.server ?? null).fetch, port }, () => {
   console.log(`api listening on :${port}, database ${databasePath}`);
 });

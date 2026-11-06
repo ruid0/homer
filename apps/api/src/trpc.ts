@@ -5,7 +5,8 @@ import type { Db } from "./db/client";
 export type AssistantDeps = { chat: ChatClient; now: () => Date };
 
 // `assistant` is left out in tests that do not need the model.
-export type Context = { db: Db; assistant?: AssistantDeps };
+// `ntfyServer` is null when notifications are off.
+export type Context = { db: Db; assistant?: AssistantDeps; ntfyServer?: string | null; now?: () => Date };
 
 const t = initTRPC.context<Context>().create();
 

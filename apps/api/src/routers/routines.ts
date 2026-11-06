@@ -1,9 +1,14 @@
 import { TRPCError } from "@trpc/server";
 import { and, asc, eq, inArray, isNull, max } from "drizzle-orm";
 import {
+  routineRemindersInputSchema,
   MAX_ROUTINE_WEEKS_BACK,
   addDays,
+  addReminderInputSchema,
+  clockText,
   idInputSchema,
+  parseReminderWhen,
+  reminderFireAt,
   moveRoutineItemInputSchema,
   routineItemInputSchema,
   routineWeekInputSchema,
@@ -12,7 +17,7 @@ import {
   weekDates,
 } from "@homer/shared";
 import type { Db } from "../db/client";
-import { routineItems, routineTicks } from "../db/schema";
+import { people, routineItems, routineReminders, routineTicks } from "../db/schema";
 import { messages } from "../messages";
 import { requirePerson } from "../people/lookup";
 import { publicProcedure, router } from "../trpc";
@@ -127,6 +132,44 @@ export const routinesRouter = router({
         .onConflictDoUpdate({ target: [routineTicks.routineItemId, routineTicks.date], set: { count } })
         .returning()
         .get();
+    }),
+  ),
+
+  // The open reminders on a person's rows. Nothing about the secret topic.
+  reminders: publicProcedure.input(routineRemindersInputSchema).query(({ ctx, input }) => {
+    requirePerson(ctx.db, input.personId);
+    return ctx.db
+      .select({ id: routineReminders.id, itemId: routineReminders.routineItemId, fireAt: routineReminders.fireAt, dailyTime: routineReminders.dailyTime })
+      .from(routineReminders)
+      .innerJoin(routineItems, eq(routineItems.id, routineReminders.routineItemId))
+      .where(and(eq(routineItems.personId, input.personId), isShown, isNull(routineReminders.removedAt)))
+      .orderBy(asc(routineReminders.fireAt))
+      .all();
+  }),
+
+  addReminder: publicProcedure.input(addReminderInputSchema).mutation(({ ctx, input }) =>
+    ctx.db.transaction((tx) => {
+      const row = requireShown(tx, input.itemId);
+      const person = tx.select({ topic: people.notifyTopic }).from(people).where(eq(people.id, row.personId)).get();
+      if (!person?.topic) throw new TRPCError({ code: "PRECONDITION_FAILED", message: messages.remindersOff });
+      const when = parseReminderWhen(input.text);
+      if (!when) throw new TRPCError({ code: "BAD_REQUEST", message: messages.reminderWhenUnknown });
+      if (input.repeatDaily && when.kind !== "at") {
+        throw new TRPCError({ code: "BAD_REQUEST", message: messages.reminderDailyNeedsClock });
+      }
+      const fireAt = reminderFireAt(when, ctx.now?.() ?? new Date()).toISOString();
+      const dailyTime = input.repeatDaily && when.kind === "at" ? clockText(when.hour, when.minute) : null;
+      return tx.insert(routineReminders).values({ routineItemId: row.id, fireAt, dailyTime }).returning().get();
+    }),
+  ),
+
+  removeReminder: publicProcedure.input(idInputSchema).mutation(({ ctx, input }) =>
+    ctx.db.transaction((tx) => {
+      const open = and(eq(routineReminders.id, input.id), isNull(routineReminders.removedAt));
+      if (!tx.select({ id: routineReminders.id }).from(routineReminders).where(open).get()) {
+        throw new TRPCError({ code: "NOT_FOUND", message: messages.reminderGone });
+      }
+      tx.update(routineReminders).set({ removedAt: new Date().toISOString() }).where(open).run();
     }),
   ),
 });

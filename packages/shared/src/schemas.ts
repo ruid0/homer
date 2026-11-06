@@ -193,6 +193,14 @@ export const setRoutineCountInputSchema = z.object({
   count: z.number().int().min(0).max(MAX_ROUTINE_COUNT),
 });
 
+export const routineRemindersInputSchema = z.object({ personId: personIdSchema });
+
+export const addReminderInputSchema = z.object({
+  itemId: z.number().int(),
+  text: z.string().trim().min(1).max(40),
+  repeatDaily: z.boolean().default(false),
+});
+
 export const routineItemSchema = z.object({
   id: z.number().int(),
   personId: personIdSchema,
@@ -226,3 +234,4 @@ export type RoutineWeekInput = z.infer<typeof routineWeekInputSchema>;
 export type SetRoutineCountInput = z.infer<typeof setRoutineCountInputSchema>;
 export type RoutineItem = z.infer<typeof routineItemSchema>;
 export type RoutineTick = z.infer<typeof routineTickSchema>;
+export type AddReminderInput = z.infer<typeof addReminderInputSchema>;

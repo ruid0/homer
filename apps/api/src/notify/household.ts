@@ -1,7 +1,7 @@
 import { notifyLog, notifyText } from "../messages";
 import { createNtfyNotifier, ntfyConfig, sendsInTheClear, type Notifier } from "./ntfy";
 
-export type Household = { topic: string; notify: Notifier; announceListed: (count: number) => void };
+export type Household = { topic: string; server: string; notify: Notifier; announceListed: (count: number) => void };
 
 // Null (and one log line) when notifications are off, so callers have nothing to switch on.
 export const householdNotifications = (
@@ -21,5 +21,5 @@ export const householdNotifications = (
     const note = { topic: config.householdTopic, title: notifyText.title, message, path: "/groceries" };
     void notify(note).then((sent) => sent || log(notifyLog.sendFailed(message)));
   };
-  return { topic: config.householdTopic, notify, announceListed };
+  return { topic: config.householdTopic, server: config.server, notify, announceListed };
 };
