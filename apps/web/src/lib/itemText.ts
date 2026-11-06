@@ -6,7 +6,7 @@ export const quantityText = (quantity: number): string => String(Math.round(quan
 type Stock = { quantity: number; daysRemaining: number | null };
 
 export const describeRunsOut = ({ quantity, daysRemaining }: Stock): string => {
-  if (quantity === 0) return copy.stock.outOfIt;
+  if (quantity === 0) return copy.stock.ranOut;
   if (daysRemaining === null) return copy.stock.noEstimate;
   if (daysRemaining === 0) return copy.stock.runsOutToday;
   return copy.stock.runsOutIn(daysRemaining);

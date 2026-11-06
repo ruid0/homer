@@ -7,8 +7,8 @@ describe("describeRunsOut", () => {
     [{ quantity: 1, daysRemaining: 1 }, "Runs out in 1 day"],
     [{ quantity: 0.4, daysRemaining: 0 }, "Runs out today"],
     [{ quantity: 3, daysRemaining: null }, "No estimate"],
-    [{ quantity: 0, daysRemaining: 0 }, "Out of it"],
-    [{ quantity: 0, daysRemaining: null }, "Out of it"],
+    [{ quantity: 0, daysRemaining: 0 }, "Ran out"],
+    [{ quantity: 0, daysRemaining: null }, "Ran out"],
   ])("%j reads %s", (item, text) => {
     expect(describeRunsOut(item)).toBe(text);
   });

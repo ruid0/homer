@@ -1,6 +1,8 @@
 import { keepPreviousData } from "@tanstack/react-query";
 import { useRef, useState } from "react";
-import { DueSoonList } from "../components/DueSoonList";
+import { Link } from "react-router-dom";
+import { UpkeepList } from "../components/UpkeepList";
+import { Card } from "../components/Card";
 import { RestockDialog } from "../components/RestockDialog";
 import { RunningOutList } from "../components/RunningOutList";
 import { ScrollCard } from "../components/ScrollCard";
@@ -19,6 +21,7 @@ import { trpc, type ListItem, type ScheduleTask } from "../trpc";
 import { copy } from "../copy";
 
 const REFRESH_MS = 60_000;
+const MOST_JUMPED = 3;
 const refetch = { refetchInterval: REFRESH_MS };
 
 export const HomePage = () => {
@@ -75,12 +78,17 @@ export const HomePage = () => {
     setRestocking(null);
   };
 
+  // A few late jobs jump to the top of the single column. Many would push Today out of sight, so then the order stays.
+  const lateCount = (upkeep.data ?? []).filter((item) => item.status === "overdue" || item.status === "due").length;
+  const jumpFirst = lateCount >= 1 && lateCount <= MOST_JUMPED;
+
   return (
-    <div className="flex flex-col gap-4 md:h-[calc(100dvh-3rem)]">
+    <div className="flex flex-col gap-4">
       <h1 className="text-page font-semibold">{dateName(today)}</h1>
 
-      <div className="grid min-h-0 flex-1 gap-4 md:grid-cols-[3fr_2fr] md:grid-rows-[minmax(0,1fr)]">
-        <ScrollCard title={copy.home.yourDay} className="max-h-[60dvh] md:max-h-none">
+      {/* One column up to lg, two equal columns from lg, 3 to 2 from xl. One to three late jobs jump to the top of the single column. */}
+      <div className="grid items-start gap-4 lg:grid-cols-2 xl:grid-cols-[3fr_2fr]">
+        <ScrollCard title={copy.home.today} className="lg:row-span-2 lg:max-h-[calc(100dvh-8rem)]">
           {view.isPending && <p role="status">{copy.home.loading}</p>}
           {view.error && <p role="alert">{copy.home.timelineFailed}</p>}
           {view.data && <TimelineList rows={rows} nowTime={nowTime} busy={complete.isPending} onDone={finish} />}
@@ -88,26 +96,25 @@ export const HomePage = () => {
           {complete.error && <p role="alert" className="py-2 text-late">{complete.error.message}</p>}
         </ScrollCard>
 
-        <div className="grid min-h-0 gap-4 md:grid-rows-[minmax(0,1fr)_minmax(0,1fr)]">
-          <ScrollCard title={copy.home.runningOut} className="max-h-[50dvh] md:max-h-none">
-            {items.isPending && <p role="status">{copy.home.loading}</p>}
-            {items.error && <p role="alert">{copy.home.runningOutFailed}</p>}
-            {items.data && <RunningOutList rows={running} onBought={setRestocking} />}
-            {items.data && running.length === 0 && (
-              <p className="border-t border-line py-4 text-muted">{copy.home.nothingRunningOut}</p>
-            )}
-          </ScrollCard>
+        <Card
+          title={<Link to="/upkeep" className="inline-block py-2 underline decoration-line-strong underline-offset-4 hover:decoration-ink">{copy.home.upkeep}</Link>}
+          className={jumpFirst ? "order-first lg:order-none" : ""}
+        >
+          {upkeep.isPending && <p role="status">{copy.home.loading}</p>}
+          {upkeep.error && <p role="alert">{copy.home.upkeepFailed}</p>}
+          <div ref={dueArea} tabIndex={-1} className="outline-none">
+            {upkeep.data && <UpkeepList items={due} busy={upkeepDone.busy} justDoneId={upkeepDone.justDoneId} onDone={upkeepDone.finish} />}
+          </div>
+          {upkeep.data && due.length === 0 && <p className="border-t border-line py-4 text-muted">{copy.home.nothingDue}</p>}
+          {upkeepDone.problem && <p role="alert" className="py-2 text-late">{upkeepDone.problem}</p>}
+        </Card>
 
-          <ScrollCard title={copy.home.dueSoon} className="max-h-[50dvh] md:max-h-none">
-            {upkeep.isPending && <p role="status">{copy.home.loading}</p>}
-            {upkeep.error && <p role="alert">{copy.home.dueSoonFailed}</p>}
-            <div ref={dueArea} tabIndex={-1} className="outline-none">
-              {upkeep.data && <DueSoonList items={due} busy={upkeepDone.busy} justDoneId={upkeepDone.justDoneId} onDone={upkeepDone.finish} />}
-            </div>
-            {upkeep.data && due.length === 0 && <p className="border-t border-line py-4 text-muted">{copy.home.nothingDue}</p>}
-            {upkeepDone.problem && <p role="alert" className="py-2 text-late">{upkeepDone.problem}</p>}
-          </ScrollCard>
-        </div>
+        <Card title={copy.home.runningOut}>
+          {items.isPending && <p role="status">{copy.home.loading}</p>}
+          {items.error && <p role="alert">{copy.home.runningOutFailed}</p>}
+          {items.data && <RunningOutList rows={running} onBought={setRestocking} />}
+          {items.data && running.length === 0 && <p className="border-t border-line py-4 text-muted">{copy.home.nothingRunningOut}</p>}
+        </Card>
       </div>
 
       {restocking && (

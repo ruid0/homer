@@ -42,7 +42,7 @@ export const ItemRow = ({ item, busy, onList, onBought, onOut, onEdit }: Props) 
               disabled={busy}
               aria-label={copy.items.outLabel(item.name)}
             >
-              {copy.stock.outOfIt}
+              {copy.stock.ranOut}
             </button>
           )}
           <button
