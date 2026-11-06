@@ -51,12 +51,12 @@ Property tests: the due date is never before the last done date; a later done da
 
 A `maintenance` router (same style as the others, input schemas in `packages/shared/src/schemas.ts`):
 - `list`: open items with `dueOn`, `status`, `daysUntil`, `lastDoneOn`, sorted by `compareMaintenance`.
-- `add`, `update` (name, interval, last done), `remove` (soft).
+- `add` (name, interval, optional last done date; the router takes `created_on` from the caller's `today`; a last done date also writes the first `maintenance_done` row), `update` (name and interval only: the last done date changes only through done and undo, so it always matches the history), `remove` (soft).
 - `markDone({ id, doneOn, today })`: writes a `maintenance_done` row and returns its id. `doneOn` is a valid `YYYY-MM-DD`, not after `today` and not more than a year before it (the same kind of bound as routines' `requireDayAllowed`). A date earlier than the latest one is allowed and is only recorded in the history; `last_done_on` is the latest of all. One transaction.
 - `undoDone({ doneId })`: removes that exact row (so a double tap or a second device never removes the wrong one) and sets `last_done_on` to the latest remaining `done_on`, or null.
 - `history({ id })`: the done dates with their ids, newest first.
 
-Notes never need clearing: they are keyed to the due date (see §7). Marking done, undoing, and editing the interval or last done date all change the due date, so the item becomes eligible for a new note by itself and an old note is never repeated.
+Notes never need clearing: they are keyed to the due date (see §7). Marking done, undoing, and editing the interval all change the due date, so the item becomes eligible for a new note by itself and an old note is never repeated.
 
 The local date comes from the caller's `today`, like routines, so the household's `TZ` is respected.
 
