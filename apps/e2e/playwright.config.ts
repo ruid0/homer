@@ -55,7 +55,7 @@ export default defineConfig({
     {
       name: "upkeep",
       testMatch: /\.upkeep\.spec\.ts$/,
-      testIgnore: /home\.upkeep\.spec\.ts$/,
+      testIgnore: /(home|list)\.upkeep\.spec\.ts$/,
       fullyParallel: false,
       use: { ...devices["Desktop Chrome"], baseURL: `http://127.0.0.1:${copies.upkeep.web}` },
     },
@@ -64,6 +64,15 @@ export default defineConfig({
       name: "upkeep-home",
       testMatch: /home\.upkeep\.spec\.ts$/,
       dependencies: ["upkeep"],
+      fullyParallel: false,
+      use: { ...devices["Desktop Chrome"], baseURL: `http://127.0.0.1:${copies.upkeep.web}` },
+    },
+    {
+      // Also the same copy and list: it waits for the home project, so no two files clear the list at once.
+      // The cost: a failure in the upkeep or home specs skips these tests, and a new spec for this list needs its own project in the chain.
+      name: "upkeep-list",
+      testMatch: /list\.upkeep\.spec\.ts$/,
+      dependencies: ["upkeep-home"],
       fullyParallel: false,
       use: { ...devices["Desktop Chrome"], baseURL: `http://127.0.0.1:${copies.upkeep.web}` },
     },

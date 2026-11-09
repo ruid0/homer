@@ -39,8 +39,19 @@ export const needsDoing = (status: Words["status"]): boolean => status !== "late
 
 type Details = { every: number; unit: "weeks" | "months" | "years"; lastDoneOn: string | null; dueOn: string; daysUntil: number };
 
-export const rowDetails = ({ every, unit, lastDoneOn, dueOn, daysUntil }: Details): string[] => [
+// The chips on a row: how often, and when it was last done. A job never done has no second chip: its status line already says so.
+export const rowChips = ({ every, unit, lastDoneOn, dueOn, daysUntil }: Details): string[] => [
   copy.maintenance.cycle(every, unit),
   // Today is not passed in: it is the due date minus the days until it.
   ...(lastDoneOn === null ? [] : [copy.maintenance.lastDone(pastDate(lastDoneOn, addDays(dueOn, -daysUntil)))]),
 ];
+
+// Up to this many rows Later stays open; one more and it folds away behind its heading.
+const LATER_OPEN_MAX = 5;
+
+export const collapsesLater = (count: number): boolean => count > LATER_OPEN_MAX;
+
+const lowerFirst = (text: string): string => text.charAt(0).toLowerCase() + text.slice(1);
+
+// What a folded Later still tells you: the next job to come round. The list arrives sorted by due date, so the first one is it.
+export const laterNote = (item: Words & { name: string }): string => copy.maintenance.laterNext(item.name, lowerFirst(dueWords(item)));

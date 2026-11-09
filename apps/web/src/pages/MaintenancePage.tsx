@@ -1,13 +1,13 @@
 import { keepPreviousData } from "@tanstack/react-query";
 import { PageHeader } from "../components/PageHeader";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ListCard } from "../components/ListCard";
 import { MaintenanceDialog, type MaintenanceForm } from "../components/MaintenanceDialog";
 import { MaintenanceRow } from "../components/MaintenanceRow";
 import { Toast } from "../components/Toast";
-import { primaryButton } from "../components/ui";
+import { primaryButton, secondaryButton } from "../components/ui";
 import { copy } from "../copy";
-import { needsDoing } from "../lib/maintenanceText";
+import { collapsesLater, laterNote, needsDoing } from "../lib/maintenanceText";
 import { useFocusNextDone } from "../lib/useFocusNextDone";
 import { useMarkDone } from "../lib/useMarkDone";
 import { useToday } from "../lib/useToday";
@@ -21,6 +21,7 @@ export const MaintenancePage = () => {
   // keepPreviousData: at midnight the day changes, and the list stays on screen until the new answer arrives.
   const list = trpc.maintenance.list.useQuery({ today }, { placeholderData: keepPreviousData });
   const [editing, setEditing] = useState<Editing>(null);
+  const [laterOpen, setLaterOpen] = useState(false);
 
   const refresh = () => utils.maintenance.list.invalidate();
 
@@ -57,6 +58,12 @@ export const MaintenancePage = () => {
 
   const urgent = items.filter((item) => needsDoing(item.status));
   const later = items.filter((item) => !needsDoing(item.status));
+  const folded = collapsesLater(later.length);
+  const laterShown = !folded || laterOpen;
+  // Once Later is short enough to stay open, forget the choice: if it grows long again it starts folded.
+  useEffect(() => {
+    if (!folded) setLaterOpen(false);
+  }, [folded]);
   const rows = (group: MaintenanceItem[]) => (
     <ListCard>
       {group.map((item) => (
@@ -86,8 +93,24 @@ export const MaintenancePage = () => {
           </section>
           {later.length > 0 && (
             <section aria-labelledby="later" className="grid gap-2">
-              <h2 id="later" className="text-section font-semibold">{copy.maintenance.later}</h2>
-              {rows(later)}
+              <h2 id="later" className="text-section font-semibold">
+                {folded ? (
+                  <button
+                    type="button"
+                    aria-expanded={laterShown}
+                    aria-controls="later-rows"
+                    className={`${secondaryButton} flex min-h-13 w-full items-center justify-between rounded-2xl bg-card px-4 text-left text-section font-semibold`}
+                    onClick={() => setLaterOpen(!laterShown)}
+                  >
+                    {copy.maintenance.laterToggle(later.length)}
+                    <span aria-hidden="true" className={`transition-transform ${laterShown ? "rotate-180" : ""}`}>⌄</span>
+                  </button>
+                ) : (
+                  copy.maintenance.later
+                )}
+              </h2>
+              {folded && !laterShown && <p className="text-meta text-muted">{laterNote(later[0]!)}</p>}
+              <div id="later-rows">{laterShown && rows(later)}</div>
             </section>
           )}
         </div>
