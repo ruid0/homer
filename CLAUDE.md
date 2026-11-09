@@ -41,7 +41,7 @@ pnpm-workspace TypeScript monorepo:
 Key design constraints:
 - **Single source of truth for types**: Zod schemas in `packages/shared` are reused for DB rows, tRPC input/output, and LLM tool-call arguments. Change them there, not per layer.
 - **Pure domain logic** lives in `shared/domain.ts` with no I/O, which is what the property-based tests target.
-- **Everything local**: no cloud services, accounts, or outbound data. The LLM runs only via Ollama on localhost; the DB is one SQLite file. The one exception is off by default: ntfy notifications (generic text, counts only) through `ntfy.sh`, a third-party service, unless `NTFY_SERVER` points at the owner's own server.
+- **Everything local**: no cloud services, accounts, or outbound data. The LLM runs only via Ollama on localhost; the DB is one SQLite file. The one exception is off by default: ntfy notifications (generic text, counts only) through `ntfy.sh`, a third-party service, unless `NTFY_SERVER` points at the owner's own server. A second, dev-time-only exception: the `reviewer` subagent sends the diff (code, never household data) to DeepSeek through the `dsh` plugin; the running app never does.
 - The assistant router drives an Ollama tool-calling loop whose tools dispatch into the same domain/DB layer as the tRPC routers.
 - **Installable as an app**: the web app is a PWA that can be added to a phone or tablet home screen, even though it's a website.
 - Deployment: Docker Compose with web + api; Ollama runs natively on the Mac host (Docker on macOS has no GPU access).
