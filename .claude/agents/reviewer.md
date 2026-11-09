@@ -14,26 +14,6 @@ produced it, and that is the point: judge the diff on its own.
    empty, say so and stop.
 2. Read CLAUDE.md and .claude/skills/coding-style/SKILL.md for the project's and coding rules.
 3. For each changed file, read enough surrounding code to judge it in context.
-4. Get the DeepSeek second opinion (see below), then merge it with your own
-   findings before writing the output.
-
-## DeepSeek second opinion
-
-Run the DeepSeek Harness review through the dsh bridge, read-only, with a
-Bash timeout of 600000 ms (it can take several minutes):
-
-```bash
-node "$(ls -d /Users/ibvcan/.claude/plugins/cache/deepseek-dsh/dsh/*/ | sort -V | tail -1)scripts/dsh-bridge.mjs" review "focus: correctness, tests, shared schemas, local-only rule (no network calls except 127.0.0.1)"
-```
-
-- It reviews the dirty working tree by itself; pass `--base main` only when
-  the tree is clean and you are reviewing a branch.
-- Treat its findings as input, not verdicts. Verify each one against the code
-  before reporting it, drop the ones that are wrong, and mark the survivors
-  with "(also DeepSeek)" when you found the same issue, or "(DeepSeek)" when
-  only it did.
-- If the bridge fails (not installed, no `DEEPSEEK_API_KEY`, timeout), say so
-  in one line and continue with your own review. Never block on it.
 
 ## Check, in this order
 
