@@ -103,7 +103,7 @@ test.describe("marking done", () => {
     await expect(row(page, "Today job")).toContainText("Due in 7 days");
     await page.reload();
     await expect(row(page, "Today job")).toContainText("Due in 7 days");
-    await expect(row(page, "Today job")).toContainText("last done");
+    await expect(row(page, "Today job")).toContainText("Last done");
   });
 
   test("the Undo toast goes away after a few seconds, and a second done keeps its own Undo", async ({ page, request }) => {
@@ -194,7 +194,7 @@ test.describe("adding", () => {
     await dialog.getByRole("button", { name: "Save" }).click();
     await expect(dialog).toHaveCount(0);
     await expect(row(page, "Furnace filter")).toContainText("Every 3 months");
-    await expect(row(page, "Furnace filter")).toContainText("last done");
+    await expect(row(page, "Furnace filter")).toContainText("Last done");
 
     await page.getByRole("button", { name: "Add job" }).click();
     await expect(page.getByRole("dialog").getByRole("button", { name: "Furnace filter" })).toHaveCount(0);
@@ -273,7 +273,7 @@ test.describe("editing, history and removing", () => {
     await dialog.getByRole("button", { name: /^Remove the done date/ }).first().click();
     await expect(dialog.getByRole("listitem")).toHaveCount(1);
     await dialog.getByRole("button", { name: "Cancel" }).click();
-    await expect(row(page, "Gutters")).toContainText("last done");
+    await expect(row(page, "Gutters")).toContainText("Last done");
   });
 
   test("a future done date cannot be picked", async ({ page, request }) => {
@@ -455,7 +455,7 @@ test.describe("dates, limits and focus", () => {
     await page.goto("/upkeep");
     await expect(row(page, "Half year job")).toContainText(/Due in [56] months/);
     await expect(row(page, "Year job")).toContainText(/Due \d+ \w+ \d{4}/);
-    await expect(row(page, "Year job")).toContainText(/last done \d+ \w+(?! \d{4})/);
+    await expect(row(page, "Year job")).toContainText(/Last done \d+ \w+(?! \d{4})/);
   });
 
   test("the name box stops at 80 characters, so a longer name can never be sent", async ({ page }) => {

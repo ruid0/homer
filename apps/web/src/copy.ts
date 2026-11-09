@@ -268,7 +268,9 @@ export const copy = {
     dueOn: (date: string) => `Due ${date}`,
     cycle: (every: number, unit: "weeks" | "months" | "years") =>
       every === 1 ? { weeks: "Every week", months: "Every month", years: "Every year" }[unit] : `Every ${every} ${unitNames[unit]}`,
-    lastDone: (date: string) => `last done ${date}`,
+    lastDone: (date: string) => `Last done ${date}`,
+    laterToggle: (count: number) => `Later (${count})`,
+    laterNext: (name: string, when: string) => `Next: ${name}, ${when}.`,
     doneToast: (name: string) => `${name} marked done.`,
     undo: "Undo",
     addTitle: "Add a job",
