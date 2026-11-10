@@ -85,21 +85,22 @@ export const MaintenanceDialog = ({ item, today, takenNames, pending, serverErro
         </div>
         {!item && (
           <div className="grid gap-2">
-            <Field label={copy.maintenance.lastDoneLabel}>
-              <input
-                className={inputClass}
-                type="date"
-                value={lastDone}
-                max={today}
-                min={addDays(today, -YEAR_BACK_DAYS)}
-                disabled={neverDone}
-                onChange={(event) => setLastDone(event.target.value)}
-              />
-            </Field>
             <label className="flex min-h-11 items-center gap-2">
               <input type="checkbox" className="size-5" checked={neverDone} onChange={(event) => setNeverDone(event.target.checked)} />
               {copy.maintenance.notDoneYetLabel}
             </label>
+            {!neverDone && (
+              <Field label={copy.maintenance.lastDoneLabel}>
+                <input
+                  className={inputClass}
+                  type="date"
+                  value={lastDone}
+                  max={today}
+                  min={addDays(today, -YEAR_BACK_DAYS)}
+                  onChange={(event) => setLastDone(event.target.value)}
+                />
+              </Field>
+            )}
           </div>
         )}
         {(error ?? serverError) && <p role="alert" className="text-late">{error ?? serverError}</p>}

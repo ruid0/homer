@@ -178,7 +178,7 @@ test.describe("a long Later list", () => {
 
     await page.getByRole("button", { name: "Add job" }).click();
     const dialog = page.getByRole("dialog");
-    await dialog.getByRole("button", { name: "Dryer vent" }).click();
+    await dialog.getByLabel("Start from a suggestion").selectOption("Dryer vent");
     await dialog.getByLabel("Not done yet").uncheck();
     await dialog.getByLabel("Last done").fill(daysAgo(10));
     await dialog.getByRole("button", { name: "Save" }).click();
@@ -235,5 +235,28 @@ test.describe("layout", () => {
       expect(done!.x).toBeGreaterThan(edit!.x);
       expect(Math.abs(done!.y - edit!.y)).toBeLessThan(2);
     });
+  });
+});
+
+test.describe("the suggestions dropdown", () => {
+  test("can be used from the keyboard, and picking fills the form", async ({ page }) => {
+    await page.goto("/upkeep");
+    await page.getByRole("button", { name: "Add job" }).click();
+    const dialog = page.getByRole("dialog");
+    // Typing the first letters picks the option, with no mouse; ArrowDown would only open the list on a Mac.
+    await dialog.getByLabel("Start from a suggestion").focus();
+    await page.keyboard.type("Fu");
+    await expect(dialog.getByRole("textbox", { name: "Name" })).toHaveValue("Furnace filter");
+    await expect(dialog.getByRole("spinbutton", { name: "Every" })).toHaveValue("3");
+  });
+
+  test("is not offered when all five jobs are already on the list", async ({ page, request }) => {
+    for (const name of ["Furnace filter", "Water softener salt", "Smoke alarm batteries", "Dryer vent", "Fridge coils"]) {
+      await seedUpkeep(request, far(name));
+    }
+    await page.goto("/upkeep");
+    await page.getByRole("button", { name: "Add job" }).click();
+    await expect(page.getByRole("dialog").getByRole("textbox", { name: "Name" })).toBeVisible();
+    await expect(page.getByRole("dialog").getByLabel("Start from a suggestion")).toHaveCount(0);
   });
 });

@@ -97,7 +97,7 @@ export const HomePage = () => {
         </ScrollCard>
 
         <Card
-          title={<Link to="/upkeep" className="inline-block py-2 underline decoration-line-strong underline-offset-4 hover:decoration-ink">{copy.home.upkeep}</Link>}
+          title={<Link to="/upkeep" className="inline-block py-2 underline-offset-4 hover:underline focus-visible:underline">{copy.home.upkeep}</Link>}
           className={jumpFirst ? "order-first lg:order-none" : ""}
         >
           {upkeep.isPending && <p role="status">{copy.home.loading}</p>}
