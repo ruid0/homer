@@ -1,6 +1,6 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Locator } from "@playwright/test";
 import { randomUUID } from "node:crypto";
-import { seedEvent, seedPerson, todayUtc } from "./scratch";
+import { daysAgo, seedEvent, seedPerson, seedUpkeep, todayUtc } from "./scratch";
 
 test.use({ viewport: { width: 390, height: 844 } });
 
@@ -15,13 +15,19 @@ test("on a phone, every field in the add-task dialog stays inside the dialog", a
   }
 });
 
-test("on a phone, a number box and a dropdown side by side are the same height", async ({ page }) => {
+test("on a phone, the stepper and the unit buttons share one row and are 44px tall", async ({ page }) => {
   await page.goto("/upkeep");
   await page.getByRole("button", { name: "Add job" }).click();
-  // The sheet slides up when it opens, so read both boxes only once they agree on where the row is.
-  const box = async (label: string) => page.getByLabel(label).boundingBox();
-  await expect.poll(async () => (await box("Every"))?.y === (await box("Unit"))?.y).toBe(true);
-  expect((await box("Every"))?.height).toBe((await box("Unit"))?.height);
+  const dialog = page.getByRole("dialog");
+  // The sheet slides up when it opens, so read the boxes only once they agree on where the row is.
+  const box = async (name: string) => dialog.getByRole("button", { name }).boundingBox();
+  const unit = () => dialog.locator("label").filter({ hasText: /^months$/i }).boundingBox();
+  await expect.poll(async () => (await box("One less"))?.y === (await unit())?.y).toBe(true);
+  expect((await box("One less"))?.height).toBe(44);
+  expect((await unit())?.height).toBe(44);
+  const edge = (await dialog.boundingBox())?.width ?? 0;
+  const years = await dialog.locator("label").filter({ hasText: /^years$/i }).boundingBox();
+  expect((years?.x ?? 0) + (years?.width ?? 0)).toBeLessThanOrEqual(edge);
 });
 
 test("on a phone, an event's Edit sits at the right edge like a task's", async ({ page, request }) => {
@@ -65,41 +71,87 @@ test("on a phone, with the keyboard up the sheet fits above it and the first fie
 });
 
 // 375x667 is an iPhone SE; 375x568 is the same phone with Safari's toolbars showing.
+const saveBottom = (dialog: Locator) =>
+  // The sheet slides up when it opens, so this settles once it stops moving.
+  dialog.getByRole("button", { name: "Save" }).boundingBox().then((save) => (save?.y ?? Infinity) + (save?.height ?? 0));
+
 for (const height of [667, 568]) {
-  for (const ticked of [true, false]) {
-    test(`on a ${height}px-tall phone, the add-job dialog fits without scrolling inside itself with 'Not done yet' ${ticked ? "ticked" : "unticked"}`, async ({ page }) => {
-      await page.setViewportSize({ width: 375, height });
-      await page.goto("/upkeep");
-      await page.getByRole("button", { name: "Add job" }).click();
-      const dialog = page.getByRole("dialog");
-      // The worst case: a suggestion picked, so the form is full.
-      await dialog.getByLabel("Start from a suggestion").selectOption("Furnace filter");
-      if (!ticked) {
-        await dialog.getByLabel("Not done yet").uncheck();
-        await expect(dialog.getByLabel("Last done")).toBeVisible();
-      }
-      // One pixel of rounding is allowed; the overflow that was reported was 5px or more.
-      expect(await dialog.evaluate((element) => element.scrollHeight - element.clientHeight)).toBeLessThanOrEqual(1);
-      // The sheet slides up when it opens, so wait for it to settle before measuring where Save is.
-      await expect
-        .poll(async () => {
-          const save = await dialog.getByRole("button", { name: "Save" }).boundingBox();
-          return (save?.y ?? Infinity) + (save?.height ?? 0);
-        })
-        .toBeLessThanOrEqual(height);
-    });
-  }
+  test(`on a ${height}px-tall phone, the add-job dialog fits without scrolling inside itself, and Save is on screen`, async ({ page }) => {
+    await page.setViewportSize({ width: 375, height });
+    await page.goto("/upkeep");
+    await page.getByRole("button", { name: "Add job" }).click();
+    const dialog = page.getByRole("dialog");
+    // The worst case that stays short: a suggestion picked, so the form is full.
+    await dialog.getByLabel("Start from a suggestion").selectOption("Furnace filter");
+    // One pixel of rounding is allowed; the overflow that was reported was 5px or more.
+    expect(await dialog.evaluate((element) => element.scrollHeight - element.clientHeight)).toBeLessThanOrEqual(1);
+    await expect.poll(() => saveBottom(dialog)).toBeLessThanOrEqual(height);
+  });
+
+  test(`on a ${height}px-tall phone, with a date to pick Save stays on screen while the fields scroll`, async ({ page }) => {
+    await page.setViewportSize({ width: 375, height });
+    await page.goto("/upkeep");
+    await page.getByRole("button", { name: "Add job" }).click();
+    const dialog = page.getByRole("dialog");
+    await dialog.getByLabel("Start from a suggestion").selectOption("Furnace filter");
+    await dialog.getByLabel("Last done").selectOption("Pick a date…");
+    await expect(dialog.getByLabel("Done on")).toBeVisible();
+    await expect.poll(() => saveBottom(dialog)).toBeLessThanOrEqual(height);
+    // However far the fields are scrolled, Save has not moved off the screen.
+    await dialog.evaluate((element) => element.scrollTo({ top: 0 }));
+    await expect.poll(() => saveBottom(dialog)).toBeLessThanOrEqual(height);
+    await dialog.evaluate((element) => element.scrollTo({ top: element.scrollHeight }));
+    await expect.poll(() => saveBottom(dialog)).toBeLessThanOrEqual(height);
+  });
+
+  test(`on a ${height}px-tall phone, with the done dates open Save stays on screen`, async ({ page, request }) => {
+    await seedUpkeep(request, { name: `Sheet job ${height}`, every: 3, unit: "months", lastDoneOn: daysAgo(5) });
+    await page.setViewportSize({ width: 375, height });
+    await page.goto("/upkeep");
+    await page.getByRole("button", { name: `Edit Sheet job ${height}` }).click();
+    const dialog = page.getByRole("dialog");
+    await dialog.getByRole("button", { name: /^Done on/ }).click();
+    await expect(dialog.getByLabel("Mark done on")).toBeVisible();
+    await expect.poll(() => saveBottom(dialog)).toBeLessThanOrEqual(height);
+    await dialog.evaluate((element) => element.scrollTo({ top: element.scrollHeight }));
+    await expect.poll(() => saveBottom(dialog)).toBeLessThanOrEqual(height);
+    await expect(dialog.getByRole("button", { name: "Remove item" })).toBeInViewport();
+  });
 }
 
-test("the last done date only appears once 'Not done yet' is unticked", async ({ page }) => {
+// 360 is the commonest Android width, 375 an iPhone SE or mini. Nothing may stick out past the dialog's side padding.
+for (const width of [375, 360]) {
+  test(`on a ${width}px-wide phone, the add and edit dialogs do not scroll sideways and every control stays inside the padding`, async ({ page, request }) => {
+    await seedUpkeep(request, { name: `Wide job ${width}`, every: 3, unit: "months", lastDoneOn: daysAgo(5) });
+    await page.setViewportSize({ width, height: 700 });
+    await page.goto("/upkeep");
+    for (const open of [() => page.getByRole("button", { name: "Add job" }).click(), () => page.getByRole("button", { name: `Edit Wide job ${width}` }).click()]) {
+      await open();
+      const dialog = page.getByRole("dialog");
+      await expect.poll(async () => (await dialog.boundingBox())?.y ?? 9999).toBeLessThan(300);
+      const dates = dialog.getByRole("button", { name: /^Done on/ });
+      if ((await dates.count()) > 0) await dates.click();
+      expect(await dialog.evaluate((element) => element.scrollWidth - element.clientWidth)).toBeLessThanOrEqual(0);
+      const edge = (await dialog.boundingBox())?.width ?? 0;
+      for (const control of await dialog.locator("input:not([type=radio]), select, label:has(input[type=radio]), button").all()) {
+        const box = await control.boundingBox();
+        if (!box) continue;
+        // The sticky Save row spans the whole width on purpose; its buttons are inside the padding like the fields.
+        expect(box.x + box.width).toBeLessThanOrEqual(edge - 19);
+      }
+      await page.keyboard.press("Escape");
+    }
+  });
+}
+
+test("the last done choices set the date, and the date field only shows for 'Pick a date…'", async ({ page }) => {
   await page.goto("/upkeep");
   await page.getByRole("button", { name: "Add job" }).click();
   const dialog = page.getByRole("dialog");
-  await expect(dialog.getByLabel("Not done yet")).toBeChecked();
-  await expect(dialog.getByLabel("Last done")).toHaveCount(0);
-  await dialog.getByLabel("Not done yet").uncheck();
-  await expect(dialog.getByLabel("Last done")).toBeVisible();
-  await expect(dialog.getByLabel("Last done")).toHaveValue(todayUtc());
-  await dialog.getByLabel("Not done yet").check();
-  await expect(dialog.getByLabel("Last done")).toHaveCount(0);
+  await expect(dialog.getByLabel("Last done")).toHaveValue("now");
+  await expect(dialog.getByLabel("Done on")).toHaveCount(0);
+  await dialog.getByLabel("Last done").selectOption("Pick a date…");
+  await expect(dialog.getByLabel("Done on")).toHaveValue(todayUtc());
+  await dialog.getByLabel("Last done").selectOption("A week ago");
+  await expect(dialog.getByLabel("Done on")).toHaveCount(0);
 });

@@ -113,6 +113,8 @@ html {
 
 html:has(dialog[open]) {
   overflow: hidden;
+}
+
 /* Everything is in rem, so type and touch targets grow together on a tablet. */
 @media (min-width: 64rem) {
   html {

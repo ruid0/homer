@@ -7,7 +7,11 @@ import { Field } from "./Field";
 import { ConfirmRemove } from "./ConfirmRemove";
 import { MaintenanceHistory } from "./MaintenanceHistory";
 import { MaintenanceSuggestions, type Suggestion } from "./MaintenanceSuggestions";
-import { inputClass, primaryButton, secondaryButton } from "./ui";
+import { DialogActions } from "./DialogActions";
+import { SegmentedChoice } from "./SegmentedChoice";
+import { Stepper } from "./Stepper";
+import { inputClass } from "./ui";
+import { lastDoneChoiceValues, lastDoneOn as lastDoneFor, type LastDoneChoice } from "../lib/lastDone";
 
 export type MaintenanceForm = { name: string; every: number; unit: MaintenanceUnit; lastDoneOn: string | null };
 
@@ -32,8 +36,8 @@ export const MaintenanceDialog = ({ item, today, takenNames, pending, serverErro
   const [name, setName] = useState(item?.name ?? "");
   const [every, setEvery] = useState(String(item?.every ?? 3));
   const [unit, setUnit] = useState<MaintenanceUnit>(item?.unit ?? DEFAULT_UNIT);
-  const [neverDone, setNeverDone] = useState(true);
-  const [lastDone, setLastDone] = useState(today);
+  const [lastDoneChoice, setLastDoneChoice] = useState<LastDoneChoice>("now");
+  const [pickedDate, setPickedDate] = useState(today);
   const [error, setError] = useState<string>();
 
   const pick = (suggestion: Suggestion) => {
@@ -50,7 +54,7 @@ export const MaintenanceDialog = ({ item, today, takenNames, pending, serverErro
     const count = Number(every);
     if (name.trim() === "") return setError(copy.maintenance.blankName);
     if (!Number.isInteger(count) || count < 1 || count > MAX_MAINTENANCE_EVERY) return setError(copy.maintenance.badEvery);
-    const lastDoneOn = item || neverDone ? null : lastDone;
+    const lastDoneOn = item ? null : lastDoneFor(lastDoneChoice, today, pickedDate);
     if (lastDoneOn !== null && (lastDoneOn > today || lastDoneOn < addDays(today, -YEAR_BACK_DAYS))) return setError(copy.maintenance.badDate);
     setError(undefined);
     onSave({ name: name.trim(), every: count, unit, lastDoneOn });
@@ -63,53 +67,42 @@ export const MaintenanceDialog = ({ item, today, takenNames, pending, serverErro
         <Field label={copy.maintenance.name}>
           <input className={inputClass} value={name} maxLength={MAX_MAINTENANCE_NAME} onChange={(event) => setName(event.target.value)} autoFocus />
         </Field>
-        <div className="grid grid-cols-2 gap-3">
-          <Field label={copy.maintenance.every}>
-            <input
-              className={inputClass}
-              type="number"
-              inputMode="numeric"
-              min={1}
-              max={MAX_MAINTENANCE_EVERY}
-              value={every}
-              onChange={(event) => setEvery(event.target.value)}
-            />
-          </Field>
-          <Field label={copy.maintenance.unit}>
-            <select className={inputClass} value={unit} onChange={(event) => setUnit(event.target.value as MaintenanceUnit)}>
-              {maintenanceUnitValues.map((value) => (
-                <option key={value} value={value}>{copy.maintenance.unitNames[value]}</option>
-              ))}
-            </select>
-          </Field>
+        <div className="flex flex-wrap items-end gap-x-3 gap-y-4">
+          <Stepper label={copy.maintenance.every} value={every} min={1} max={MAX_MAINTENANCE_EVERY} onChange={setEvery} />
+          <SegmentedChoice
+            label={copy.maintenance.unit}
+            name="unit"
+            value={unit}
+            options={maintenanceUnitValues.map((value) => ({ value, label: copy.maintenance.unitNames[value] }))}
+            onChange={(value) => setUnit(value as MaintenanceUnit)}
+          />
         </div>
         {!item && (
-          <div className="grid gap-2">
-            <label className="flex min-h-11 items-center gap-2">
-              <input type="checkbox" className="size-5" checked={neverDone} onChange={(event) => setNeverDone(event.target.checked)} />
-              {copy.maintenance.notDoneYetLabel}
-            </label>
-            {!neverDone && (
-              <Field label={copy.maintenance.lastDoneLabel}>
+          <>
+            <Field label={copy.maintenance.lastDoneLabel}>
+              <select className={inputClass} value={lastDoneChoice} onChange={(event) => setLastDoneChoice(event.target.value as LastDoneChoice)}>
+                {lastDoneChoiceValues.map((value) => (
+                  <option key={value} value={value}>{copy.maintenance.lastDoneChoices[value]}</option>
+                ))}
+              </select>
+            </Field>
+            {lastDoneChoice === "date" && (
+              <Field label={copy.maintenance.lastDoneDateLabel}>
                 <input
                   className={inputClass}
                   type="date"
-                  value={lastDone}
+                  value={pickedDate}
                   max={today}
                   min={addDays(today, -YEAR_BACK_DAYS)}
-                  onChange={(event) => setLastDone(event.target.value)}
+                  onChange={(event) => setPickedDate(event.target.value)}
                 />
               </Field>
             )}
-          </div>
+          </>
         )}
-        {(error ?? serverError) && <p role="alert" className="text-late">{error ?? serverError}</p>}
         {item && <MaintenanceHistory itemId={item.id} today={today} onChanged={onChanged} />}
         {item && <ConfirmRemove pending={pending} onRemove={onRemove} />}
-        <div className="flex justify-end gap-3">
-          <button type="button" className={secondaryButton} onClick={onClose}>{copy.common.cancel}</button>
-          <button type="submit" className={primaryButton} disabled={pending}>{copy.common.save}</button>
-        </div>
+        <DialogActions pending={pending} error={error ?? serverError} onCancel={onClose} />
       </form>
     </Dialog>
   );
