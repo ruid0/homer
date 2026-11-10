@@ -276,6 +276,7 @@ export const copy = {
     addTitle: "Add a job",
     editTitle: (name: string) => `Edit ${name}`,
     suggestionsLabel: "Start from a suggestion",
+    suggestionsPlaceholder: "Pick one",
     suggestions: [
       { name: "Furnace filter", every: 3, unit: "months" },
       { name: "Water softener salt", every: 1, unit: "months" },

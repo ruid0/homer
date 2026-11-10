@@ -504,6 +504,23 @@ test.describe("Home layout, naming and the nav", () => {
     await expect(page.getByRole("navigation", { name: "Main" }).getByRole("link", { name: /^Upkeep/ }).getByText("9+")).toBeVisible();
   });
 
+  test("the Upkeep card title is a link to the page, underlined only when hovered or focused", async ({ page }) => {
+    await page.goto("/");
+    const link = card(page).getByRole("link", { name: "Upkeep" });
+    await expect(link).toHaveAttribute("href", "/upkeep");
+    const underline = () => link.evaluate((element) => getComputedStyle(element).textDecorationLine);
+    expect(await underline()).toBe("none");
+    await link.hover();
+    expect(await underline()).toBe("underline");
+    await page.mouse.move(0, 0);
+    expect(await underline()).toBe("none");
+    // From the keyboard it is underlined too, so a keyboard user can see where they are.
+    await page.keyboard.press("Tab");
+    await link.focus();
+    await expect(link).toBeFocused();
+    expect(await underline()).toBe("underline");
+  });
+
   test("Items calls the stock button 'Ran out', not 'Out of it'", async ({ page, request }) => {
     const tag = randomUUID().slice(0, 8);
     await seedItem(request, `Naming ${tag}`);

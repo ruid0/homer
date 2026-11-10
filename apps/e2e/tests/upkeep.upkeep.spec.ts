@@ -185,7 +185,7 @@ test.describe("adding", () => {
     await page.goto("/upkeep");
     await page.getByRole("button", { name: "Add job" }).click();
     const dialog = page.getByRole("dialog");
-    await dialog.getByRole("button", { name: "Furnace filter" }).click();
+    await dialog.getByLabel("Start from a suggestion").selectOption("Furnace filter");
     await expect(dialog.getByRole("textbox", { name: "Name" })).toHaveValue("Furnace filter");
     await expect(dialog.getByRole("spinbutton", { name: "Every" })).toHaveValue("3");
     await expect(dialog.getByLabel("Unit")).toHaveValue("months");
@@ -197,17 +197,17 @@ test.describe("adding", () => {
     await expect(row(page, "Furnace filter")).toContainText("Last done");
 
     await page.getByRole("button", { name: "Add job" }).click();
-    await expect(page.getByRole("dialog").getByRole("button", { name: "Furnace filter" })).toHaveCount(0);
-    await expect(page.getByRole("dialog").getByRole("button", { name: "Dryer vent" })).toBeVisible();
+    await expect(page.getByRole("dialog").getByRole("option", { name: "Furnace filter" })).toHaveCount(0);
+    await expect(page.getByRole("dialog").getByRole("option", { name: "Dryer vent" })).toHaveCount(1);
   });
 
   test("another suggestion in months reads as it is, and a year-long one as a year", async ({ page }) => {
     await page.goto("/upkeep");
     await page.getByRole("button", { name: "Add job" }).click();
     const dialog = page.getByRole("dialog");
-    await dialog.getByRole("button", { name: "Fridge coils" }).click();
+    await dialog.getByLabel("Start from a suggestion").selectOption("Fridge coils");
     await expect(dialog.getByLabel("Unit")).toHaveValue("years");
-    await dialog.getByRole("button", { name: "Smoke alarm batteries" }).click();
+    await dialog.getByLabel("Start from a suggestion").selectOption("Smoke alarm batteries");
     await expect(dialog.getByRole("spinbutton", { name: "Every" })).toHaveValue("6");
     await expect(dialog.getByLabel("Unit")).toHaveValue("months");
   });

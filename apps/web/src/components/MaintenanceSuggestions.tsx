@@ -1,31 +1,33 @@
 import { copy } from "../copy";
-import { toggleButton } from "./ui";
+import { Field } from "./Field";
+import { inputClass } from "./ui";
 
 export type Suggestion = (typeof copy.maintenance.suggestions)[number];
 
 type Props = { takenNames: string[]; selectedName: string; onPick: (suggestion: Suggestion) => void };
 
-// Common items to start from. One already on the list is left out.
+// Common jobs to start from, in one dropdown so the phone's own picker does the choosing and the dialog stays short.
+// One already on the list is left out.
 export const MaintenanceSuggestions = ({ takenNames, selectedName, onPick }: Props) => {
   const taken = new Set(takenNames.map((name) => name.toLowerCase()));
   const suggestions = copy.maintenance.suggestions.filter((suggestion) => !taken.has(suggestion.name.toLowerCase()));
   if (suggestions.length === 0) return null;
+  const chosen = suggestions.some((suggestion) => suggestion.name === selectedName) ? selectedName : "";
   return (
-    <div className="grid gap-2" role="group" aria-label={copy.maintenance.suggestionsLabel}>
-      <span>{copy.maintenance.suggestionsLabel}</span>
-      <div className="flex flex-wrap gap-2">
+    <Field label={copy.maintenance.suggestionsLabel}>
+      <select
+        className={inputClass}
+        value={chosen}
+        onChange={(event) => {
+          const suggestion = suggestions.find((candidate) => candidate.name === event.target.value);
+          if (suggestion) onPick(suggestion);
+        }}
+      >
+        <option value="">{copy.maintenance.suggestionsPlaceholder}</option>
         {suggestions.map((suggestion) => (
-          <button
-            key={suggestion.name}
-            type="button"
-            className={toggleButton(selectedName === suggestion.name)}
-            aria-pressed={selectedName === suggestion.name}
-            onClick={() => onPick(suggestion)}
-          >
-            {suggestion.name}
-          </button>
+          <option key={suggestion.name} value={suggestion.name}>{suggestion.name}</option>
         ))}
-      </div>
-    </div>
+      </select>
+    </Field>
   );
 };

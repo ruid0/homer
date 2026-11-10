@@ -18,10 +18,10 @@ test("on a phone, every field in the add-task dialog stays inside the dialog", a
 test("on a phone, a number box and a dropdown side by side are the same height", async ({ page }) => {
   await page.goto("/upkeep");
   await page.getByRole("button", { name: "Add job" }).click();
-  const every = await page.getByLabel("Every").boundingBox();
-  const unit = await page.getByLabel("Unit").boundingBox();
-  expect(every?.height).toBe(unit?.height);
-  expect(every?.y).toBe(unit?.y);
+  // The sheet slides up when it opens, so read both boxes only once they agree on where the row is.
+  const box = async (label: string) => page.getByLabel(label).boundingBox();
+  await expect.poll(async () => (await box("Every"))?.y === (await box("Unit"))?.y).toBe(true);
+  expect((await box("Every"))?.height).toBe((await box("Unit"))?.height);
 });
 
 test("on a phone, an event's Edit sits at the right edge like a task's", async ({ page, request }) => {
@@ -62,4 +62,44 @@ test("on a phone, with the keyboard up the sheet fits above it and the first fie
   await expect(page.getByLabel("Name")).toBeInViewport();
   await page.evaluate(() => (window as unknown as { fakeKeyboard: (height: number) => void }).fakeKeyboard(844));
   expect((await dialog.boundingBox())?.height ?? 0).toBeGreaterThan(400);
+});
+
+// 375x667 is an iPhone SE; 375x568 is the same phone with Safari's toolbars showing.
+for (const height of [667, 568]) {
+  for (const ticked of [true, false]) {
+    test(`on a ${height}px-tall phone, the add-job dialog fits without scrolling inside itself with 'Not done yet' ${ticked ? "ticked" : "unticked"}`, async ({ page }) => {
+      await page.setViewportSize({ width: 375, height });
+      await page.goto("/upkeep");
+      await page.getByRole("button", { name: "Add job" }).click();
+      const dialog = page.getByRole("dialog");
+      // The worst case: a suggestion picked, so the form is full.
+      await dialog.getByLabel("Start from a suggestion").selectOption("Furnace filter");
+      if (!ticked) {
+        await dialog.getByLabel("Not done yet").uncheck();
+        await expect(dialog.getByLabel("Last done")).toBeVisible();
+      }
+      // One pixel of rounding is allowed; the overflow that was reported was 5px or more.
+      expect(await dialog.evaluate((element) => element.scrollHeight - element.clientHeight)).toBeLessThanOrEqual(1);
+      // The sheet slides up when it opens, so wait for it to settle before measuring where Save is.
+      await expect
+        .poll(async () => {
+          const save = await dialog.getByRole("button", { name: "Save" }).boundingBox();
+          return (save?.y ?? Infinity) + (save?.height ?? 0);
+        })
+        .toBeLessThanOrEqual(height);
+    });
+  }
+}
+
+test("the last done date only appears once 'Not done yet' is unticked", async ({ page }) => {
+  await page.goto("/upkeep");
+  await page.getByRole("button", { name: "Add job" }).click();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog.getByLabel("Not done yet")).toBeChecked();
+  await expect(dialog.getByLabel("Last done")).toHaveCount(0);
+  await dialog.getByLabel("Not done yet").uncheck();
+  await expect(dialog.getByLabel("Last done")).toBeVisible();
+  await expect(dialog.getByLabel("Last done")).toHaveValue(todayUtc());
+  await dialog.getByLabel("Not done yet").check();
+  await expect(dialog.getByLabel("Last done")).toHaveCount(0);
 });
