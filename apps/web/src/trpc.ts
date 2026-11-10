@@ -10,6 +10,22 @@ type Outputs = inferRouterOutputs<AppRouter>["inventory"];
 
 export type ListItem = Outputs["list"][number];
 
+export type ListEntry = inferRouterOutputs<AppRouter>["groceries"]["list"][number];
+
+export type ListPerson = inferRouterOutputs<AppRouter>["people"]["list"][number];
+
+export type RoutineWeek = inferRouterOutputs<AppRouter>["routines"]["week"];
+
+export type RoutineRow = RoutineWeek["items"][number];
+
+export type MaintenanceItem = inferRouterOutputs<AppRouter>["maintenance"]["list"][number];
+
+type ScheduleView = inferRouterOutputs<AppRouter>["schedule"]["view"];
+
+export type ScheduleTask = ScheduleView["overdue"][number];
+
+export type ScheduleEvent = ScheduleView["days"][number]["events"][number];
+
 export type ArchivedItem = NonNullable<Outputs["findArchived"]>;
 
 export const queryClient = new QueryClient();

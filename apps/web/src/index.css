@@ -1,6 +1,111 @@
 @import "tailwindcss";
+@import "@fontsource-variable/atkinson-hyperlegible-next";
 
-@custom-variant dark (@media (prefers-color-scheme: dark));
+/* Colours switch with the system theme, so components never repeat dark: pairs. */
+:root {
+  --surface: var(--color-stone-50);
+  --card: #fff;
+  --ink: var(--color-stone-900);
+  --primary: var(--color-stone-900);
+  --on-primary: #fff;
+  --muted: var(--color-stone-600);
+  --line: var(--color-stone-200);
+  --line-strong: var(--color-stone-300);
+  /* The edge of a control (button, input): 3:1 against the card, where line-strong is only a divider. */
+  --control: #8a847e;
+  --hover: var(--color-stone-100);
+  --warn: var(--color-amber-700);
+  --late: var(--color-red-800);
+  --scrim: rgb(0 0 0 / 0.5);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    /* Charcoal: a soft warm grey, with off-white text and a calmer primary button than pure white. */
+    --surface: #1f1d1b;
+    --card: #2d2a28;
+    --ink: #e9e5e0;
+    --primary: #d8d2ca;
+    --on-primary: #1f1d1b;
+    --muted: #aaa59d;
+    --line: #3a3633;
+    --line-strong: #4f4a45;
+    --control: #7f7972;
+    --hover: #332f2c;
+    --warn: #e6b04f;
+    --late: #ef8c80;
+  }
+}
+
+@theme inline {
+  --color-surface: var(--surface);
+  --color-card: var(--card);
+  --color-ink: var(--ink);
+  --color-primary: var(--primary);
+  --color-on-primary: var(--on-primary);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-control: var(--control);
+  --color-hover: var(--hover);
+  --color-warn: var(--warn);
+  --color-late: var(--late);
+  --color-scrim: var(--scrim);
+
+  /* 1920px at the default 16px root; the wall: variant is available for layout changes. */
+  --breakpoint-wall: 120rem;
+
+  --font-sans: "Atkinson Hyperlegible Next Variable", ui-sans-serif, system-ui, sans-serif;
+
+  /* The type scale, by role: a page title, a section, a card title, the one-line answer, small print. */
+  --text-page: 1.75rem;
+  --text-page--line-height: 2.25rem;
+  --text-section: 1.25rem;
+  --text-section--line-height: 1.75rem;
+  --text-title: 1.125rem;
+  --text-title--line-height: 1.5rem;
+  --text-answer: 1.25rem;
+  --text-answer--line-height: 1.75rem;
+  --text-nav: 0.6875rem;
+  --text-nav--line-height: 0.875rem;
+  --text-meta: 0.875rem;
+  --text-meta--line-height: 1.25rem;
+
+  /* Motion answers a touch and shows what changed. Short, one-off, never looping; the reduced-motion rule below turns it all off. */
+  --animate-sheet-up: sheet-up 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  --animate-dialog-in: dialog-in 160ms ease-out;
+  --animate-backdrop-in: backdrop-in 160ms ease-out;
+  --animate-toast-in: toast-in 200ms cubic-bezier(0.2, 0.8, 0.2, 1);
+  --animate-row-flash: row-flash 1400ms ease-out;
+
+  @keyframes sheet-up {
+    from {
+      translate: 0 100%;
+    }
+  }
+  @keyframes dialog-in {
+    from {
+      opacity: 0;
+      scale: 0.96;
+    }
+  }
+  @keyframes backdrop-in {
+    from {
+      opacity: 0;
+    }
+  }
+  @keyframes toast-in {
+    from {
+      opacity: 0;
+      translate: -50% 0.75rem;
+    }
+  }
+  @keyframes row-flash {
+    from {
+      background-color: color-mix(in srgb, var(--ink) 20%, transparent);
+    }
+  }
+}
 
 html {
   color-scheme: light dark;
@@ -8,14 +113,30 @@ html {
 
 html:has(dialog[open]) {
   overflow: hidden;
+/* Everything is in rem, so type and touch targets grow together on a tablet. */
+@media (min-width: 64rem) {
+  html {
+    font-size: 112.5%;
+  }
+}
+
+/* A big wall or desk touchscreen: bigger again, so the room can read it. Keep in step with --breakpoint-wall. */
+@media (min-width: 120rem) {
+  html {
+    font-size: 150%;
+  }
 }
 
 body {
-  @apply bg-stone-50 text-stone-900 dark:bg-stone-950 dark:text-stone-100;
+  @apply bg-surface font-sans text-ink;
 }
 
+/* "*" does not reach pseudo-elements, so the dialog backdrop and the overdue bar are named. */
 @media (prefers-reduced-motion: reduce) {
-  * {
+  *,
+  *::before,
+  *::after,
+  *::backdrop {
     transition: none !important;
     animation: none !important;
   }

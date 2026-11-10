@@ -7,6 +7,7 @@ export default defineConfig({
   server: {
     host: true,
     port: 3000,
-    proxy: { "/trpc": "http://127.0.0.1:3001" },
+    // API_URL lets a second copy of the app run against a different api, for example one with a scratch database.
+    proxy: { "/trpc": process.env.API_URL ?? "http://127.0.0.1:3001" },
   },
 });

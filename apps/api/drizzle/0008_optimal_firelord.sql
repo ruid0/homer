@@ -1,0 +1,1 @@
+ALTER TABLE `items` ADD `learning_since` text;

@@ -1,0 +1,32 @@
+# UI and UX pass over Upkeep and Home, and the visual pass over the app
+
+Status: In progress (PR A, B, B2, C and D1 built, D2, D3, E and F planned) · Owner: Igor Bondarenko · Last updated: 2026-11-09 · Source: three critical `ui-reviewer` passes (UI reassessment, UX ease of use, visual design) run on the merged maintenance work, and the owner's answers of 2026-11-05.
+
+## Decisions (owner, defaults accepted)
+
+- Nav order becomes Home, Groceries, Schedule, Upkeep, Items, People, Assistant, and Upkeep gets a wrench or loop icon.
+- Renames: Home "Due soon" becomes "Upkeep", Home "Your day" becomes "Today", Upkeep "Needs doing" becomes "Due now", "Add an item" becomes "Add job", "Out of it" becomes "Ran out" (and moves under Edit).
+- Identity: the "Now" line carries through Schedule, a one-line summary sits under the Home date, a big weekday with a muted date, larger tabular time numerals, a small amber accent on the wordmark. No display font and no illustration unless asked.
+- Slashed zeros stay on times; checked at 2 metres.
+- Not adopted, with reasons: swipe and long-press (not discoverable, no keyboard route, wet hands), bottom sheets, command bars, inline row editing, skeleton loaders, a phone "More" tab, gradients, illustrations, a second font.
+
+## PRs
+
+- **A. Bugs and accessibility (built).** Plain-words input errors from the api (`errorFormatter`), name capped at 80, far dates told in months or with their year, one source for month names, second done on the same day refused in words, rail tightened and scrollable, phone labels at 11px, focus returns to the opener after a dialog and moves to the next Done after a Done, Undo toast waits while held and stays 15 seconds, quiet Dismiss.
+- **B. Design foundations (built).** One status style (18px semibold) on every screen, darker bolder `late` plus a left border on overdue rows, a `--control` border token (about 3.5:1), shared `PageHeader`, one shared Home row, a shared Done size so Edit lines up, the overdue bar drawn in the card padding so no text moves, fade `h-8`, list pages capped at 3xl (Items, Groceries, People, Upkeep; Schedule is exempt because it already uses two columns from `lg`), "Any time" spelling, shorter Upkeep blurb, no "Chat" heading, lighter dark-mode card.
+- **B2. Motion and phone sheets (built).** Dialogs become bottom sheets on phones (centred on tablet and desktop) that slide or fade in, the toast slides in, the row that moved flashes once after Done (Upkeep and Home), buttons give a small press response, the nav eases its colour. All 150 to 220 ms (the flash 1.4 s), all off under reduced motion (the rule also names pseudo-elements, since `*` misses the dialog backdrop), with tests for both. Entry animations only: a dialog or toast that closes is removed at once, so dismissing stays instant. Added at the owner's request: the app had no animation and its dialogs did not feel native. Known: on a real phone the on-screen keyboard may still cover the lower part of a tall sheet (the viewport now asks browsers that support it to resize for the keyboard); a sticky Save row comes with PR D.
+- **C. Home layout and naming (built).** One column up to `lg`, Today beside Upkeep over Running out from `lg`; Upkeep and Running out are as tall as their rows (the page scrolls, Today alone scrolls inside itself); overdue upkeep moves to the top of the single column; the Upkeep card title links to the page and the Upkeep nav item shows a due count (words for a screen reader); nav order Home, Groceries, Schedule, Upkeep, Items, People, Assistant with a wrench icon; renames (Today, Upkeep, Due now, Add job, Ran out, Back to People); one loading string ("Loading."); shorter toasts for restocking and tasks. Moving "Ran out" into the Items edit dialog moves to PR D, with the other dialog work; the maintenance toast gets its next-due wording there too.
+- **D. Upkeep flow**, in three PRs (owner, 2026-11-09):
+  - **D1. Upkeep list (built).** Two chips on each row (how often, and "Last done 10 Nov" or "Not done yet"); tapping the row opens the editor, and Edit stays; Done is quiet (no outline, still 44px) on Later rows; Later folds behind a `Later (8)` button when it has more than 5 rows, with a "Next: ..." line while it is folded; on a phone Done shares the name's line and Edit sits at the end of the chips line. Edit comes before Done in the markup so Tab follows the wide layout, which means on a phone Tab reaches Edit (lower right) before Done (upper right). Tests in `upkeep.list.upkeep.spec.ts`, which has its own Playwright project because every file in the `upkeep` project shares one list.
+  - **D2. Dialogs.** Dialog for name and cycle only with History behind a disclosure (latest few, named remove with confirm), 44px stepper and segmented unit, sticky Save row above the keyboard, and "Ran out" moves under Edit in the Items dialog.
+  - **D3. Done feedback.** Toast with the next due date and "Done earlier?" chips, chips as the empty state with no autofocus while they show, optimistic Done.
+- **Phone fixes after D1 (owner, from a real phone, 2026-11-09).** The Add job dialog scrolled inside itself on short phones and its Last done field looked far too big, so: the Last done date appears only after "Not done yet" is unticked, and the five suggestion chips became one "Start from a suggestion" dropdown, which fits 375x667 and 375x568 in both states (four tests). The Home "Upkeep" title link (from PR C) has no resting underline, and is underlined on hover and keyboard focus; the nav tab is the visible way to the page on a phone. Not checked: iPhone Safari's own date control, since only Chromium is installed here.
+- **E. Snooze.** "Not today" by a day, a week or a month (schema change).
+- **F. Identity.** The items under "Identity" above.
+- **Then** the maintenance note job (PR 6 of `design-maintenance.md`).
+
+Every PR has browser tests for each state it adds, runs `reviewer` and `ui-reviewer`, and records its `frontend-design` pass in the PR body.
+
+## Findings reference
+
+Kept as given by the reviewers: Atkinson Hyperlegible Next and the named type roles, the stone palette with matching dark mode, `rounded-2xl` bordered cards, 44px targets, one primary action per card, the "Now" line, plain-word status, the shared `ListRow` and `ListCard`, one-tap Done with Undo.

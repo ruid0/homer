@@ -11,7 +11,8 @@
 <!-- Evidence, not claims: pnpm typecheck, pnpm test results, screenshots for UI. -->
 - [ ] `pnpm typecheck` passes
 - [ ] `pnpm test` passes
-- [ ] Checked in the running app (UI changes only)
+- [ ] Checked in the running app (UI changes only), with the states looked at named below
+- [ ] UI test added or updated, `pnpm e2e` passing, and `ui-reviewer` has no Must fix (UI changes only; see "UI rules" in `CLAUDE.md`)
 
 ## Reviewer findings
 <!-- Output from the reviewer subagent: what you fixed, and what you left and why. -->

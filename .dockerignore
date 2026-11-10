@@ -6,3 +6,11 @@
 data
 docs
 **/*.log
+# The dev database holds real household data and must never end up in an image layer.
+**/*.db
+**/*.db-shm
+**/*.db-wal
+**/*.sqlite*
+
+/backups/
+apps/api/backups/

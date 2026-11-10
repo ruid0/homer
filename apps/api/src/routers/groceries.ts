@@ -1,0 +1,100 @@
+import { TRPCError } from "@trpc/server";
+import { and, asc, eq } from "drizzle-orm";
+import { groceryAddInputSchema, groceryBoughtInputSchema, idInputSchema } from "@homer/shared";
+import type { Db } from "../db/client";
+import { groceryEntries, items } from "../db/schema";
+import { openEntries as isOpen, type GroceryTx } from "../groceries/open";
+import { syncGrocery } from "../groceries/sync";
+import { findActive, findActiveByName, type ItemRow } from "../inventory/lookup";
+import { applyRestock, usualRestock } from "../inventory/stock";
+import { messages } from "../messages";
+import { publicProcedure, router } from "../trpc";
+
+type EntryRow = typeof groceryEntries.$inferSelect;
+
+const entryClosed = () =>
+  new TRPCError({ code: "NOT_FOUND", message: messages.entryClosed });
+
+const quantityNeeded = () =>
+  new TRPCError({ code: "BAD_REQUEST", message: messages.quantityNeeded });
+
+const findOpenEntry = (db: Pick<Db, "select">, id: number): EntryRow => {
+  const row = db.select().from(groceryEntries).where(and(eq(groceryEntries.id, id), isOpen)).get();
+  if (!row) throw entryClosed();
+  return row;
+};
+
+const withItemDetails = (db: Db, entry: EntryRow) => {
+  if (entry.itemId === null) return { ...entry, unit: null, usualRestock: null };
+  const item = db.select({ name: items.name, unit: items.unit }).from(items).where(eq(items.id, entry.itemId)).get();
+  return {
+    ...entry,
+    text: item?.name ?? entry.text,
+    unit: item?.unit ?? null,
+    usualRestock: usualRestock(db, entry.itemId),
+  };
+};
+
+const addForItem = (db: GroceryTx, item: ItemRow, quantity?: number): EntryRow => {
+  const open = db
+    .select()
+    .from(groceryEntries)
+    .where(and(eq(groceryEntries.itemId, item.id), isOpen))
+    .get();
+  if (!open) {
+    return db
+      .insert(groceryEntries)
+      .values({ itemId: item.id, text: item.name, quantity: quantity ?? null, addedBy: "manual" })
+      .returning()
+      .get();
+  }
+  return db
+    .update(groceryEntries)
+    .set({ addedBy: "manual", ...(quantity === undefined ? {} : { quantity }) })
+    .where(eq(groceryEntries.id, open.id))
+    .returning()
+    .get();
+};
+
+export const groceriesRouter = router({
+  list: publicProcedure.query(({ ctx }) =>
+    ctx.db
+      .select()
+      .from(groceryEntries)
+      .where(isOpen)
+      .orderBy(asc(groceryEntries.addedBy), asc(groceryEntries.createdAt), asc(groceryEntries.id))
+      .all()
+      .map((entry) => withItemDetails(ctx.db, entry)),
+  ),
+
+  add: publicProcedure.input(groceryAddInputSchema).mutation(({ ctx, input }) =>
+    ctx.db.transaction((tx) => {
+      if ("itemId" in input) return addForItem(tx, findActive(tx, input.itemId), input.quantity);
+      const match = findActiveByName(tx, input.text);
+      if (match) return addForItem(tx, match, input.quantity);
+      return tx
+        .insert(groceryEntries)
+        .values({ text: input.text, quantity: input.quantity ?? null, addedBy: "manual" })
+        .returning()
+        .get();
+    }),
+  ),
+
+  markBought: publicProcedure.input(groceryBoughtInputSchema).mutation(({ ctx, input }) =>
+    ctx.db.transaction((tx) => {
+      const entry = findOpenEntry(tx, input.id);
+      if (entry.itemId !== null) {
+        findActive(tx, entry.itemId);
+        if (input.quantity === undefined) throw quantityNeeded();
+        applyRestock(tx, entry.itemId, input.quantity);
+      }
+      tx.update(groceryEntries).set({ boughtAt: new Date().toISOString() }).where(eq(groceryEntries.id, entry.id)).run();
+      if (entry.itemId !== null) syncGrocery(tx, entry.itemId);
+    }),
+  ),
+
+  remove: publicProcedure.input(idInputSchema).mutation(({ ctx, input }) => {
+    const entry = findOpenEntry(ctx.db, input.id);
+    ctx.db.update(groceryEntries).set({ removedAt: new Date().toISOString() }).where(eq(groceryEntries.id, entry.id)).run();
+  }),
+});

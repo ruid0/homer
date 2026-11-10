@@ -1,10 +1,15 @@
+import { copy } from "../copy";
+
+// Stock counts down in fractions of a unit, so it is shown to two decimals.
+export const quantityText = (quantity: number): string => String(Math.round(quantity * 100) / 100);
+
 type Stock = { quantity: number; daysRemaining: number | null };
 
 export const describeRunsOut = ({ quantity, daysRemaining }: Stock): string => {
-  if (quantity === 0) return "Out of it";
-  if (daysRemaining === null) return "No estimate";
-  if (daysRemaining === 0) return "Runs out today";
-  return `Runs out in ${daysRemaining} ${daysRemaining === 1 ? "day" : "days"}`;
+  if (quantity === 0) return copy.stock.ranOut;
+  if (daysRemaining === null) return copy.stock.noEstimate;
+  if (daysRemaining === 0) return copy.stock.runsOutToday;
+  return copy.stock.runsOutIn(daysRemaining);
 };
 
 const urgency = ({ quantity, daysRemaining }: Stock): number => {

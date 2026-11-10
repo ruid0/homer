@@ -15,6 +15,11 @@ produced it, and that is the point: judge the diff on its own.
 2. Read CLAUDE.md and .claude/skills/coding-style/SKILL.md for the project's and coding rules.
 3. For each changed file, read enough surrounding code to judge it in context.
 
+## DeepSeek
+
+You do not call DeepSeek. The owner runs `/dsh:review` and `/dsh:critique`
+themselves when they want a second opinion, so no tokens go on it here.
+
 ## Check, in this order
 
 1. **Correctness.** Logic errors, unhandled edge cases, wrong assumptions

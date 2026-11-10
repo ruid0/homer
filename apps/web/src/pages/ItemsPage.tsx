@@ -1,12 +1,15 @@
 import { useState } from "react";
+import { PageHeader } from "../components/PageHeader";
 import type { ItemInput } from "@homer/shared";
-import { ItemCard } from "../components/ItemCard";
+import { ItemRow } from "../components/ItemRow";
 import { ItemForm } from "../components/ItemForm";
+import { ListCard } from "../components/ListCard";
 import { RestockDialog } from "../components/RestockDialog";
 import { RestoreChoiceDialog } from "../components/RestoreChoiceDialog";
 import { primaryButton } from "../components/ui";
 import { sortByUrgency } from "../lib/itemText";
 import { trpc, type ArchivedItem, type ListItem } from "../trpc";
+import { copy } from "../copy";
 
 type Editing = ListItem | "new" | null;
 type Choice = { values: ItemInput; archived: ArchivedItem };
@@ -14,6 +17,8 @@ type Choice = { values: ItemInput; archived: ArchivedItem };
 export const ItemsPage = () => {
   const utils = trpc.useUtils();
   const items = trpc.inventory.list.useQuery();
+  const groceries = trpc.groceries.list.useQuery();
+  const listedIds = new Set((groceries.data ?? []).flatMap((entry) => (entry.itemId === null ? [] : [entry.itemId])));
   const [editing, setEditing] = useState<Editing>(null);
   const [restocking, setRestocking] = useState<ListItem | null>(null);
   const [choice, setChoice] = useState<Choice | null>(null);
@@ -22,7 +27,7 @@ export const ItemsPage = () => {
     setEditing(null);
     setRestocking(null);
     setChoice(null);
-    return utils.inventory.list.invalidate();
+    return Promise.all([utils.inventory.list.invalidate(), utils.groceries.list.invalidate()]);
   };
 
   const create = trpc.inventory.create.useMutation({ onSuccess: done });
@@ -44,7 +49,7 @@ export const ItemsPage = () => {
   };
 
   const removeItem = (item: ListItem) => {
-    if (window.confirm(`Remove ${item.name}? Its restock history is kept.`)) archive.mutate({ id: item.id });
+    if (window.confirm(copy.items.confirmRemove(item.name))) archive.mutate({ id: item.id });
   };
 
   const closeForm = () => {
@@ -61,29 +66,32 @@ export const ItemsPage = () => {
   const actionError = markOut.error?.message ?? archive.error?.message;
 
   return (
-    <>
-      <header className="mb-4 flex items-center justify-between gap-3">
-        <h1 className="text-2xl font-semibold">Items</h1>
-        <button type="button" className={primaryButton} onClick={() => setEditing("new")}>Add item</button>
-      </header>
+    <div className="mx-auto max-w-3xl">
+      <PageHeader
+        title={copy.items.title}
+        action={<button type="button" className={primaryButton} onClick={() => setEditing("new")}>{copy.items.addItem}</button>}
+      />
 
-      {items.isPending && <p>Loading items.</p>}
-      {items.error && <p role="alert">Couldn't load items. Check that the api is running, then refresh.</p>}
-      {actionError && <p role="alert" className="mb-4 text-red-700 dark:text-red-400">{actionError} Refresh the list and try again.</p>}
-      {items.data?.length === 0 && <p>No items yet. Add something you don't want to run out of.</p>}
+      {items.isPending && <p>{copy.items.loading}</p>}
+      {items.error && <p role="alert">{copy.items.loadFailed}</p>}
+      {actionError && <p role="alert" className="mb-4 text-late">{copy.items.actionFailed(actionError)}</p>}
+      {items.data?.length === 0 && <p>{copy.items.empty}</p>}
 
-      <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {sortByUrgency(items.data ?? []).map((item) => (
-          <ItemCard
-            key={item.id}
-            item={item}
-            busy={markOut.isPending}
-            onBought={() => setRestocking(item)}
-            onOut={() => markOut.mutate({ id: item.id })}
-            onEdit={() => setEditing(item)}
-          />
-        ))}
-      </ul>
+      {items.data && items.data.length > 0 && (
+        <ListCard>
+          {sortByUrgency(items.data).map((item) => (
+            <ItemRow
+              key={item.id}
+              item={item}
+              busy={markOut.isPending}
+              onList={listedIds.has(item.id)}
+              onBought={() => setRestocking(item)}
+              onOut={() => markOut.mutate({ id: item.id })}
+              onEdit={() => setEditing(item)}
+            />
+          ))}
+        </ListCard>
+      )}
 
       {editing === "new" && (
         <ItemForm
@@ -118,13 +126,15 @@ export const ItemsPage = () => {
       )}
       {restocking && (
         <RestockDialog
-          item={restocking}
+          name={restocking.name}
+          unit={restocking.unit}
+          initialQuantity={restocking.usualRestock ?? 1}
           pending={restock.isPending}
           serverError={restock.error?.message}
           onSave={(quantity) => restock.mutate({ itemId: restocking.id, quantity })}
           onClose={closeRestock}
         />
       )}
-    </>
+    </div>
   );
 };
