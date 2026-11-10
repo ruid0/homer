@@ -179,8 +179,8 @@ test.describe("a long Later list", () => {
     await page.getByRole("button", { name: "Add job" }).click();
     const dialog = page.getByRole("dialog");
     await dialog.getByLabel("Start from a suggestion").selectOption("Dryer vent");
-    await dialog.getByLabel("Not done yet").uncheck();
-    await dialog.getByLabel("Last done").fill(daysAgo(10));
+    await dialog.getByLabel("Last done").selectOption("Pick a date…");
+    await dialog.getByLabel("Done on").fill(daysAgo(10));
     await dialog.getByRole("button", { name: "Save" }).click();
     await expect(page.getByRole("button", { name: "Later (6)" })).toHaveAttribute("aria-expanded", "false");
   });
