@@ -14,13 +14,33 @@ produced it, and that is the point: judge the diff on its own.
    empty, say so and stop.
 2. Read CLAUDE.md and .claude/skills/coding-style/SKILL.md for the project's and coding rules.
 3. For each changed file, read enough surrounding code to judge it in context.
-4. Get the DeepSeek second opinion (see below): both `dsh review` and
-   `dsh critique`. Then merge them with your own findings before writing the
-   output.
+4. Decide whether the diff is big enough for the DeepSeek second opinion (see
+   below). If it is, run both `dsh review` and `dsh critique`, then merge them
+   with your own findings before writing the output.
 
 ## DeepSeek second opinion
 
-Always call both DeepSeek Harness commands through the dsh bridge, read-only.
+It adds about 3 to 7 minutes, so small diffs skip it. Count the lines added plus
+deleted outside tests and root `docs/`, new untracked files included (plain
+`git diff` does not see them), and list the paths touched, tests included:
+
+```bash
+tracked=$(git diff HEAD --numstat -- . ':!*.test.*' ':!*.spec.*' ':!docs' | awk '{ t += $1 + $2 } END { print t + 0 }')
+fresh=0
+for f in $(git ls-files --others --exclude-standard -- . ':!*.test.*' ':!*.spec.*' ':!docs'); do fresh=$((fresh + $(wc -l < "$f"))); done
+echo "lines: $((tracked + fresh))"
+{ git diff HEAD --name-only; git ls-files --others --exclude-standard; } | grep -E '^(packages/shared/|apps/api/src/(db|ai)/)' || echo "guarded paths: none"
+```
+
+Skip DeepSeek, and say "DeepSeek skipped: small diff (N lines)" in one line,
+when the line count is **40 or fewer** and it printed "guarded paths: none"
+(schemas, the database and the assistant loop are never "small", test files
+there included). Otherwise run it as below. A diff of only tests and docs
+counts 0 and is skipped. Binary files count as 0 lines, so if the diff adds a
+large binary or generated file, run DeepSeek anyway.
+
+When you run it, always call both DeepSeek Harness commands through the dsh
+bridge, read-only.
 Send the two Bash calls in the same response so they run in parallel, each with
 a timeout of 600000 ms (each can take several minutes):
 
