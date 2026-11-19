@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { collapsesLater, dueWords, laterNote, longDate, needsDoing, rowChips, shortDate } from "./maintenanceText";
+import { collapsesLater, dueWords, isDoneToday, laterNote, longDate, needsDoing, rowChips, shortDate } from "./maintenanceText";
 
 const base = { lastDoneOn: "2026-11-01", dueOn: "2027-02-01" };
 
@@ -77,5 +77,16 @@ describe("the Later section", () => {
       "Next: Smoke alarm batteries, due in 4 months.",
     );
     expect(laterNote({ name: "Gutters", lastDoneOn: "2026-10-01", dueOn: "2026-12-20", status: "later", daysUntil: 41 })).toBe("Next: Gutters, due 20 Dec.");
+  });
+});
+
+describe("isDoneToday", () => {
+  it("is true when the last done date is today (due date minus the days until it)", () => {
+    expect(isDoneToday({ lastDoneOn: "2026-11-19", dueOn: "2026-11-26", daysUntil: 7 })).toBe(true);
+  });
+
+  it("is false for an earlier done date, and for a job never done", () => {
+    expect(isDoneToday({ lastDoneOn: "2026-11-18", dueOn: "2026-11-25", daysUntil: 6 })).toBe(false);
+    expect(isDoneToday({ lastDoneOn: null, dueOn: "2026-11-19", daysUntil: 0 })).toBe(false);
   });
 });

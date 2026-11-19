@@ -1,3 +1,4 @@
+import { ErrorToast } from "../components/ErrorToast";
 import { useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { addDays } from "@homer/shared";
@@ -119,7 +120,7 @@ const RoutineView = ({ personId, name, remindersOn }: { personId: number; name: 
 
       {week.isPending && <p>{copy.routine.loading}</p>}
       {week.error && <p role="alert" className="text-late">{copy.routine.loadFailed}</p>}
-      {problem && <p role="alert" className="mb-4 text-late">{problem}</p>}
+      <ErrorToast message={problem} />
       {week.data && items.length === 0 && <p>{copy.routine.empty}</p>}
       {week.data && items.length > 0 && <RoutineGrid week={week.data} today={today} onChange={change} onEdit={setEditing} />}
 

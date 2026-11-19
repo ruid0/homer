@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState } from "react";
 import { secondaryButton } from "./ui";
 import { copy } from "../copy";
 
@@ -8,12 +8,11 @@ const SHOW_WITH_ACTION_FOR_MS = 15_000;
 // Holding pauses the toast, but not for ever: a pointer left resting on it must not keep it up all day.
 const MOST_SHOWN_FOR_MS = 60_000;
 
-type Props = { message: string; onClose: () => void; action?: { label: string; onClick: () => void; disabled?: boolean }; children?: ReactNode };
+type Props = { message: string; onClose: () => void; action?: { label: string; onClick: () => void; disabled?: boolean } };
 
-export const Toast = ({ message, onClose, action, children }: Props) => {
+export const Toast = ({ message, onClose, action }: Props) => {
   // Only a new message restarts the timer, not a parent re-render with a new onClose.
   const hasAction = action !== undefined;
-  const stacked = children !== undefined && children !== false;
   const close = useRef(onClose);
   close.current = onClose;
   // The clock stops while a finger or a pointer is on the toast, and starts again from full when it leaves.
@@ -37,13 +36,10 @@ export const Toast = ({ message, onClose, action, children }: Props) => {
       onPointerLeave={() => setHeld(false)}
       onFocus={() => setHeld(true)}
       onBlur={() => setHeld(false)}
-      className={`fixed bottom-24 left-1/2 z-20 w-[calc(100%-2rem)] max-w-xl -translate-x-1/2 rounded-xl bg-primary py-2 pl-4 pr-2 text-on-primary shadow-lg animate-toast-in md:bottom-6 ${
-        stacked ? "grid gap-2" : "flex items-center justify-between gap-3"
-      }`}
+      className="fixed bottom-24 left-1/2 z-20 flex w-[calc(100%-2rem)] max-w-xl -translate-x-1/2 items-center justify-between gap-3 rounded-xl bg-primary py-2 pl-4 pr-2 text-on-primary shadow-lg animate-toast-in md:bottom-6"
     >
-      <span className={`font-medium ${stacked ? "pr-2 pt-1" : ""}`}>{message}</span>
-      {children}
-      <div className={`flex gap-2 ${stacked ? "justify-end" : ""}`}>
+      <span className="font-medium">{message}</span>
+      <div className="flex gap-2">
         {action && (
           <button type="button" className={`${secondaryButton} border-on-primary`} disabled={action.disabled} onClick={action.onClick}>
             {action.label}

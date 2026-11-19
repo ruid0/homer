@@ -1,3 +1,4 @@
+import { ErrorToast } from "../components/ErrorToast";
 import { useState, type SubmitEvent } from "react";
 import { PageHeader } from "../components/PageHeader";
 import { Link } from "react-router-dom";
@@ -61,11 +62,8 @@ export const PeoplePage = () => {
 
       {people.isPending && <p>{copy.people.loading}</p>}
       {people.error && <p role="alert" className="text-late">{copy.people.loadFailed}</p>}
-      {(blank || add.error) && (
-        <p role="alert" className="mb-4 text-late">
-          {blank ? copy.people.blankName : add.error?.message}
-        </p>
-      )}
+      {blank && <p role="alert" className="mb-4 text-late">{copy.people.blankName}</p>}
+      <ErrorToast message={add.error?.message} />
       {people.data?.length === 0 && <p>{copy.people.empty}</p>}
 
       {people.data && people.data.length > 0 && (

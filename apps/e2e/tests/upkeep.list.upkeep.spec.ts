@@ -49,7 +49,7 @@ test.describe("opening a job", () => {
     await seedUpkeep(request, weekly("Gutters", 20));
     await page.goto("/upkeep");
     await page.getByRole("button", { name: "Done: Gutters" }).click();
-    await expect(page.getByRole("status").filter({ hasText: "Gutters done." })).toBeVisible();
+    await expect(page.getByRole("status").filter({ hasText: "Gutters done today." })).toBeVisible();
     await expect(page.getByRole("dialog")).toHaveCount(0);
   });
 
@@ -110,7 +110,7 @@ test.describe("Done on a Later row", () => {
     await seedUpkeep(request, far("Far job"));
     await page.goto("/upkeep");
     await page.getByRole("button", { name: "Done: Far job" }).click();
-    await expect(page.getByRole("status").filter({ hasText: "Far job done." })).toBeVisible();
+    await expect(page.getByRole("status").filter({ hasText: "Far job done today." })).toBeVisible();
   });
 });
 
@@ -190,7 +190,7 @@ test.describe("a long Later list", () => {
     await seedUpkeep(request, weekly("Due job", 20));
     await page.goto("/upkeep");
     await page.getByRole("button", { name: "Done: Due job" }).click();
-    await expect(page.getByRole("status").filter({ hasText: "Due job done." })).toBeVisible();
+    await expect(page.getByRole("status").filter({ hasText: "Due job done today." })).toBeVisible();
   });
 });
 

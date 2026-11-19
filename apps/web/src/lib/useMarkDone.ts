@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { addDays, compareMaintenance, dueOn, maintenanceStatus } from "@homer/shared";
+import { compareMaintenance, dueOn, maintenanceStatus } from "@homer/shared";
 import { copy } from "../copy";
 import { pastDate } from "./maintenanceText";
 import { trpc, type MaintenanceItem } from "../trpc";
@@ -7,7 +7,7 @@ import { trpc, type MaintenanceItem } from "../trpc";
 // The flash lasts 1.4 s; the row stops being marked a little after, so it cannot replay if it moves between lists later.
 const FLASH_FOR_MS = 1600;
 
-type Undoable = { doneId: number; item: MaintenanceItem; doneOn: string; lastDoneOn: string };
+type Undoable = { doneId: number; item: MaintenanceItem; lastDoneOn: string };
 
 // The row as the list will show it once the save has come back, so Done feels instant.
 const markedDone = (item: MaintenanceItem, today: string): MaintenanceItem => {
@@ -15,12 +15,10 @@ const markedDone = (item: MaintenanceItem, today: string): MaintenanceItem => {
   return { ...item, lastDoneOn: today, snoozedUntil: null, dueOn: due, ...maintenanceStatus(due, today) };
 };
 
-const toastMessage = ({ item, doneOn, lastDoneOn }: Undoable, today: string): string => {
-  const next = pastDate(dueOn({ lastDoneOn, createdOn: item.createdOn }, item.every, item.unit), today);
-  return doneOn === today ? copy.maintenance.doneToast(item.name, next) : copy.maintenance.doneOnToast(item.name, pastDate(doneOn, today), next);
-};
+const toastMessage = ({ item, lastDoneOn }: Undoable, today: string): string =>
+  copy.maintenance.doneToast(item.name, pastDate(dueOn({ lastDoneOn, createdOn: item.createdOn }, item.every, item.unit), today));
 
-// Done today, "done earlier" and Undo for an upkeep item, shared by the Upkeep page and the Home card.
+// Done today and Undo for an upkeep item, shared by the Upkeep page and the Home card.
 export const useMarkDone = (today: string, onDone?: () => void) => {
   const utils = trpc.useUtils();
   const [undoable, setUndoable] = useState<Undoable | null>(null);
@@ -48,7 +46,7 @@ export const useMarkDone = (today: string, onDone?: () => void) => {
     },
     // Runs for every save, not only the latest one, so each Done gets its toast.
     onSuccess: ({ doneId, lastDoneOn }, _input, context) => {
-      if (context?.item) setUndoable({ doneId, item: context.item, doneOn: today, lastDoneOn: lastDoneOn ?? today });
+      if (context?.item) setUndoable({ doneId, item: context.item, lastDoneOn: lastDoneOn ?? today });
       onDone?.();
     },
     // A failure puts back that row only, and says why.
@@ -63,25 +61,12 @@ export const useMarkDone = (today: string, onDone?: () => void) => {
       if (saving.current === 0) void refresh();
     },
   });
-  const redate = trpc.maintenance.redateDone.useMutation({ onError: (error) => setProblem(error.message), onSettled: refresh });
   const undo = trpc.maintenance.undoDone.useMutation({ onError: (error) => setProblem(error.message), onSettled: refresh });
 
   const finish = (item: MaintenanceItem) => {
     setProblem(undefined);
     setFlashId(item.id);
     markDone.mutate({ id: item.id, doneOn: today, today });
-  };
-
-  const doneEarlier = (daysAgo: number) => {
-    if (!undoable) return;
-    setProblem(undefined);
-    const { doneId } = undoable;
-    const doneOn = addDays(today, -daysAgo);
-    redate.mutate(
-      { doneId, doneOn, today },
-      // Only while the toast is still for this done, so a newer Done keeps its own dates.
-      { onSuccess: ({ lastDoneOn }) => setUndoable((was) => (was?.doneId === doneId ? { ...was, doneOn, lastDoneOn: lastDoneOn ?? doneOn } : was)) },
-    );
   };
 
   const takeBack = (doneId: number) => {
@@ -93,11 +78,9 @@ export const useMarkDone = (today: string, onDone?: () => void) => {
   const toast = undoable && {
     doneId: undoable.doneId,
     message: toastMessage(undoable, today),
-    // The choice already made is not offered again.
-    earlier: copy.maintenance.doneEarlierChoices.filter(({ daysAgo }) => addDays(today, -daysAgo) !== undoable.doneOn),
-    busy: redate.isPending || undo.isPending,
+    busy: undo.isPending,
   };
 
   // justDoneId: the row to flash, so a person sees where a done item went.
-  return { finish, takeBack, doneEarlier, toast, justDoneId: flashId, problem, busy: markDone.isPending, closeToast: () => setUndoable(null) };
+  return { finish, takeBack, toast, justDoneId: flashId, problem, busy: markDone.isPending, closeToast: () => setUndoable(null) };
 };

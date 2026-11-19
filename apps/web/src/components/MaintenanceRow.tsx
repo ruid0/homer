@@ -1,6 +1,6 @@
 import { useRef, type MouseEvent } from "react";
 import { copy } from "../copy";
-import { dueWords, needsDoing, rowChips } from "../lib/maintenanceText";
+import { dueWords, isDoneToday, needsDoing, rowChips } from "../lib/maintenanceText";
 import type { MaintenanceItem } from "../trpc";
 import { UpkeepChips } from "./UpkeepChips";
 import { doneSize, lateBar, quietButton, secondaryButton, statusClass } from "./ui";
@@ -51,16 +51,19 @@ export const MaintenanceRow = ({ item, busy, justDone = false, onDone, onEdit, o
           {copy.maintenance.edit}
         </button>
       </div>
-      <button
-        type="button"
-        className={`${doneStyle} ${doneSize} col-start-2 row-start-1 sm:col-start-3 sm:row-span-3 sm:self-center`}
-        disabled={busy}
-        data-done-action
-        onClick={onDone}
-        aria-label={copy.maintenance.doneLabel(item.name)}
-      >
-        {copy.maintenance.done}
-      </button>
+      {/* A second done on the same day is refused, so a job done today has no Done. */}
+      {!isDoneToday(item) && (
+        <button
+          type="button"
+          className={`${doneStyle} ${doneSize} col-start-2 row-start-1 sm:col-start-3 sm:row-span-3 sm:self-center`}
+          disabled={busy}
+          data-done-action
+          onClick={onDone}
+          aria-label={copy.maintenance.doneLabel(item.name)}
+        >
+          {copy.maintenance.done}
+        </button>
+      )}
     </li>
   );
 };

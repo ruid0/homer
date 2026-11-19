@@ -1,3 +1,4 @@
+import { ErrorToast } from "../components/ErrorToast";
 import { useState, type SubmitEvent } from "react";
 import { PageHeader } from "../components/PageHeader";
 import { GroceryRow } from "../components/GroceryRow";
@@ -68,7 +69,7 @@ export const GroceriesPage = () => {
 
       {entries.isPending && <p>{copy.groceries.loading}</p>}
       {entries.error && <p role="alert">{copy.groceries.loadFailed}</p>}
-      {actionError && <p role="alert" className="mb-4 text-late">{actionError}</p>}
+      <ErrorToast message={actionError} />
       {entries.data?.length === 0 && <p>{copy.groceries.empty}</p>}
 
       {entries.data && entries.data.length > 0 && (

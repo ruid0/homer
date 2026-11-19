@@ -1,3 +1,4 @@
+import { ErrorToast } from "../components/ErrorToast";
 import { keepPreviousData } from "@tanstack/react-query";
 import { PageHeader } from "../components/PageHeader";
 import { useState } from "react";
@@ -97,7 +98,7 @@ export const SchedulePage = () => {
 
       {view.isPending && <p role="status">{copy.schedule.loading}</p>}
       {view.error && <p role="alert">{copy.schedule.loadFailed}</p>}
-      {actionError && <p role="alert" className="mb-4 text-late">{actionError}</p>}
+      <ErrorToast message={actionError} />
       {loaded && empty && mode === "today" && personId === undefined && <p>{copy.schedule.empty}</p>}
       {nothingForPerson && (
         <div className="mb-6 grid justify-items-start gap-3">

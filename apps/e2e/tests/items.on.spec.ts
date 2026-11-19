@@ -154,3 +154,18 @@ test.describe("Ran out in the Edit dialog", () => {
     });
   });
 });
+
+test.describe("a failed Remove item", () => {
+  test("shows the error in the Edit dialog, which stays open, and the item stays", async ({ page, request }) => {
+    const name = await newItem(request);
+    await interceptCall(page, "inventory.archive", { answer: failure("Could not save. Try again.") });
+    page.once("dialog", (confirm) => void confirm.accept());
+    const dialog = await openEdit(page, name);
+    await dialog.getByRole("button", { name: "Remove item" }).click();
+    await expect(dialog.getByRole("alert")).toHaveText("Could not save. Try again. Refresh the list and try again.");
+    // One message, in the dialog: nothing floats behind the modal where it cannot be reached.
+    await expect(page.getByRole("alert")).toHaveCount(1);
+    await dialog.getByRole("button", { name: "Cancel" }).click();
+    await expect(row(page, name)).toBeVisible();
+  });
+});
