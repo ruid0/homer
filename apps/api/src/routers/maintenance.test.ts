@@ -253,3 +253,64 @@ describe("maintenance edges", () => {
     expect(everything).not.toMatch(/notified/i);
   });
 });
+
+describe("maintenance.snooze", () => {
+  const overdue = async (api: ReturnType<typeof setup>) => (await addFilter(api, null)).id;
+
+  it("hides a due job in Later until the day, with the real due date kept", async () => {
+    const api = setup();
+    const id = await overdue(api);
+    await api.maintenance.snooze({ id, until: "2026-11-12", today });
+    expect((await api.maintenance.list({ today }))[0]).toMatchObject({ snoozedUntil: "2026-11-12", status: "later", dueOn: today });
+    expect((await api.maintenance.list({ today: "2026-11-12" }))[0]).toMatchObject({ snoozedUntil: "2026-11-12", status: "overdue" });
+  });
+
+  it("null clears it, which is how Undo works", async () => {
+    const api = setup();
+    const id = await overdue(api);
+    await api.maintenance.snooze({ id, until: "2026-11-12", today });
+    await api.maintenance.snooze({ id, until: null, today });
+    expect((await api.maintenance.list({ today }))[0]).toMatchObject({ snoozedUntil: null, status: "due" });
+  });
+
+  it("marking done clears it", async () => {
+    const api = setup();
+    const id = await overdue(api);
+    await api.maintenance.snooze({ id, until: "2026-11-12", today });
+    await api.maintenance.markDone({ id, doneOn: today, today });
+    expect((await api.maintenance.list({ today }))[0]?.snoozedUntil).toBeNull();
+  });
+
+  it("a job not yet due can be snoozed, and stays hidden if it falls due before the snooze ends", async () => {
+    const api = setup();
+    const { id } = await addFilter(api, "2026-10-29"); // 3 months: due 2027-01-29
+    await api.maintenance.snooze({ id, until: "2026-11-12", today });
+    expect((await api.maintenance.list({ today }))[0]).toMatchObject({ status: "later", snoozedUntil: "2026-11-12" });
+  });
+
+  it("undoing a done does not bring an earlier snooze back", async () => {
+    const api = setup();
+    const id = await overdue(api);
+    await api.maintenance.snooze({ id, until: "2026-11-12", today });
+    const { doneId } = await api.maintenance.markDone({ id, doneOn: today, today });
+    await api.maintenance.undoDone({ doneId });
+    expect((await api.maintenance.list({ today }))[0]).toMatchObject({ snoozedUntil: null, status: "due" });
+  });
+
+  it("editing keeps it", async () => {
+    const api = setup();
+    const id = await overdue(api);
+    await api.maintenance.snooze({ id, until: "2026-11-12", today });
+    await api.maintenance.update({ id, name: "Filter 2", every: 3, unit: "months" });
+    expect((await api.maintenance.list({ today }))[0]?.snoozedUntil).toBe("2026-11-12");
+  });
+
+  it("refuses a past day and a removed or unknown job", async () => {
+    const api = setup();
+    const id = await overdue(api);
+    await expect(api.maintenance.snooze({ id, until: today, today })).rejects.toThrow();
+    await api.maintenance.remove({ id });
+    await expect(api.maintenance.snooze({ id, until: "2026-11-12", today })).rejects.toMatchObject({ code: "NOT_FOUND", message: messages.maintenanceGone });
+    await expect(api.maintenance.snooze({ id: 999, until: null, today })).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+});

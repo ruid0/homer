@@ -161,6 +161,8 @@ export const maintenanceItems = sqliteTable(
     unit: text("unit", { enum: maintenanceUnitValues }).notNull(),
     // Always the latest done_on in maintenance_done, or null when it was never done.
     lastDoneOn: text("last_done_on"),
+    // Hidden from Due now until this local day; null means not snoozed. Marking done clears it.
+    snoozedUntil: text("snoozed_until"),
     // The due dates a note was already sent for, so each stage is sent once per due date.
     notifiedSoonFor: text("notified_soon_for"),
     notifiedDueFor: text("notified_due_for"),

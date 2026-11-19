@@ -4,6 +4,7 @@ import {
   MAX_MAINTENANCE_EVERY,
   maintenanceItemInputSchema,
   markMaintenanceDoneInputSchema,
+  snoozeMaintenanceInputSchema,
   undoMaintenanceDoneInputSchema,
   updateMaintenanceItemInputSchema,
 } from "./schemas";
@@ -64,5 +65,17 @@ describe("markMaintenanceDoneInputSchema", () => {
     expect(markMaintenanceDoneInputSchema.safeParse({ id: 1, doneOn: "2025-11-04", today }).success).toBe(false);
     expect(markMaintenanceDoneInputSchema.safeParse({ id: 1, doneOn: "2026-11-06", today }).success).toBe(false);
     expect(markMaintenanceDoneInputSchema.safeParse({ id: 1, doneOn: "nope", today }).success).toBe(false);
+  });
+});
+
+describe("snoozeMaintenanceInputSchema", () => {
+  it("takes a day after today, up to a year ahead, or null to clear", () => {
+    expect(snoozeMaintenanceInputSchema.safeParse({ id: 1, until: "2026-11-06", today }).success).toBe(true);
+    expect(snoozeMaintenanceInputSchema.safeParse({ id: 1, until: "2027-11-05", today }).success).toBe(true);
+    expect(snoozeMaintenanceInputSchema.safeParse({ id: 1, until: null, today }).success).toBe(true);
+  });
+
+  it.each(["2026-11-05", "2026-11-04", "2027-11-06", "nope"])("rejects %s", (until) => {
+    expect(snoozeMaintenanceInputSchema.safeParse({ id: 1, until, today }).success).toBe(false);
   });
 });

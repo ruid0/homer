@@ -21,8 +21,14 @@ export const dueOn = ({ lastDoneOn, createdOn }: Basis, every: number, unit: Mai
 
 export type MaintenanceStatus = "overdue" | "due" | "soon" | "later";
 
-export const maintenanceStatus = (dueDate: string, today: string): { status: MaintenanceStatus; daysUntil: number } => {
+// A snoozed job that is due or overdue counts as later until the snooze day; daysUntil stays the real distance to the due date.
+export const maintenanceStatus = (
+  dueDate: string,
+  today: string,
+  snoozedUntil: string | null = null,
+): { status: MaintenanceStatus; daysUntil: number } => {
   const daysUntil = daysBetween(today, dueDate);
+  if (daysUntil <= 0 && snoozedUntil !== null && snoozedUntil > today) return { status: "later", daysUntil };
   if (daysUntil < 0) return { status: "overdue", daysUntil };
   if (daysUntil === 0) return { status: "due", daysUntil };
   return { status: daysUntil <= SOON_DAYS ? "soon" : "later", daysUntil };

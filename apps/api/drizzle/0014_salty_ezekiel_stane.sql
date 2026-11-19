@@ -1,0 +1,1 @@
+ALTER TABLE `maintenance_items` ADD `snoozed_until` text;
