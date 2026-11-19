@@ -9,6 +9,7 @@ import {
   maintenanceStatus,
   markMaintenanceDoneInputSchema,
   redateMaintenanceDoneInputSchema,
+  snoozeMaintenanceInputSchema,
   undoMaintenanceDoneInputSchema,
   updateMaintenanceItemInputSchema,
 } from "@homer/shared";
@@ -76,13 +77,14 @@ export const maintenanceRouter = router({
         unit: maintenanceItems.unit,
         lastDoneOn: maintenanceItems.lastDoneOn,
         createdOn: maintenanceItems.createdOn,
+        snoozedUntil: maintenanceItems.snoozedUntil,
       })
       .from(maintenanceItems)
       .where(isShown)
       .all()
       .map((item) => {
         const due = dueOn(item, item.every, item.unit);
-        return { ...item, dueOn: due, ...maintenanceStatus(due, input.today) };
+        return { ...item, dueOn: due, ...maintenanceStatus(due, input.today, item.snoozedUntil) };
       })
       .sort(compareMaintenance),
   ),
@@ -133,7 +135,17 @@ export const maintenanceRouter = router({
         .values({ itemId: input.id, doneOn: input.doneOn })
         .returning({ id: maintenanceDone.id })
         .get();
+      tx.update(maintenanceItems).set({ snoozedUntil: null }).where(eq(maintenanceItems.id, input.id)).run();
       return { doneId, lastDoneOn: syncLastDone(tx, input.id) };
+    }),
+  ),
+
+  // Hides the job from Due now until that day; null clears it, so Undo is the same call.
+  snooze: publicProcedure.input(snoozeMaintenanceInputSchema).mutation(({ ctx, input }) =>
+    ctx.db.transaction((tx) => {
+      requireShown(tx, input.id);
+      tx.update(maintenanceItems).set({ snoozedUntil: input.until }).where(eq(maintenanceItems.id, input.id)).run();
+      return { id: input.id, snoozedUntil: input.until };
     }),
   ),
 

@@ -12,7 +12,7 @@ type Undoable = { doneId: number; item: MaintenanceItem; doneOn: string; lastDon
 // The row as the list will show it once the save has come back, so Done feels instant.
 const markedDone = (item: MaintenanceItem, today: string): MaintenanceItem => {
   const due = dueOn({ lastDoneOn: today, createdOn: item.createdOn }, item.every, item.unit);
-  return { ...item, lastDoneOn: today, dueOn: due, ...maintenanceStatus(due, today) };
+  return { ...item, lastDoneOn: today, snoozedUntil: null, dueOn: due, ...maintenanceStatus(due, today) };
 };
 
 const toastMessage = ({ item, doneOn, lastDoneOn }: Undoable, today: string): string => {

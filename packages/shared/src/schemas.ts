@@ -240,6 +240,7 @@ export type AddReminderInput = z.infer<typeof addReminderInputSchema>;
 
 export const MAX_MAINTENANCE_EVERY = 99;
 export const MAX_MAINTENANCE_DAYS_BACK = 365;
+export const MAX_SNOOZE_DAYS = 365;
 
 export const MAX_MAINTENANCE_NAME = 80;
 const maintenanceName = text.max(MAX_MAINTENANCE_NAME, schemaMessages.maintenanceNameLength);
@@ -277,5 +278,13 @@ export const markMaintenanceDoneInputSchema = idInputSchema
 export const redateMaintenanceDoneInputSchema = z
   .object({ doneId: z.number().int().positive(), doneOn: dateSchema, today: dateSchema })
   .refine(({ doneOn, today }) => withinYearUpTo(doneOn, today), { path: ["doneOn"], message: schemaMessages.maintenanceDateRange });
+
+// Hide a job from Due now until a day after today and within a year; null clears the snooze (Undo).
+export const snoozeMaintenanceInputSchema = idInputSchema
+  .extend({ until: dateSchema.nullable(), today: dateSchema })
+  .refine(({ until, today }) => until === null || (until > today && until <= addDays(today, MAX_SNOOZE_DAYS)), {
+    path: ["until"],
+    message: schemaMessages.maintenanceSnoozeRange,
+  });
 
 export const undoMaintenanceDoneInputSchema = z.object({ doneId: z.number().int().positive() });

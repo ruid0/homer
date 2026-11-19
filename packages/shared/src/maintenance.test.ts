@@ -141,3 +141,31 @@ describe("compareMaintenance", () => {
     );
   });
 });
+
+describe("maintenanceStatus with a snooze", () => {
+  const today = "2026-11-05";
+
+  it("a due or overdue job is later while the snooze is ahead, and keeps its real days", () => {
+    expect(maintenanceStatus("2026-11-05", today, "2026-11-06")).toEqual({ status: "later", daysUntil: 0 });
+    expect(maintenanceStatus("2026-10-30", today, "2026-11-12")).toEqual({ status: "later", daysUntil: -6 });
+  });
+
+  it("is back on the day it ends", () => {
+    expect(maintenanceStatus("2026-10-30", today, today)).toEqual({ status: "overdue", daysUntil: -6 });
+    expect(maintenanceStatus("2026-11-05", today, "2026-11-01")).toEqual({ status: "due", daysUntil: 0 });
+  });
+
+  it("leaves a soon or later job alone", () => {
+    expect(maintenanceStatus("2026-11-08", today, "2026-11-20").status).toBe("soon");
+    expect(maintenanceStatus("2027-01-01", today, "2026-11-20").status).toBe("later");
+  });
+
+  it("null is no snooze", () => {
+    fc.assert(
+      fc.property(dateArb, fc.integer({ min: -400, max: 400 }), (day, offset) => {
+        const dueDate = addDays(day, offset);
+        expect(maintenanceStatus(dueDate, day, null)).toEqual(maintenanceStatus(dueDate, day));
+      }),
+    );
+  });
+});
