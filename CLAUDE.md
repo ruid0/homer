@@ -18,6 +18,7 @@ H.O.M.E.R. is a self-hosted, fully local household assistant: inventory, groceri
 pnpm install
 pnpm typecheck     # tsc --noEmit in every package (pnpm -r)
 pnpm test          # vitest run (Vitest + fast-check)
+pnpm --filter @homer/web build   # production build of the web app; must print no warnings
 pnpm exec vitest related <file> --run   # tests touching one file
 pnpm dev           # web :3000, api :3001
 pnpm db:generate   # new Drizzle migration from apps/api/src/db/schema.ts (run in apps/api)
@@ -64,7 +65,7 @@ Every piece of work moves through six phases, in order. **Name the phase you are
    Output: a plan the owner approves or changes. Nothing is built before the plan is agreed.
 3. **BUILD**: implement the agreed plan in small, coherent commits, each one buildable. The post-edit hook typechecks and runs related tests automatically.
    **Ship in small PRs, not whole slices.** When a meaningful part is done, testable and works by itself (for example the shared domain code, or an api router with its tests, or one page), run VERIFY, REVIEW and SHIP for that part before starting the next. A slice is usually several PRs. Each PR must leave `main` working: typecheck and tests pass, and nothing half-wired is visible in the app. The PLAN names the PR boundaries up front.
-4. **VERIFY**: evidence, not claims. Run `pnpm typecheck` and `pnpm test`, and for anything visual, check the running app with the Playwright MCP and run the UI test (see "UI rules" below). Say what passed and what didn't.
+4. **VERIFY**: evidence, not claims. Run `pnpm typecheck` and `pnpm test`, and for a change under `apps/web` also the production build (`pnpm --filter @homer/web build`): **the output must have no warnings** (for example a chunk over 500 kB). Fix the cause in the same PR, by splitting the code, not by raising the limit or hiding the message. A warning that cannot be fixed is named in the PR with the reason. For anything visual, check the running app with the Playwright MCP and run the UI test (see "UI rules" below). Say what passed and what didn't.
 
 5. **REVIEW**: run the `reviewer` subagent on the diff and address its Must fix items. For any change under `apps/web`, also run the `ui-reviewer` subagent and address its Must fix items (a BLOCK verdict stops the PR).
 6. **SHIP**: open a PR with `.github/pull_request_template.md` filled in, wait for CI (once it exists), merge, then rebuild with `docker compose up -d --build`.
