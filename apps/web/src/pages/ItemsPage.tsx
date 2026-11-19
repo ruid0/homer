@@ -1,4 +1,3 @@
-import { ErrorToast } from "../components/ErrorToast";
 import { useState } from "react";
 import { PageHeader } from "../components/PageHeader";
 import type { ItemInput } from "@homer/shared";
@@ -65,8 +64,6 @@ export const ItemsPage = () => {
     setRestocking(null);
   };
 
-  const actionError = archive.error?.message;
-
   return (
     <div className="mx-auto max-w-3xl">
       <PageHeader
@@ -76,7 +73,6 @@ export const ItemsPage = () => {
 
       {items.isPending && <p>{copy.items.loading}</p>}
       {items.error && <p role="alert">{copy.items.loadFailed}</p>}
-      <ErrorToast message={actionError && copy.items.actionFailed(actionError)} />
       {items.data?.length === 0 && <p>{copy.items.empty}</p>}
 
       {items.data && items.data.length > 0 && (
@@ -105,7 +101,8 @@ export const ItemsPage = () => {
         <ItemForm
           item={editing}
           pending={update.isPending}
-          serverError={update.error?.message}
+          // Removing is only reachable from this dialog, so its error shows here, not on the page behind it.
+          serverError={update.error?.message ?? (archive.error ? copy.items.actionFailed(archive.error.message) : undefined)}
           onSave={(values) => update.mutate({ id: editing.id, ...values })}
           onRemove={() => removeItem(editing)}
           onOut={() => markOut.mutate({ id: editing.id })}
