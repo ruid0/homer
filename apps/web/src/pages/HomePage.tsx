@@ -2,6 +2,7 @@ import { keepPreviousData } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { UpkeepList } from "../components/UpkeepList";
+import { SnoozeUi } from "../components/SnoozeUi";
 import { Card } from "../components/Card";
 import { RestockDialog } from "../components/RestockDialog";
 import { RunningOutList } from "../components/RunningOutList";
@@ -18,7 +19,8 @@ import { runningOut } from "../lib/runningOut";
 import { timelineRows } from "../lib/timeline";
 import { useFocusNextDone } from "../lib/useFocusNextDone";
 import { useMarkDone } from "../lib/useMarkDone";
-import { trpc, type ListItem, type ScheduleTask } from "../trpc";
+import { useSnooze } from "../lib/useSnooze";
+import { trpc, type ListItem, type MaintenanceItem, type ScheduleTask } from "../trpc";
 import { copy } from "../copy";
 
 const REFRESH_MS = 60_000;
@@ -41,7 +43,17 @@ export const HomePage = () => {
   const dueArea = useRef<HTMLDivElement>(null);
   const focusNextDone = useFocusNextDone(dueArea, dueArea);
   const upkeepDone = useMarkDone(today, focusNextDone);
+  // One toast at a time: a snooze closes the Done toast, and a Done closes the snooze toast.
+  const snooze = useSnooze(today, () => {
+    upkeepDone.closeToast();
+    focusNextDone();
+  });
   const { toast } = upkeepDone;
+  const upkeepProblem = upkeepDone.problem ?? snooze.problem;
+  const finishUpkeep = (item: MaintenanceItem) => {
+    snooze.closeToast();
+    upkeepDone.finish(item);
+  };
 
   const complete = trpc.tasks.complete.useMutation({ onSuccess: () => utils.schedule.view.invalidate() });
   const restock = trpc.inventory.restock.useMutation();
@@ -104,10 +116,10 @@ export const HomePage = () => {
           {upkeep.isPending && <p role="status">{copy.home.loading}</p>}
           {upkeep.error && <p role="alert">{copy.home.upkeepFailed}</p>}
           <div ref={dueArea} tabIndex={-1} className="outline-none">
-            {upkeep.data && <UpkeepList items={due} busy={upkeepDone.busy} justDoneId={upkeepDone.justDoneId} onDone={upkeepDone.finish} />}
+            {upkeep.data && <UpkeepList items={due} busy={upkeepDone.busy || snooze.busy} justDoneId={upkeepDone.justDoneId} onDone={finishUpkeep} onSnooze={snooze.ask} />}
           </div>
           {upkeep.data && due.length === 0 && <p className="border-t border-line py-4 text-muted">{copy.home.nothingDue}</p>}
-          {upkeepDone.problem && <p role="alert" className="py-2 text-late">{upkeepDone.problem}</p>}
+          {upkeepProblem && <p role="alert" className="py-2 text-late">{upkeepProblem}</p>}
         </Card>
 
         <Card title={copy.home.runningOut}>
@@ -130,8 +142,9 @@ export const HomePage = () => {
         />
       )}
       {/* One toast at a time: the Undo toast wins, since it is the only way back. */}
-      {message && !toast && <Toast message={message} onClose={() => setMessage(null)} />}
+      {message && !toast && !snooze.toast && <Toast message={message} onClose={() => setMessage(null)} />}
       <DoneToast done={upkeepDone} />
+      <SnoozeUi snooze={snooze} today={today} />
     </div>
   );
 };

@@ -22,6 +22,16 @@ describe("dueWords", () => {
     expect(dueWords({ lastDoneOn: "2026-11-05", dueOn: "2027-11-05", status: "later", daysUntil: 365 })).toBe("Due 5 Nov 2027");
   });
 
+  it("says a snoozed job that is due or overdue is snoozed, and until when", () => {
+    expect(dueWords({ ...base, status: "later", daysUntil: -3, snoozedUntil: "2026-11-26" })).toBe("Snoozed to 26 Nov");
+    expect(dueWords({ lastDoneOn: null, dueOn: "2026-11-05", status: "later", daysUntil: 0, snoozedUntil: "2026-11-26" })).toBe("Snoozed to 26 Nov");
+  });
+
+  it("leaves a job that is not yet due in its own words, snoozed or not", () => {
+    expect(dueWords({ ...base, status: "later", daysUntil: 60, snoozedUntil: "2026-11-26" })).toBe("Due 1 Feb");
+    expect(dueWords({ ...base, status: "soon", daysUntil: 5, snoozedUntil: null })).toBe("Due in 5 days");
+  });
+
   it("says an item never done is not done yet, whatever its due date", () => {
     expect(dueWords({ lastDoneOn: null, dueOn: "2026-11-05", status: "due", daysUntil: 0 })).toBe("Not done yet");
     expect(dueWords({ lastDoneOn: null, dueOn: "2026-11-05", status: "overdue", daysUntil: -9 })).toBe("Not done yet");

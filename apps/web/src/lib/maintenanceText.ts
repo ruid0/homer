@@ -1,7 +1,7 @@
 import { addDays } from "@homer/shared";
 import { copy } from "../copy";
 
-type Words = { lastDoneOn: string | null; status: "overdue" | "due" | "soon" | "later"; daysUntil: number; dueOn: string };
+type Words = { lastDoneOn: string | null; status: "overdue" | "due" | "soon" | "later"; daysUntil: number; dueOn: string; snoozedUntil?: string | null };
 
 // Past this many days a date is told in months, so "Due 17 Oct" is never mistaken for last month's.
 const DATE_UNTIL_DAYS = 60;
@@ -27,7 +27,9 @@ const laterWords = ({ daysUntil, dueOn }: Pick<Words, "daysUntil" | "dueOn">): s
 };
 
 // The one-line answer on a row: in words, so colour is never the only signal.
-export const dueWords = ({ lastDoneOn, status, daysUntil, dueOn }: Words): string => {
+// A snoozed job only reads as "later" while it is due or overdue (daysUntil of 0 or less); a job not yet due keeps its own words.
+export const dueWords = ({ lastDoneOn, status, daysUntil, dueOn, snoozedUntil = null }: Words): string => {
+  if (status === "later" && daysUntil <= 0 && snoozedUntil !== null) return copy.maintenance.snoozedTo(shortDate(snoozedUntil));
   if (lastDoneOn === null && (status === "due" || status === "overdue")) return copy.maintenance.neverDone;
   if (status === "overdue") return copy.maintenance.overdueDays(-daysUntil);
   if (status === "due") return copy.maintenance.dueToday;
