@@ -7,6 +7,7 @@ import { RestockDialog } from "../components/RestockDialog";
 import { RunningOutList } from "../components/RunningOutList";
 import { ScrollCard } from "../components/ScrollCard";
 import { TimelineList } from "../components/TimelineList";
+import { DoneToast } from "../components/DoneToast";
 import { Toast } from "../components/Toast";
 import { timeOfDay, useClock } from "../lib/clock";
 import { dateName, dayHeading } from "../lib/dayHeading";
@@ -40,7 +41,7 @@ export const HomePage = () => {
   const dueArea = useRef<HTMLDivElement>(null);
   const focusNextDone = useFocusNextDone(dueArea, dueArea);
   const upkeepDone = useMarkDone(today, focusNextDone);
-  const { undoable } = upkeepDone;
+  const { toast } = upkeepDone;
 
   const complete = trpc.tasks.complete.useMutation({ onSuccess: () => utils.schedule.view.invalidate() });
   const restock = trpc.inventory.restock.useMutation();
@@ -129,15 +130,8 @@ export const HomePage = () => {
         />
       )}
       {/* One toast at a time: the Undo toast wins, since it is the only way back. */}
-      {message && !undoable && <Toast message={message} onClose={() => setMessage(null)} />}
-      {undoable && (
-        <Toast
-          key={undoable.doneId}
-          message={undoable.message}
-          onClose={upkeepDone.closeToast}
-          action={{ label: copy.maintenance.undo, onClick: () => upkeepDone.takeBack(undoable.doneId) }}
-        />
-      )}
+      {message && !toast && <Toast message={message} onClose={() => setMessage(null)} />}
+      <DoneToast done={upkeepDone} />
     </div>
   );
 };

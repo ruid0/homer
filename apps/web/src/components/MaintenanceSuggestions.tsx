@@ -4,6 +4,10 @@ import { inputClass } from "./ui";
 
 export type Suggestion = (typeof copy.maintenance.suggestions)[number];
 
+// Twelve months reads better as a year.
+export const suggestionCycle = ({ every, unit }: Suggestion): { every: number; unit: "weeks" | "months" | "years" } =>
+  unit === "months" && every % 12 === 0 ? { every: every / 12, unit: "years" } : { every, unit };
+
 type Props = { takenNames: string[]; selectedName: string; onPick: (suggestion: Suggestion) => void };
 
 // Common jobs to start from, in one dropdown so the phone's own picker does the choosing and the dialog stays short.

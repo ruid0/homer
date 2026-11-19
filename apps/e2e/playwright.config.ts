@@ -55,7 +55,7 @@ export default defineConfig({
     {
       name: "upkeep",
       testMatch: /\.upkeep\.spec\.ts$/,
-      testIgnore: /(home|list|dialog)\.upkeep\.spec\.ts$/,
+      testIgnore: /(home|list|dialog|feedback)\.upkeep\.spec\.ts$/,
       fullyParallel: false,
       use: { ...devices["Desktop Chrome"], baseURL: `http://127.0.0.1:${copies.upkeep.web}` },
     },
@@ -81,6 +81,14 @@ export default defineConfig({
       name: "upkeep-dialog",
       testMatch: /dialog\.upkeep\.spec\.ts$/,
       dependencies: ["upkeep-list"],
+      fullyParallel: false,
+      use: { ...devices["Desktop Chrome"], baseURL: `http://127.0.0.1:${copies.upkeep.web}` },
+    },
+    {
+      // Last in the chain, for the same reason as upkeep-list.
+      name: "upkeep-feedback",
+      testMatch: /feedback\.upkeep\.spec\.ts$/,
+      dependencies: ["upkeep-dialog"],
       fullyParallel: false,
       use: { ...devices["Desktop Chrome"], baseURL: `http://127.0.0.1:${copies.upkeep.web}` },
     },

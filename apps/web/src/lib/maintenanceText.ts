@@ -18,7 +18,7 @@ export const shortDate = (date: string): string => `${asDate(date).getUTCDate()}
 export const longDate = (date: string): string => `${shortDate(date)} ${asDate(date).getUTCFullYear()}`;
 
 // The year shows only when it is not this year.
-const pastDate = (date: string, today: string): string => (date.slice(0, 4) === today.slice(0, 4) ? shortDate(date) : longDate(date));
+export const pastDate = (date: string, today: string): string => (date.slice(0, 4) === today.slice(0, 4) ? shortDate(date) : longDate(date));
 
 const laterWords = ({ daysUntil, dueOn }: Pick<Words, "daysUntil" | "dueOn">): string => {
   if (daysUntil <= DATE_UNTIL_DAYS) return copy.maintenance.dueOn(shortDate(dueOn));

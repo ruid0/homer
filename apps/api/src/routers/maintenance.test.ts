@@ -166,6 +166,37 @@ describe("maintenance.markDone and undoDone", () => {
     expect((await api.maintenance.list({ today }))[0]?.lastDoneOn).toBe("2026-11-01");
   });
 
+  it("redateDone moves the record and the due date follows the latest date", async () => {
+    const api = setup();
+    const { id } = await addFilter(api, null);
+    const { doneId } = await api.maintenance.markDone({ id, doneOn: today, today });
+    const moved = await api.maintenance.redateDone({ doneId, doneOn: "2026-11-03", today });
+    expect(moved.lastDoneOn).toBe("2026-11-03");
+    expect((await api.maintenance.history({ id })).map((row) => row.doneOn)).toEqual(["2026-11-03"]);
+    expect((await api.maintenance.list({ today }))[0]).toMatchObject({ lastDoneOn: "2026-11-03", dueOn: "2027-02-03" });
+  });
+
+  it("redateDone keeps the latest date when an older record moves, and refuses a day already recorded", async () => {
+    const api = setup();
+    const { id } = await addFilter(api, "2026-11-01");
+    const { doneId } = await api.maintenance.markDone({ id, doneOn: today, today });
+    await expect(api.maintenance.redateDone({ doneId, doneOn: "2026-11-01", today })).rejects.toMatchObject({ code: "CONFLICT" });
+    expect((await api.maintenance.history({ id })).map((row) => row.doneOn)).toEqual([today, "2026-11-01"]);
+    await api.maintenance.redateDone({ doneId, doneOn: "2026-10-20", today });
+    expect((await api.maintenance.list({ today }))[0]?.lastDoneOn).toBe("2026-11-01");
+  });
+
+  it("redateDone refuses a future day, a day over a year back, a missing record and a removed item", async () => {
+    const api = setup();
+    const { id } = await addFilter(api, null);
+    const { doneId } = await api.maintenance.markDone({ id, doneOn: today, today });
+    await expect(api.maintenance.redateDone({ doneId, doneOn: "2026-11-06", today })).rejects.toThrow();
+    await expect(api.maintenance.redateDone({ doneId, doneOn: "2025-11-04", today })).rejects.toThrow();
+    await expect(api.maintenance.redateDone({ doneId: 9999, doneOn: "2026-11-03", today })).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await api.maintenance.remove({ id });
+    await expect(api.maintenance.redateDone({ doneId, doneOn: "2026-11-03", today })).rejects.toMatchObject({ code: "NOT_FOUND" });
+  });
+
   it("history lists the done dates newest first, with ids", async () => {
     const api = setup();
     const { id } = await addFilter(api, "2026-10-01");
