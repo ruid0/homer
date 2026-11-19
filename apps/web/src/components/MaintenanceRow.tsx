@@ -5,12 +5,12 @@ import type { MaintenanceItem } from "../trpc";
 import { UpkeepChips } from "./UpkeepChips";
 import { doneSize, lateBar, quietButton, secondaryButton, statusClass } from "./ui";
 
-type Props = { item: MaintenanceItem; busy: boolean; justDone?: boolean; onDone: () => void; onEdit: () => void };
+type Props = { item: MaintenanceItem; busy: boolean; justDone?: boolean; onDone: () => void; onEdit: () => void; onSnooze: () => void };
 
 // Phone: the name and Done share a line, then the status, then the chips with Edit at the end.
 // Wide: the three text lines on the left, Edit and Done together on the right.
-// Edit comes before Done in the markup, so Tab follows the wide layout left to right.
-export const MaintenanceRow = ({ item, busy, justDone = false, onDone, onEdit }: Props) => {
+// Not today and Edit come before Done in the markup, so Tab follows the wide layout left to right.
+export const MaintenanceRow = ({ item, busy, justDone = false, onDone, onEdit, onSnooze }: Props) => {
   const late = item.status === "overdue" || item.status === "due";
   const level = late ? "late" : item.status === "soon" ? "warn" : "plain";
   // Later rows are not asked for yet, so their Done is quiet; Due now rows keep the outlined one.
@@ -40,15 +40,17 @@ export const MaintenanceRow = ({ item, busy, justDone = false, onDone, onEdit }:
       <div className="col-start-1 row-start-3 mt-1.5">
         <UpkeepChips chips={rowChips(item)} />
       </div>
-      <button
-        ref={editButton}
-        type="button"
-        className={`${quietButton} col-start-2 row-start-3 sm:row-span-3 sm:row-start-1 sm:self-center`}
-        onClick={onEdit}
-        aria-label={copy.maintenance.editLabel(item.name)}
-      >
-        {copy.maintenance.edit}
-      </button>
+      <div className="col-start-2 row-start-3 flex sm:row-span-3 sm:row-start-1 sm:self-center">
+        {/* Only a job that is due or overdue can be put off; a snooze changes nothing for one that is not yet due. */}
+        {late && (
+          <button type="button" className={quietButton} disabled={busy} onClick={onSnooze} aria-label={copy.maintenance.notTodayLabel(item.name)}>
+            {copy.maintenance.notToday}
+          </button>
+        )}
+        <button ref={editButton} type="button" className={quietButton} onClick={onEdit} aria-label={copy.maintenance.editLabel(item.name)}>
+          {copy.maintenance.edit}
+        </button>
+      </div>
       <button
         type="button"
         className={`${doneStyle} ${doneSize} col-start-2 row-start-1 sm:col-start-3 sm:row-span-3 sm:self-center`}

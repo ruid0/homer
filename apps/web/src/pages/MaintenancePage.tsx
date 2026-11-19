@@ -7,11 +7,13 @@ import { MaintenanceRow } from "../components/MaintenanceRow";
 import { MaintenanceStarters } from "../components/MaintenanceStarters";
 import type { Suggestion } from "../components/MaintenanceSuggestions";
 import { DoneToast } from "../components/DoneToast";
+import { SnoozeUi } from "../components/SnoozeUi";
 import { primaryButton, secondaryButton } from "../components/ui";
 import { copy } from "../copy";
 import { collapsesLater, laterNote, needsDoing } from "../lib/maintenanceText";
 import { useFocusNextDone } from "../lib/useFocusNextDone";
 import { useMarkDone } from "../lib/useMarkDone";
+import { useSnooze } from "../lib/useSnooze";
 import { useToday } from "../lib/useToday";
 import { trpc, type MaintenanceItem } from "../trpc";
 
@@ -49,7 +51,17 @@ export const MaintenancePage = () => {
   const addButton = useRef<HTMLButtonElement>(null);
   const focusNextDone = useFocusNextDone(listArea, addButton);
   const markDone = useMarkDone(today, focusNextDone);
-  const { finish, justDoneId, problem, busy } = markDone;
+  // One toast at a time: a snooze closes the Done toast, and a Done closes the snooze toast.
+  const snooze = useSnooze(today, () => {
+    markDone.closeToast();
+    focusNextDone();
+  });
+  const { justDoneId, busy } = markDone;
+  const problem = markDone.problem ?? snooze.problem;
+  const finish = (item: MaintenanceItem) => {
+    snooze.closeToast();
+    markDone.finish(item);
+  };
 
   const items = list.data ?? [];
   const editingItem = typeof editing === "number" ? (items.find((item) => item.id === editing) ?? null) : null;
@@ -72,7 +84,7 @@ export const MaintenancePage = () => {
   const rows = (group: MaintenanceItem[]) => (
     <ListCard>
       {group.map((item) => (
-        <MaintenanceRow key={item.id} item={item} busy={busy} justDone={item.id === justDoneId} onDone={() => finish(item)} onEdit={() => open(item.id)} />
+        <MaintenanceRow key={item.id} item={item} busy={busy || snooze.busy} justDone={item.id === justDoneId} onDone={() => finish(item)} onEdit={() => open(item.id)} onSnooze={() => snooze.ask(item)} />
       ))}
     </ListCard>
   );
@@ -137,6 +149,7 @@ export const MaintenancePage = () => {
         />
       )}
       <DoneToast done={markDone} />
+      <SnoozeUi snooze={snooze} today={today} />
     </div>
   );
 };
