@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { contrastOf } from "./contrast";
 import { failure, gate, interceptCall } from "./intercept";
 import { clearUpkeep, daysAgo, seedUpkeep, todayUtc } from "./scratch";
@@ -13,6 +13,13 @@ test.beforeEach(async ({ request }) => {
 });
 
 const row = (page: Page, name: string) => page.getByRole("listitem").filter({ has: page.getByText(name, { exact: true }) });
+
+const openHistory = (dialog: Locator) => dialog.getByRole("button", { name: /^Done on/ }).click();
+
+const removeDate = async (dialog: Locator) => {
+  await dialog.getByRole("button", { name: /^Remove the done date/ }).first().click();
+  await dialog.getByRole("button", { name: "Yes, remove it" }).click();
+};
 
 const weekly = (name: string, lastDoneDaysAgo: number | null) => ({
   name,
@@ -155,6 +162,7 @@ test.describe("marking done", () => {
     await page.goto("/upkeep");
     await page.getByRole("button", { name: "Edit Gutters" }).click();
     const dialog = page.getByRole("dialog");
+    await openHistory(dialog);
     await dialog.getByRole("button", { name: "Mark done" }).click();
     await expect(dialog.getByRole("alert")).toHaveText("Gutters is already marked done today.");
     await expect(dialog.getByRole("listitem")).toHaveCount(1);
@@ -188,9 +196,9 @@ test.describe("adding", () => {
     await dialog.getByLabel("Start from a suggestion").selectOption("Furnace filter");
     await expect(dialog.getByRole("textbox", { name: "Name" })).toHaveValue("Furnace filter");
     await expect(dialog.getByRole("spinbutton", { name: "Every" })).toHaveValue("3");
-    await expect(dialog.getByLabel("Unit")).toHaveValue("months");
-    await dialog.getByLabel("Not done yet").uncheck();
-    await dialog.getByLabel("Last done").fill(daysAgo(10));
+    await expect(dialog.getByRole("radio", { name: "Months" })).toBeChecked();
+    await dialog.getByLabel("Last done").selectOption("Pick a date…");
+    await dialog.getByLabel("Done on").fill(daysAgo(10));
     await dialog.getByRole("button", { name: "Save" }).click();
     await expect(dialog).toHaveCount(0);
     await expect(row(page, "Furnace filter")).toContainText("Every 3 months");
@@ -206,10 +214,10 @@ test.describe("adding", () => {
     await page.getByRole("button", { name: "Add job" }).click();
     const dialog = page.getByRole("dialog");
     await dialog.getByLabel("Start from a suggestion").selectOption("Fridge coils");
-    await expect(dialog.getByLabel("Unit")).toHaveValue("years");
+    await expect(dialog.getByRole("radio", { name: "Years" })).toBeChecked();
     await dialog.getByLabel("Start from a suggestion").selectOption("Smoke alarm batteries");
     await expect(dialog.getByRole("spinbutton", { name: "Every" })).toHaveValue("6");
-    await expect(dialog.getByLabel("Unit")).toHaveValue("months");
+    await expect(dialog.getByRole("radio", { name: "Months" })).toBeChecked();
   });
 
   test("an item added as not done yet shows as not done yet", async ({ page }) => {
@@ -266,11 +274,12 @@ test.describe("editing, history and removing", () => {
     await page.goto("/upkeep");
     await page.getByRole("button", { name: "Edit Gutters" }).click();
     const dialog = page.getByRole("dialog");
+    await openHistory(dialog);
     await expect(dialog.getByRole("listitem")).toHaveCount(1);
     await dialog.getByLabel("Mark done on").fill(daysAgo(3));
     await dialog.getByRole("button", { name: "Mark done" }).click();
     await expect(dialog.getByRole("listitem")).toHaveCount(2);
-    await dialog.getByRole("button", { name: /^Remove the done date/ }).first().click();
+    await removeDate(dialog);
     await expect(dialog.getByRole("listitem")).toHaveCount(1);
     await dialog.getByRole("button", { name: "Cancel" }).click();
     await expect(row(page, "Gutters")).toContainText("Last done");
@@ -280,6 +289,7 @@ test.describe("editing, history and removing", () => {
     await seedUpkeep(request, weekly("Gutters", 1));
     await page.goto("/upkeep");
     await page.getByRole("button", { name: "Edit Gutters" }).click();
+    await openHistory(page.getByRole("dialog"));
     expect(await page.getByRole("dialog").getByLabel("Mark done on").getAttribute("max")).toBe(todayUtc());
   });
 
@@ -354,6 +364,7 @@ test.describe("failures and waiting", () => {
     await page.goto("/upkeep");
     await page.getByRole("button", { name: "Edit Gutters" }).click();
     const dialog = page.getByRole("dialog");
+    await openHistory(dialog);
     await dialog.getByLabel("Mark done on").fill(daysAgo(3));
     await dialog.getByLabel("Mark done on").press("Enter");
     await expect(dialog.getByRole("listitem")).toHaveCount(2);
@@ -368,12 +379,29 @@ test.describe("failures and waiting", () => {
     await expect(page.getByRole("dialog").getByRole("alert")).toHaveText(/Couldn't load the done dates/, RETRIES);
   });
 
+  test("while the done dates load, the open list says so instead of looking empty", async ({ page, request }) => {
+    await seedUpkeep(request, weekly("Gutters", 1));
+    const held = gate();
+    await interceptCall(page, "maintenance.history", { when: held.when });
+    try {
+      await page.goto("/upkeep");
+      await page.getByRole("button", { name: "Edit Gutters" }).click();
+      const dialog = page.getByRole("dialog");
+      await openHistory(dialog);
+      await expect(dialog.getByRole("status")).toHaveText("Loading.");
+      await expect(dialog.getByText("Not done yet.")).toHaveCount(0);
+    } finally {
+      held.release();
+    }
+  });
+
   test("a failed done date or removal in the history shows the error in the dialog", async ({ page, request }) => {
     await seedUpkeep(request, weekly("Gutters", 1));
     await interceptCall(page, "maintenance.markDone", { answer: failure("Could not mark it done.") });
     await page.goto("/upkeep");
     await page.getByRole("button", { name: "Edit Gutters" }).click();
     const dialog = page.getByRole("dialog");
+    await openHistory(dialog);
     await dialog.getByRole("button", { name: "Mark done" }).click();
     await expect(dialog.getByRole("alert")).toHaveText("Could not mark it done.");
   });
@@ -384,9 +412,11 @@ test.describe("failures and waiting", () => {
     await page.goto("/upkeep");
     await page.getByRole("button", { name: "Edit Gutters" }).click();
     const dialog = page.getByRole("dialog");
-    await dialog.getByRole("button", { name: /^Remove the done date/ }).click();
+    await openHistory(dialog);
+    await removeDate(dialog);
     await expect(dialog.getByRole("alert")).toHaveText("Could not remove the date.");
     await expect(dialog.getByRole("listitem")).toHaveCount(1);
+    await expect(dialog.getByRole("button", { name: /^Remove the done date/ })).toBeFocused();
   });
 
   test("Done is disabled while the done is being saved", async ({ page, request }) => {
@@ -492,7 +522,7 @@ test.describe("dates, limits and focus", () => {
     await page.getByRole("button", { name: "Done: Gutters" }).click();
     await expect(page.getByRole("status").filter({ hasText: "Gutters marked done." })).toBeVisible();
     await page.getByRole("button", { name: "Edit Gutters" }).click();
-    await expect(page.getByRole("dialog").getByRole("listitem")).toHaveCount(2);
+    await expect(page.getByRole("dialog").getByRole("button", { name: "Done on (2)" })).toBeVisible();
     await page.getByRole("dialog").getByRole("button", { name: "Cancel" }).click();
     expect(problems).toEqual([]);
   });
@@ -522,12 +552,16 @@ test.describe("fit, targets and themes", () => {
     for (const control of controls) expect((await control.boundingBox())?.height).toBeGreaterThanOrEqual(44);
     await page.getByRole("button", { name: "Edit Gutters" }).click();
     const dialog = page.getByRole("dialog");
+    await openHistory(dialog);
     for (const control of [
       dialog.getByRole("button", { name: "Mark done" }),
       dialog.getByRole("button", { name: /^Remove the done date/ }),
       dialog.getByRole("button", { name: "Remove item" }),
       dialog.getByRole("spinbutton", { name: "Every" }),
-      dialog.getByLabel("Unit"),
+      dialog.getByRole("button", { name: "One less" }),
+      dialog.getByRole("button", { name: "One more" }),
+      dialog.locator("label").filter({ hasText: /^months$/i }),
+      dialog.getByRole("button", { name: "Save" }),
       dialog.getByLabel("Mark done on"),
     ]) {
       expect((await control.boundingBox())?.height).toBeGreaterThanOrEqual(44);
@@ -625,7 +659,8 @@ test.describe("fit, targets and themes", () => {
     }
     await page.getByRole("button", { name: "Edit Far job" }).click();
     const dialog = page.getByRole("dialog");
-    for (const text of [dialog.getByRole("heading", { name: "Edit Far job" }), dialog.getByText("Done on", { exact: true }), dialog.getByText(/^Not done yet\.$|^\d+ \w+ \d{4}$/).first()]) {
+    await openHistory(dialog);
+    for (const text of [dialog.getByRole("heading", { name: "Edit Far job" }), dialog.getByText(/^Done on/).first(), dialog.getByText(/^Not done yet\.$|^\d+ \w+ \d{4}$/).first()]) {
       expect(await contrastOf(text)).toBeGreaterThanOrEqual(4.5);
     }
   });

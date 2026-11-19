@@ -46,6 +46,10 @@ export const clearUpkeep = async (request: APIRequestContext) => {
 export const seedUpkeep = (request: APIRequestContext, item: { name: string; every: number; unit: Unit; lastDoneOn: string | null }) =>
   call<{ id: number }>(request, "maintenance.add", { ...item, today: todayUtc() });
 
+// One more done date on a job, through the api.
+export const seedDone = (request: APIRequestContext, id: number, doneOn: string) =>
+  call(request, "maintenance.markDone", { id, doneOn, today: todayUtc() });
+
 export const seedTask = (request: APIRequestContext, task: { title: string; dueDate: string | null; dueTime?: string | null }) =>
   call<{ id: number }>(request, "tasks.add", { title: task.title, dueDate: task.dueDate, dueTime: task.dueTime ?? null });
 
