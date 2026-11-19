@@ -318,3 +318,42 @@ test.describe("looks", () => {
     expect(running).toBe(0);
   });
 });
+
+test.describe("clicking outside the Upkeep dialog", () => {
+  const OUTSIDE = { x: 4, y: 4 };
+
+  test("the controls inside it never close it, and a click on the page behind does", async ({ page, request }) => {
+    await seedUpkeep(request, { name: "Click job", every: 3, unit: "months", lastDoneOn: daysAgo(10) });
+    const dialog = await openEdit(page, "Click job");
+    await dialog.getByRole("button", { name: "One more" }).click();
+    await unitButton(dialog, "years").click();
+    await toggle(dialog).click();
+    await dialog.getByRole("button", { name: "Remove item" }).click();
+    await expect(dialog.getByRole("button", { name: "Yes, remove it" })).toBeVisible();
+    await expect(dialog).toBeVisible();
+    await page.mouse.click(OUTSIDE.x, OUTSIDE.y);
+    await expect(dialog).toHaveCount(0);
+    // Nothing was saved or removed.
+    await expect(row(page, "Click job")).toContainText("Every 3 months");
+  });
+
+  test("the Last done choices and the date field keep it open", async ({ page }) => {
+    const dialog = await openAdd(page);
+    await dialog.getByLabel("Last done").selectOption("date");
+    await dialog.getByLabel("Done on").click();
+    await expect(dialog).toBeVisible();
+  });
+
+  test("Enter on a button inside it never closes it, even after a press that started outside and never finished", async ({ page }) => {
+    const dialog = await openAdd(page);
+    // A press on the page behind whose release never reached the dialog, as when the pointer leaves the window.
+    await dialog.evaluate((element) => element.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, clientX: 4, clientY: 4 })));
+    await dialog.getByRole("button", { name: "One more" }).focus();
+    await page.keyboard.press("Enter");
+    await expect(everyBox(dialog)).toHaveValue("4");
+    await dialog.getByRole("button", { name: "One more" }).focus();
+    await page.keyboard.press("Space");
+    await expect(everyBox(dialog)).toHaveValue("5");
+    await expect(dialog).toBeVisible();
+  });
+});

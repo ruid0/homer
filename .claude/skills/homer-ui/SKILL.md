@@ -16,6 +16,7 @@ glanceable, so take that skill's typography and layout craft, not its call for b
 - Big touch targets (44px minimum). Assume wet or messy hands.
 - One primary action per card: "Bought it", "Done", "Snooze a week".
 - Calm by default. Color only for state: overdue, due soon, fine.
+- A dialog closes on Cancel, Escape, or a click on the dimmed page behind it (`Dialog.tsx`; what was typed is thrown away, as with Cancel and Escape). A press that starts inside and ends outside does not close it.
 - Responsive and mobile and tablet first. Use a single column on small screens, and a grid on larger ones.
 
 ## Copy
