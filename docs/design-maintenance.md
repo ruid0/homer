@@ -1,6 +1,6 @@
 # Maintenance schedules: things that come round on a long cycle. Definition, technical plan and system design
 
-Status: Draft (shape agreed with the owner; waiting for the owner to approve the plan and the defaults in §2) · Owner: Igor Bondarenko · Last updated: 2026-11-05 · Source: `docs/v2-plan.md` theme B, the PRD §4 ("maintenance reminders: filters, softener salt, cleaning"), and the owner's answers of 2026-11-05. Builds on `docs/design-jobs-and-ntfy.md` and `docs/design-routines.md`.
+Status: In progress (the api, the Upkeep page and the Home card are built; the maintenance note job is not) · Owner: Igor Bondarenko · Last updated: 2026-11-19 · Source: `docs/v2-plan.md` theme B, the PRD §4 ("maintenance reminders: filters, softener salt, cleaning"), and the owner's answers of 2026-11-05. Builds on `docs/design-jobs-and-ntfy.md` and `docs/design-routines.md`.
 
 ## 1. Problem
 
