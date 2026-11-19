@@ -13,6 +13,9 @@ type Props = {
   serverError?: string;
   onSave: (values: ItemInput) => void;
   onRemove?: () => void;
+  onOut?: () => void;
+  outPending?: boolean;
+  outError?: string;
   onClose: () => void;
 };
 
@@ -23,13 +26,22 @@ const toNumberOrNull = (text: string) => (text.trim() === "" ? null : Number(tex
 const invalidFields = (issues: readonly { path: readonly PropertyKey[] }[]) =>
   [...new Set(issues.map((issue) => fieldLabels[String(issue.path[0])] ?? copy.itemForm.wholeForm))].join(", ");
 
-export const ItemForm = ({ item, pending, serverError, onSave, onRemove, onClose }: Props) => {
+export const ItemForm = ({ item, pending, serverError, onSave, onRemove, onOut, outPending = false, outError, onClose }: Props) => {
   const [name, setName] = useState(item?.name ?? "");
   const [unit, setUnit] = useState(item?.unit ?? "");
   const [quantity, setQuantity] = useState(quantityText(item?.quantity ?? 0));
   const [daysPerUnit, setDaysPerUnit] = useState(String(item?.daysPerUnitEntered ?? ""));
   const [threshold, setThreshold] = useState(String(item?.lowThresholdDays ?? DEFAULT_LOW_THRESHOLD_DAYS));
   const [error, setError] = useState<string>();
+
+  // Ran out acts on the saved item, so it waits until nothing in the form has been changed.
+  const untouched =
+    item !== undefined &&
+    name === item.name &&
+    unit === item.unit &&
+    quantity === quantityText(item.quantity) &&
+    daysPerUnit === String(item.daysPerUnitEntered ?? "") &&
+    threshold === String(item.lowThresholdDays);
 
   const submit = (event: SubmitEvent) => {
     event.preventDefault();
@@ -57,19 +69,29 @@ export const ItemForm = ({ item, pending, serverError, onSave, onRemove, onClose
         <Field label={copy.itemForm.quantity}>
           <NumberInput value={quantity} onChange={setQuantity} />
         </Field>
+        {item && onOut && item.quantity > 0 && untouched && (
+          <div className="grid justify-items-start gap-1">
+            <button type="button" className={secondaryButton} disabled={pending || outPending} onClick={onOut} aria-label={copy.items.outLabel(item.name)} aria-describedby="ran-out-hint">
+              {copy.stock.ranOut}
+            </button>
+            <p id="ran-out-hint" className="text-meta text-muted">{copy.itemForm.ranOutHint}</p>
+          </div>
+        )}
         <Field label={copy.itemForm.daysPerUnit}>
           <NumberInput value={daysPerUnit} onChange={setDaysPerUnit} />
         </Field>
         <Field label={copy.itemForm.lowThresholdDays}>
           <NumberInput value={threshold} onChange={setThreshold} />
         </Field>
-        {(error ?? serverError) && <p role="alert" className="text-late">{error ?? serverError}</p>}
+        {(error ?? serverError ?? (untouched ? outError : undefined)) && (
+          <p role="alert" className="text-late">{error ?? serverError ?? outError}</p>
+        )}
         <div className="flex flex-wrap justify-end gap-3">
           {onRemove && (
             <button type="button" className={`${secondaryButton} mr-auto`} onClick={onRemove}>{copy.itemForm.removeItem}</button>
           )}
           <button type="button" className={secondaryButton} onClick={onClose}>{copy.common.cancel}</button>
-          <button type="submit" className={primaryButton} disabled={pending}>{copy.common.save}</button>
+          <button type="submit" className={primaryButton} disabled={pending || outPending}>{copy.common.save}</button>
         </div>
       </form>
     </Dialog>

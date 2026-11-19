@@ -55,6 +55,7 @@ export const ItemsPage = () => {
   const closeForm = () => {
     create.reset();
     update.reset();
+    markOut.reset();
     setEditing(null);
   };
 
@@ -63,7 +64,7 @@ export const ItemsPage = () => {
     setRestocking(null);
   };
 
-  const actionError = markOut.error?.message ?? archive.error?.message;
+  const actionError = archive.error?.message;
 
   return (
     <div className="mx-auto max-w-3xl">
@@ -83,10 +84,8 @@ export const ItemsPage = () => {
             <ItemRow
               key={item.id}
               item={item}
-              busy={markOut.isPending}
               onList={listedIds.has(item.id)}
               onBought={() => setRestocking(item)}
-              onOut={() => markOut.mutate({ id: item.id })}
               onEdit={() => setEditing(item)}
             />
           ))}
@@ -108,6 +107,9 @@ export const ItemsPage = () => {
           serverError={update.error?.message}
           onSave={(values) => update.mutate({ id: editing.id, ...values })}
           onRemove={() => removeItem(editing)}
+          onOut={() => markOut.mutate({ id: editing.id })}
+          outPending={markOut.isPending}
+          outError={markOut.error?.message}
           onClose={closeForm}
         />
       )}

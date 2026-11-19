@@ -186,6 +186,7 @@ export const copy = {
     daysPerUnit: "Lasts (days per unit, blank if unknown)",
     lowThresholdDays: "Low at (days left)",
     removeItem: "Remove item",
+    ranOutHint: "Sets the quantity to 0 and puts it on the grocery list.",
     fixFields: (fields: string) => `Fix these fields, then save again: ${fields}.`,
     wholeForm: "Form",
     invalidFields: {

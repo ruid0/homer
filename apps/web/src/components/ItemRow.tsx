@@ -6,14 +6,12 @@ import { copy } from "../copy";
 
 type Props = {
   item: ListItem;
-  busy: boolean;
   onList: boolean;
   onBought: () => void;
-  onOut: () => void;
   onEdit: () => void;
 };
 
-export const ItemRow = ({ item, busy, onList, onBought, onOut, onEdit }: Props) => {
+export const ItemRow = ({ item, onList, onBought, onEdit }: Props) => {
   const urgent = item.runningLow || item.quantity === 0;
   const note =
     item.estimateSource === "learned" && item.learnedFrom !== null
@@ -34,17 +32,6 @@ export const ItemRow = ({ item, busy, onList, onBought, onOut, onEdit }: Props) 
           <button type="button" className={quietButton} onClick={onEdit} aria-label={copy.items.editLabel(item.name)}>
             {copy.items.edit}
           </button>
-          {item.quantity > 0 && (
-            <button
-              type="button"
-              className={secondaryButton}
-              onClick={onOut}
-              disabled={busy}
-              aria-label={copy.items.outLabel(item.name)}
-            >
-              {copy.stock.ranOut}
-            </button>
-          )}
           <button
             type="button"
             className={`${secondaryButton} ${doneSize}`}
