@@ -2,9 +2,10 @@ import { useState, type SubmitEvent } from "react";
 import { repeatValues, taskInputSchema, type TaskInput } from "@homer/shared";
 import type { ListPerson, ScheduleTask } from "../trpc";
 import { Dialog } from "./Dialog";
+import { DialogActions } from "./DialogActions";
 import { Field } from "./Field";
 import { PersonField } from "./PersonField";
-import { inputClass, primaryButton, secondaryButton } from "./ui";
+import { inputClass } from "./ui";
 import { copy } from "../copy";
 
 type Props = {
@@ -66,14 +67,7 @@ export const TaskDialog = ({ task, people, defaultPersonId, pending, serverError
           </select>
         </Field>
         <PersonField label={copy.taskForm.person} people={people} value={personId} onChange={setPersonId} />
-        {(error ?? serverError) && <p role="alert" className="text-late">{error ?? serverError}</p>}
-        <div className="flex flex-wrap justify-end gap-3">
-          {onRemove && (
-            <button type="button" className={`${secondaryButton} mr-auto`} onClick={onRemove}>{copy.taskForm.removeTask}</button>
-          )}
-          <button type="button" className={secondaryButton} onClick={onClose}>{copy.common.cancel}</button>
-          <button type="submit" className={primaryButton} disabled={pending}>{copy.common.save}</button>
-        </div>
+        <DialogActions pending={pending} error={error ?? serverError} onCancel={onClose} remove={onRemove ? { label: copy.taskForm.removeTask, onClick: onRemove } : undefined} />
       </form>
     </Dialog>
   );

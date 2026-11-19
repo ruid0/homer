@@ -109,6 +109,8 @@
 
 html {
   color-scheme: light dark;
+  /* The page is pinned while a dialog is open, which removes its scrollbar; keeping the space stops the content shifting sideways. */
+  scrollbar-gutter: stable;
 }
 
 html:has(dialog[open]) {

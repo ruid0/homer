@@ -3,8 +3,9 @@ import { quantityText } from "../lib/itemText";
 import { DEFAULT_LOW_THRESHOLD_DAYS, itemInputSchema, type ItemInput } from "@homer/shared";
 import type { ListItem } from "../trpc";
 import { Dialog } from "./Dialog";
+import { DialogActions } from "./DialogActions";
 import { Field } from "./Field";
-import { inputClass, primaryButton, secondaryButton } from "./ui";
+import { inputClass, secondaryButton } from "./ui";
 import { copy } from "../copy";
 
 type Props = {
@@ -83,16 +84,12 @@ export const ItemForm = ({ item, pending, serverError, onSave, onRemove, onOut, 
         <Field label={copy.itemForm.lowThresholdDays}>
           <NumberInput value={threshold} onChange={setThreshold} />
         </Field>
-        {(error ?? serverError ?? (untouched ? outError : undefined)) && (
-          <p role="alert" className="text-late">{error ?? serverError ?? outError}</p>
-        )}
-        <div className="flex flex-wrap justify-end gap-3">
-          {onRemove && (
-            <button type="button" className={`${secondaryButton} mr-auto`} onClick={onRemove}>{copy.itemForm.removeItem}</button>
-          )}
-          <button type="button" className={secondaryButton} onClick={onClose}>{copy.common.cancel}</button>
-          <button type="submit" className={primaryButton} disabled={pending || outPending}>{copy.common.save}</button>
-        </div>
+        <DialogActions
+          pending={pending || outPending}
+          error={error ?? serverError ?? (untouched ? outError : undefined)}
+          onCancel={onClose}
+          remove={onRemove ? { label: copy.itemForm.removeItem, onClick: onRemove } : undefined}
+        />
       </form>
     </Dialog>
   );
