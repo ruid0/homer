@@ -8,6 +8,7 @@ import {
   maintenanceListInputSchema,
   maintenanceStatus,
   markMaintenanceDoneInputSchema,
+  redateMaintenanceDoneInputSchema,
   undoMaintenanceDoneInputSchema,
   updateMaintenanceItemInputSchema,
 } from "@homer/shared";
@@ -47,6 +48,22 @@ const syncLastDone = (db: Pick<Db, "select" | "update">, itemId: number): string
     db.select({ latest: max(maintenanceDone.doneOn) }).from(maintenanceDone).where(eq(maintenanceDone.itemId, itemId)).get()?.latest ?? null;
   db.update(maintenanceItems).set({ lastDoneOn: latest }).where(eq(maintenanceItems.id, itemId)).run();
   return latest;
+};
+
+// A second record for the same day would only make Undo remove the wrong one. The record being moved is not counted against itself.
+const refuseSameDay = (db: Pick<Db, "select">, item: { id: number; name: string }, input: { doneOn: string; today: string }, exceptDoneId?: number) => {
+  const sameDay = db
+    .select({ id: maintenanceDone.id })
+    .from(maintenanceDone)
+    .where(
+      and(
+        eq(maintenanceDone.itemId, item.id),
+        eq(maintenanceDone.doneOn, input.doneOn),
+        exceptDoneId === undefined ? undefined : ne(maintenanceDone.id, exceptDoneId),
+      ),
+    )
+    .get();
+  if (sameDay) throw new TRPCError({ code: "CONFLICT", message: messages.maintenanceAlreadyDone(item.name, input.doneOn === input.today) });
 };
 
 export const maintenanceRouter = router({
@@ -110,19 +127,25 @@ export const maintenanceRouter = router({
   markDone: publicProcedure.input(markMaintenanceDoneInputSchema).mutation(({ ctx, input }) =>
     ctx.db.transaction((tx) => {
       const item = requireShown(tx, input.id);
-      // A second record for the same day would only make Undo remove the wrong one.
-      const sameDay = tx
-        .select({ id: maintenanceDone.id })
-        .from(maintenanceDone)
-        .where(and(eq(maintenanceDone.itemId, input.id), eq(maintenanceDone.doneOn, input.doneOn)))
-        .get();
-      if (sameDay) throw new TRPCError({ code: "CONFLICT", message: messages.maintenanceAlreadyDone(item.name, input.doneOn === input.today) });
+      refuseSameDay(tx, item, input);
       const { id: doneId } = tx
         .insert(maintenanceDone)
         .values({ itemId: input.id, doneOn: input.doneOn })
         .returning({ id: maintenanceDone.id })
         .get();
       return { doneId, lastDoneOn: syncLastDone(tx, input.id) };
+    }),
+  ),
+
+  // Moves exactly that done record to another day in one step, so a failure never leaves the job undone.
+  redateDone: publicProcedure.input(redateMaintenanceDoneInputSchema).mutation(({ ctx, input }) =>
+    ctx.db.transaction((tx) => {
+      const done = tx.select().from(maintenanceDone).where(eq(maintenanceDone.id, input.doneId)).get();
+      if (!done) throw new TRPCError({ code: "NOT_FOUND", message: messages.maintenanceDoneGone });
+      const item = requireShown(tx, done.itemId);
+      refuseSameDay(tx, item, input, done.id);
+      tx.update(maintenanceDone).set({ doneOn: input.doneOn }).where(eq(maintenanceDone.id, done.id)).run();
+      return { lastDoneOn: syncLastDone(tx, done.itemId) };
     }),
   ),
 

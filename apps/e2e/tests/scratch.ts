@@ -50,6 +50,10 @@ export const seedUpkeep = (request: APIRequestContext, item: { name: string; eve
 export const seedDone = (request: APIRequestContext, id: number, doneOn: string) =>
   call(request, "maintenance.markDone", { id, doneOn, today: todayUtc() });
 
+// The done dates of a job, newest first, as the api holds them.
+export const doneDates = async (request: APIRequestContext, id: number) =>
+  (await query<{ doneOn: string }[]>(request, "maintenance.history", { id })).map((row) => row.doneOn);
+
 export const seedTask = (request: APIRequestContext, task: { title: string; dueDate: string | null; dueTime?: string | null }) =>
   call<{ id: number }>(request, "tasks.add", { title: task.title, dueDate: task.dueDate, dueTime: task.dueTime ?? null });
 

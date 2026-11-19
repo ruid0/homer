@@ -4,7 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { ListCard } from "../components/ListCard";
 import { MaintenanceDialog, type MaintenanceForm } from "../components/MaintenanceDialog";
 import { MaintenanceRow } from "../components/MaintenanceRow";
-import { Toast } from "../components/Toast";
+import { MaintenanceStarters } from "../components/MaintenanceStarters";
+import type { Suggestion } from "../components/MaintenanceSuggestions";
+import { DoneToast } from "../components/DoneToast";
 import { primaryButton, secondaryButton } from "../components/ui";
 import { copy } from "../copy";
 import { collapsesLater, laterNote, needsDoing } from "../lib/maintenanceText";
@@ -22,6 +24,7 @@ export const MaintenancePage = () => {
   const list = trpc.maintenance.list.useQuery({ today }, { placeholderData: keepPreviousData });
   const [editing, setEditing] = useState<Editing>(null);
   const [laterOpen, setLaterOpen] = useState(false);
+  const [start, setStart] = useState<Suggestion | null>(null);
 
   const refresh = () => utils.maintenance.list.invalidate();
 
@@ -36,15 +39,17 @@ export const MaintenancePage = () => {
     return refresh();
   };
   // Opening a dialog starts clean, so an old error never shows in a new one.
-  const open = (next: Editing) => {
+  const open = (next: Editing, from: Suggestion | null = null) => {
     resetDialogErrors();
+    setStart(from);
     setEditing(next);
   };
 
   const listArea = useRef<HTMLDivElement>(null);
   const addButton = useRef<HTMLButtonElement>(null);
   const focusNextDone = useFocusNextDone(listArea, addButton);
-  const { finish, takeBack, undoable, justDoneId, problem, busy, closeToast } = useMarkDone(today, focusNextDone);
+  const markDone = useMarkDone(today, focusNextDone);
+  const { finish, justDoneId, problem, busy } = markDone;
 
   const items = list.data ?? [];
   const editingItem = typeof editing === "number" ? (items.find((item) => item.id === editing) ?? null) : null;
@@ -83,7 +88,7 @@ export const MaintenancePage = () => {
       {list.isPending && <p role="status">{copy.maintenance.loading}</p>}
       {list.error && <p role="alert" className="text-late">{copy.maintenance.loadFailed}</p>}
       {problem && <p role="alert" className="mb-4 text-late">{problem}</p>}
-      {list.data && items.length === 0 && <p>{copy.maintenance.empty}</p>}
+      {list.data && items.length === 0 && <MaintenanceStarters onPick={(suggestion) => open("new", suggestion)} />}
 
       {list.data && items.length > 0 && (
         <div ref={listArea} className="grid gap-6">
@@ -120,6 +125,7 @@ export const MaintenancePage = () => {
         <MaintenanceDialog
           key={editing}
           item={editingItem}
+          start={start}
           today={today}
           takenNames={takenNames}
           pending={add.isPending || update.isPending || remove.isPending}
@@ -130,14 +136,7 @@ export const MaintenancePage = () => {
           onClose={() => open(null)}
         />
       )}
-      {undoable && (
-        <Toast
-          key={undoable.doneId}
-          message={undoable.message}
-          onClose={closeToast}
-          action={{ label: copy.maintenance.undo, onClick: () => takeBack(undoable.doneId) }}
-        />
-      )}
+      <DoneToast done={markDone} />
     </div>
   );
 };

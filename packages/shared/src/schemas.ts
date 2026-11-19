@@ -273,4 +273,9 @@ export const markMaintenanceDoneInputSchema = idInputSchema
   .extend({ doneOn: dateSchema, today: dateSchema })
   .refine(({ doneOn, today }) => withinYearUpTo(doneOn, today), { path: ["doneOn"], message: schemaMessages.maintenanceDateRange });
 
+// Moves one done record to another day, so "done earlier" is one step that cannot leave the job undone.
+export const redateMaintenanceDoneInputSchema = z
+  .object({ doneId: z.number().int().positive(), doneOn: dateSchema, today: dateSchema })
+  .refine(({ doneOn, today }) => withinYearUpTo(doneOn, today), { path: ["doneOn"], message: schemaMessages.maintenanceDateRange });
+
 export const undoMaintenanceDoneInputSchema = z.object({ doneId: z.number().int().positive() });

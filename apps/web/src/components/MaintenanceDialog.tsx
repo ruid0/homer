@@ -6,7 +6,7 @@ import { Dialog } from "./Dialog";
 import { Field } from "./Field";
 import { ConfirmRemove } from "./ConfirmRemove";
 import { MaintenanceHistory } from "./MaintenanceHistory";
-import { MaintenanceSuggestions, type Suggestion } from "./MaintenanceSuggestions";
+import { MaintenanceSuggestions, suggestionCycle, type Suggestion } from "./MaintenanceSuggestions";
 import { DialogActions } from "./DialogActions";
 import { SegmentedChoice } from "./SegmentedChoice";
 import { Stepper } from "./Stepper";
@@ -18,6 +18,8 @@ export type MaintenanceForm = { name: string; every: number; unit: MaintenanceUn
 type Props = {
   // Null means adding a new item.
   item: MaintenanceItem | null;
+  // A suggestion to start from when adding, from the empty page.
+  start?: Suggestion | null;
   today: string;
   // Names already on the list are left out of the suggestions.
   takenNames: string[];
@@ -32,20 +34,20 @@ type Props = {
 const YEAR_BACK_DAYS = 365;
 const DEFAULT_UNIT: MaintenanceUnit = "months";
 
-export const MaintenanceDialog = ({ item, today, takenNames, pending, serverError, onSave, onRemove, onChanged, onClose }: Props) => {
-  const [name, setName] = useState(item?.name ?? "");
-  const [every, setEvery] = useState(String(item?.every ?? 3));
-  const [unit, setUnit] = useState<MaintenanceUnit>(item?.unit ?? DEFAULT_UNIT);
+export const MaintenanceDialog = ({ item, start = null, today, takenNames, pending, serverError, onSave, onRemove, onChanged, onClose }: Props) => {
+  const started = start ? suggestionCycle(start) : null;
+  const [name, setName] = useState(item?.name ?? start?.name ?? "");
+  const [every, setEvery] = useState(String(item?.every ?? started?.every ?? 3));
+  const [unit, setUnit] = useState<MaintenanceUnit>(item?.unit ?? started?.unit ?? DEFAULT_UNIT);
   const [lastDoneChoice, setLastDoneChoice] = useState<LastDoneChoice>("now");
   const [pickedDate, setPickedDate] = useState(today);
   const [error, setError] = useState<string>();
 
   const pick = (suggestion: Suggestion) => {
+    const cycle = suggestionCycle(suggestion);
     setName(suggestion.name);
-    // Twelve months reads better as a year.
-    const wholeYears = suggestion.unit === "months" && suggestion.every % 12 === 0;
-    setEvery(String(wholeYears ? suggestion.every / 12 : suggestion.every));
-    setUnit(wholeYears ? "years" : suggestion.unit);
+    setEvery(String(cycle.every));
+    setUnit(cycle.unit);
     setError(undefined);
   };
 

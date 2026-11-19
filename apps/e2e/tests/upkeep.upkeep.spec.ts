@@ -93,7 +93,7 @@ test.describe("marking done", () => {
     await seedUpkeep(request, weekly("Overdue job", 20));
     await page.goto("/upkeep");
     await page.getByRole("button", { name: "Done: Overdue job" }).click();
-    const toast = page.getByRole("status").filter({ hasText: "Overdue job marked done." });
+    const toast = page.getByRole("status").filter({ hasText: "Overdue job done." });
     await expect(toast).toBeVisible();
     await expect(row(page, "Overdue job")).toContainText("Due in 7 days");
     await toast.getByRole("button", { name: "Undo" }).click();
@@ -117,7 +117,7 @@ test.describe("marking done", () => {
     await seedUpkeep(request, weekly("Today job", 7));
     await page.clock.install({ time: new Date(`${todayUtc()}T12:00:00Z`) });
     await page.goto("/upkeep");
-    const toast = page.getByRole("status").filter({ hasText: "Today job marked done." });
+    const toast = page.getByRole("status").filter({ hasText: "Today job done." });
     await page.getByRole("button", { name: "Done: Today job" }).click();
     await expect(toast).toBeVisible();
     await page.clock.fastForward(3_000);
@@ -138,7 +138,7 @@ test.describe("marking done", () => {
     await page.clock.install({ time: new Date(`${todayUtc()}T12:00:00Z`) });
     await page.goto("/upkeep");
     await page.getByRole("button", { name: "Done: Today job" }).click();
-    const toast = page.getByRole("status").filter({ hasText: "Today job marked done." });
+    const toast = page.getByRole("status").filter({ hasText: "Today job done." });
     await expect(toast).toBeVisible();
     await toast.hover();
     await page.clock.fastForward(30_000);
@@ -353,10 +353,10 @@ test.describe("failures and waiting", () => {
     await interceptCall(page, "maintenance.undoDone", { answer: failure("Could not undo it.") });
     await page.goto("/upkeep");
     await page.getByRole("button", { name: "Done: Today job" }).click();
-    await page.getByRole("status").filter({ hasText: "Today job marked done." }).getByRole("button", { name: "Undo" }).click();
+    await page.getByRole("status").filter({ hasText: "Today job done." }).getByRole("button", { name: "Undo" }).click();
     await expect(page.getByRole("alert")).toHaveText("Could not undo it.");
     await expect(row(page, "Today job")).toContainText("Due in 7 days");
-    await expect(page.getByRole("status").filter({ hasText: "Today job marked done." })).toBeVisible();
+    await expect(page.getByRole("status").filter({ hasText: "Today job done." })).toBeVisible();
   });
 
   test("Enter in the done date marks it and does not save the item", async ({ page, request }) => {
@@ -520,7 +520,7 @@ test.describe("dates, limits and focus", () => {
     await seedUpkeep(request, weekly("Gutters", 7));
     await page.goto("/upkeep");
     await page.getByRole("button", { name: "Done: Gutters" }).click();
-    await expect(page.getByRole("status").filter({ hasText: "Gutters marked done." })).toBeVisible();
+    await expect(page.getByRole("status").filter({ hasText: "Gutters done." })).toBeVisible();
     await page.getByRole("button", { name: "Edit Gutters" }).click();
     await expect(page.getByRole("dialog").getByRole("button", { name: "Done on (2)" })).toBeVisible();
     await page.getByRole("dialog").getByRole("button", { name: "Cancel" }).click();
