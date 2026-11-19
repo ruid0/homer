@@ -1,7 +1,8 @@
 import { useState, type SubmitEvent } from "react";
 import { restockInputSchema } from "@homer/shared";
 import { Dialog } from "./Dialog";
-import { inputClass, primaryButton, secondaryButton } from "./ui";
+import { DialogActions } from "./DialogActions";
+import { inputClass } from "./ui";
 import { copy } from "../copy";
 
 type Props = {
@@ -41,11 +42,7 @@ export const RestockDialog = ({ name, unit, initialQuantity, pending, serverErro
             autoFocus
           />
         </label>
-        {(error ?? serverError) && <p role="alert" className="text-late">{error ?? serverError}</p>}
-        <div className="flex justify-end gap-3">
-          <button type="button" className={secondaryButton} onClick={onClose}>{copy.common.cancel}</button>
-          <button type="submit" className={primaryButton} disabled={pending}>{copy.common.save}</button>
-        </div>
+        <DialogActions pending={pending} error={error ?? serverError} onCancel={onClose} />
       </form>
     </Dialog>
   );

@@ -4,9 +4,10 @@ import { copy } from "../copy";
 import type { ReminderState } from "../lib/reminderText";
 import type { RoutineRow } from "../trpc";
 import { Dialog } from "./Dialog";
+import { DialogActions } from "./DialogActions";
 import { Field } from "./Field";
 import { RoutineReminders } from "./RoutineReminders";
-import { inputClass, primaryButton, quietButton, secondaryButton } from "./ui";
+import { inputClass, quietButton, secondaryButton } from "./ui";
 
 type Props = {
   // Null means adding a new row.
@@ -57,7 +58,6 @@ export const RoutineRowDialog = ({ row, personId, state, pending, serverError, c
             onChange={(event) => setTarget(event.target.value)}
           />
         </Field>
-        {(error ?? serverError) && <p role="alert" className="text-late">{error ?? serverError}</p>}
         {row && <RoutineReminders personId={personId} itemId={row.id} state={state} />}
         {row && (
           <div className="flex flex-wrap gap-2">
@@ -83,10 +83,7 @@ export const RoutineRowDialog = ({ row, personId, state, pending, serverError, c
             </div>
           </div>
         )}
-        <div className="flex justify-end gap-3">
-          <button type="button" className={secondaryButton} onClick={onClose}>{copy.common.cancel}</button>
-          <button type="submit" className={primaryButton} disabled={pending}>{copy.common.save}</button>
-        </div>
+        <DialogActions pending={pending} error={error ?? serverError} onCancel={onClose} />
       </form>
     </Dialog>
   );

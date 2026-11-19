@@ -3,18 +3,48 @@ import { keyboardFit } from "../lib/keyboardFit";
 
 type Props = { title: string; onClose: () => void; children: ReactNode };
 
+// The page behind a modal must not scroll. Hiding overflow is not enough on iOS Safari, so the body is pinned where it is and put back
+// afterwards. The counter is for two dialogs mounted at once; a dialog that replaces another releases the page for an instant and locks it again.
+let locks = 0;
+let lockedAt = 0;
+
+const lockPage = () => {
+  if (locks++ > 0) return;
+  lockedAt = window.scrollY;
+  Object.assign(document.body.style, { position: "fixed", top: `-${lockedAt}px`, left: "0", right: "0" });
+};
+
+const unlockPage = () => {
+  if (--locks > 0) return;
+  Object.assign(document.body.style, { position: "", top: "", left: "", right: "" });
+  window.scrollTo({ top: lockedAt, behavior: "instant" });
+};
+
+// On a phone or tablet a field that takes focus on its own raises the on-screen keyboard, which covers the sheet before anyone has read its
+// title. So a touch screen starts on the title (which a screen reader reads out); a mouse and keyboard still land on the first field.
+const hasTouchScreen = () => window.matchMedia("(pointer: coarse)").matches;
+
 export const Dialog = ({ title, onClose, children }: Props) => {
   const ref = useRef<HTMLDialogElement>(null);
+  const heading = useRef<HTMLHeadingElement>(null);
   // On a phone the dialog is a sheet that slides up from the bottom edge; from md up it is a centred card.
   // Taken while rendering, before this dialog or any dialog it replaces has touched focus.
   const [opener] = useState(() => document.activeElement);
 
   useEffect(() => {
-    if (ref.current && !ref.current.open) ref.current.showModal();
+    lockPage();
+    if (ref.current && !ref.current.open) {
+      if (hasTouchScreen() && heading.current) {
+        heading.current.tabIndex = -1;
+        heading.current.setAttribute("autofocus", "");
+      }
+      ref.current.showModal();
+    }
     // Closing removes the dialog, so focus goes back to the control that opened it instead of the top of the page.
     // It waits a tick: while the dialog is still open, everything behind it cannot take focus.
     // If that control is gone (its row was removed), focus goes to the page content.
     return () => {
+      unlockPage();
       window.setTimeout(() => {
         const target = opener instanceof HTMLElement && opener.isConnected ? opener : document.querySelector<HTMLElement>("main");
         target?.focus();
@@ -64,9 +94,9 @@ export const Dialog = ({ title, onClose, children }: Props) => {
         if (event.detail > 0 && pressedOutside.current && isOutside(event)) event.currentTarget.close();
         pressedOutside.current = false;
       }}
-      className="m-auto max-h-[calc(100dvh-2rem)] w-[min(28rem,calc(100vw-2rem))] overflow-y-auto rounded-xl bg-card p-5 text-inherit backdrop:animate-backdrop-in backdrop:bg-scrim max-md:mb-0 max-md:w-full max-md:max-w-none max-md:animate-sheet-up max-md:rounded-b-none max-md:rounded-t-2xl max-md:pb-[max(1.25rem,env(safe-area-inset-bottom))] md:animate-dialog-in"
+      className="m-auto max-h-[calc(100dvh-2rem)] w-[min(28rem,calc(100vw-2rem))] overflow-y-auto overscroll-contain rounded-xl bg-card p-5 text-inherit backdrop:animate-backdrop-in backdrop:bg-scrim max-md:mb-0 max-md:w-full max-md:max-w-none max-md:animate-sheet-up max-md:rounded-b-none max-md:rounded-t-2xl max-md:pb-[max(1.25rem,env(safe-area-inset-bottom))] md:animate-dialog-in"
     >
-      <h2 className="mb-4 text-section font-semibold">{title}</h2>
+      <h2 ref={heading} className="mb-4 text-section font-semibold outline-none">{title}</h2>
       {children}
     </dialog>
   );
