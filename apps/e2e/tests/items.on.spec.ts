@@ -1,0 +1,156 @@
+import { expect, test, type Page } from "@playwright/test";
+import { randomUUID } from "node:crypto";
+import { contrastOf } from "./contrast";
+import { failure, gate, interceptCall } from "./intercept";
+import { seedItem } from "./scratch";
+
+const DIALOG_PADDING = 20;
+
+// Each test makes its own item with a unique name, so tests do not share state.
+const newItem = async (request: Parameters<typeof seedItem>[0]) => {
+  const name = `Ran out ${randomUUID().slice(0, 8)}`;
+  await seedItem(request, name);
+  return name;
+};
+
+const row = (page: Page, name: string) => page.getByRole("listitem").filter({ has: page.getByText(name, { exact: true }) });
+
+const openEdit = async (page: Page, name: string) => {
+  await page.goto("/items");
+  await page.getByRole("button", { name: `Edit ${name}` }).click();
+  return page.getByRole("dialog");
+};
+
+test.describe("the row", () => {
+  test("has Edit and Bought it, and no Ran out", async ({ page, request }) => {
+    const name = await newItem(request);
+    await page.goto("/items");
+    await expect(row(page, name).getByRole("button", { name: `Edit ${name}` })).toBeVisible();
+    await expect(row(page, name).getByRole("button", { name: `Bought it: ${name}` })).toBeVisible();
+    await expect(row(page, name).getByRole("button", { name: /^Ran out/ })).toHaveCount(0);
+  });
+});
+
+test.describe("Ran out in the Edit dialog", () => {
+  test("marks the item out at once, closes the dialog and puts it on the grocery list", async ({ page, request }) => {
+    const name = await newItem(request);
+    const dialog = await openEdit(page, name);
+    await expect(dialog.getByText("Sets the quantity to 0 and puts it on the grocery list.")).toBeVisible();
+    await expect(dialog.getByRole("button", { name: `Ran out: ${name}` })).toHaveAccessibleDescription("Sets the quantity to 0 and puts it on the grocery list.");
+    await dialog.getByRole("button", { name: `Ran out: ${name}` }).click();
+    await expect(dialog).toHaveCount(0);
+    await expect(row(page, name)).toContainText("Ran out");
+    await expect(row(page, name)).toContainText("On the grocery list");
+    await expect(row(page, name)).toContainText("0 bag");
+  });
+
+  test("is not offered for an item already at 0", async ({ page, request }) => {
+    const name = await newItem(request);
+    const first = await openEdit(page, name);
+    await first.getByRole("button", { name: `Ran out: ${name}` }).click();
+    await expect(first).toHaveCount(0);
+    await page.getByRole("button", { name: `Edit ${name}` }).click();
+    await expect(page.getByRole("dialog")).toBeVisible();
+    await expect(page.getByRole("dialog").getByRole("button", { name: /^Ran out/ })).toHaveCount(0);
+  });
+
+  test("is not offered while the form has unsaved changes, and comes back when they are undone", async ({ page, request }) => {
+    const name = await newItem(request);
+    const dialog = await openEdit(page, name);
+    const ranOut = dialog.getByRole("button", { name: `Ran out: ${name}` });
+    await expect(ranOut).toBeVisible();
+    await dialog.getByLabel("Name").fill(`${name} changed`);
+    await expect(ranOut).toHaveCount(0);
+    await dialog.getByLabel("Name").fill(name);
+    await expect(ranOut).toBeVisible();
+    await dialog.getByLabel("Quantity").fill("5");
+    await expect(ranOut).toHaveCount(0);
+  });
+
+  test("is not in the Add item dialog", async ({ page }) => {
+    await page.goto("/items");
+    await page.getByRole("button", { name: "Add item" }).click();
+    await expect(page.getByRole("dialog").getByRole("button", { name: /^Ran out/ })).toHaveCount(0);
+  });
+
+  test("says what went wrong in the dialog, keeps it open and the item unchanged", async ({ page, request }) => {
+    const name = await newItem(request);
+    await interceptCall(page, "inventory.markOut", { answer: failure("Could not mark it out.") });
+    const dialog = await openEdit(page, name);
+    await dialog.getByRole("button", { name: `Ran out: ${name}` }).click();
+    await expect(dialog.getByRole("alert")).toHaveText("Could not mark it out.");
+    await expect(dialog.getByRole("button", { name: `Ran out: ${name}` })).toBeEnabled();
+    await dialog.getByRole("button", { name: "Cancel" }).click();
+    await expect(row(page, name)).toContainText("1 bag");
+    await page.getByRole("button", { name: `Edit ${name}` }).click();
+    await expect(page.getByRole("dialog").getByRole("alert")).toHaveCount(0);
+  });
+
+  test("the error goes away once the form is changed, and the button's lock holds against Save", async ({ page, request }) => {
+    const name = await newItem(request);
+    await interceptCall(page, "inventory.markOut", { answer: failure("Could not mark it out.") });
+    const dialog = await openEdit(page, name);
+    await dialog.getByRole("button", { name: `Ran out: ${name}` }).click();
+    await expect(dialog.getByRole("alert")).toHaveText("Could not mark it out.");
+    await dialog.getByLabel("Quantity").fill("4");
+    await expect(dialog.getByRole("alert")).toHaveCount(0);
+  });
+
+  test("Save is disabled while Ran out is being saved", async ({ page, request }) => {
+    const name = await newItem(request);
+    const held = gate();
+    await interceptCall(page, "inventory.markOut", { when: held.when });
+    const dialog = await openEdit(page, name);
+    try {
+      await dialog.getByRole("button", { name: `Ran out: ${name}` }).click();
+      await expect(dialog.getByRole("button", { name: "Save" })).toBeDisabled();
+    } finally {
+      held.release();
+    }
+    await expect(dialog).toHaveCount(0);
+  });
+
+  test("is disabled while it is being saved", async ({ page, request }) => {
+    const name = await newItem(request);
+    const held = gate();
+    await interceptCall(page, "inventory.markOut", { when: held.when });
+    const dialog = await openEdit(page, name);
+    try {
+      await dialog.getByRole("button", { name: `Ran out: ${name}` }).click();
+      await expect(dialog.getByRole("button", { name: `Ran out: ${name}` })).toBeDisabled();
+    } finally {
+      held.release();
+    }
+    await expect(dialog).toHaveCount(0);
+  });
+
+  test("closing the dialog returns focus to the Edit button", async ({ page, request }) => {
+    const name = await newItem(request);
+    const dialog = await openEdit(page, name);
+    await dialog.getByRole("button", { name: `Ran out: ${name}` }).click();
+    await expect(dialog).toHaveCount(0);
+    await expect(page.getByRole("button", { name: `Edit ${name}` })).toBeFocused();
+  });
+
+  test("has a 44px-tall button that fits the dialog, and keeps its contrast in dark mode", async ({ page, request }) => {
+    const name = await newItem(request);
+    await page.emulateMedia({ colorScheme: "dark" });
+    const dialog = await openEdit(page, name);
+    const button = dialog.getByRole("button", { name: `Ran out: ${name}` });
+    expect((await button.boundingBox())?.height).toBeGreaterThanOrEqual(44);
+    expect(await contrastOf(button)).toBeGreaterThanOrEqual(4.5);
+  });
+
+  test.describe("on a phone", () => {
+    test.use({ viewport: { width: 375, height: 667 } });
+
+    test("the dialog does not scroll sideways and the button stays inside the padding", async ({ page, request }) => {
+      const name = await newItem(request);
+      const dialog = await openEdit(page, name);
+      await expect.poll(async () => (await dialog.boundingBox())?.y ?? 9999).toBeLessThan(400);
+      expect(await dialog.evaluate((element) => element.scrollWidth - element.clientWidth)).toBeLessThanOrEqual(0);
+      const box = await dialog.getByRole("button", { name: `Ran out: ${name}` }).boundingBox();
+      expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(375 - DIALOG_PADDING + 1);
+    });
+  });
+});

@@ -521,11 +521,12 @@ test.describe("Home layout, naming and the nav", () => {
     expect(await underline()).toBe("underline");
   });
 
-  test("Items calls the stock button 'Ran out', not 'Out of it'", async ({ page, request }) => {
+  test("Items calls the stock button 'Ran out', not 'Out of it', and keeps it in the Edit dialog", async ({ page, request }) => {
     const tag = randomUUID().slice(0, 8);
     await seedItem(request, `Naming ${tag}`);
     await page.goto("/items");
-    await expect(page.getByRole("button", { name: `Ran out: Naming ${tag}` })).toBeVisible();
+    await page.getByRole("button", { name: `Edit Naming ${tag}` }).click();
+    await expect(page.getByRole("dialog").getByRole("button", { name: `Ran out: Naming ${tag}` })).toBeVisible();
     await expect(page.getByRole("button", { name: /^Out of it/ })).toHaveCount(0);
   });
 
