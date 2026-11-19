@@ -1,5 +1,5 @@
 import { copy } from "../copy";
-import { dueWords } from "../lib/maintenanceText";
+import { dueWords, isDoneToday } from "../lib/maintenanceText";
 import type { MaintenanceItem } from "../trpc";
 import { HomeRow } from "./HomeRow";
 import { doneSize, quietButton, secondaryButton } from "./ui";
@@ -24,16 +24,18 @@ export const UpkeepList = ({ items, busy, justDoneId = null, onDone, onSnooze }:
                 {copy.maintenance.notToday}
               </button>
             )}
-            <button
-              type="button"
-              className={`${secondaryButton} ${doneSize}`}
-              disabled={busy}
-              data-done-action
-              aria-label={copy.maintenance.doneLabel(item.name)}
-              onClick={() => onDone(item)}
-            >
-              {copy.maintenance.done}
-            </button>
+            {!isDoneToday(item) && (
+              <button
+                type="button"
+                className={`${secondaryButton} ${doneSize}`}
+                disabled={busy}
+                data-done-action
+                aria-label={copy.maintenance.doneLabel(item.name)}
+                onClick={() => onDone(item)}
+              >
+                {copy.maintenance.done}
+              </button>
+            )}
           </div>
         }
       />

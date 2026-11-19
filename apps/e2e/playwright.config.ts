@@ -55,7 +55,7 @@ export default defineConfig({
     {
       name: "upkeep",
       testMatch: /\.upkeep\.spec\.ts$/,
-      testIgnore: /(home|list|dialog|feedback|snooze)\.upkeep\.spec\.ts$/,
+      testIgnore: /(home|list|dialog|feedback|snooze|errors)\.upkeep\.spec\.ts$/,
       fullyParallel: false,
       use: { ...devices["Desktop Chrome"], baseURL: `http://127.0.0.1:${copies.upkeep.web}` },
     },
@@ -97,6 +97,14 @@ export default defineConfig({
       name: "upkeep-snooze",
       testMatch: /snooze\.upkeep\.spec\.ts$/,
       dependencies: ["upkeep-feedback"],
+      fullyParallel: false,
+      use: { ...devices["Desktop Chrome"], baseURL: `http://127.0.0.1:${copies.upkeep.web}` },
+    },
+    {
+      // Last in the chain, for the same reason as upkeep-list.
+      name: "upkeep-errors",
+      testMatch: /errors\.upkeep\.spec\.ts$/,
+      dependencies: ["upkeep-snooze"],
       fullyParallel: false,
       use: { ...devices["Desktop Chrome"], baseURL: `http://127.0.0.1:${copies.upkeep.web}` },
     },

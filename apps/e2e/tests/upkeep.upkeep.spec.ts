@@ -1,7 +1,7 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { contrastOf } from "./contrast";
 import { failure, gate, interceptCall } from "./intercept";
-import { clearUpkeep, daysAgo, seedUpkeep, todayUtc } from "./scratch";
+import { clearUpkeep, daysAgo, seedDone, seedUpkeep, todayUtc } from "./scratch";
 
 // A failing query is retried 3 times with growing waits (about 7 seconds) before the screen calls it failed.
 const RETRIES = { timeout: 20_000 };
@@ -93,7 +93,7 @@ test.describe("marking done", () => {
     await seedUpkeep(request, weekly("Overdue job", 20));
     await page.goto("/upkeep");
     await page.getByRole("button", { name: "Done: Overdue job" }).click();
-    const toast = page.getByRole("status").filter({ hasText: "Overdue job done." });
+    const toast = page.getByRole("status").filter({ hasText: "Overdue job done today." });
     await expect(toast).toBeVisible();
     await expect(row(page, "Overdue job")).toContainText("Due in 7 days");
     await toast.getByRole("button", { name: "Undo" }).click();
@@ -114,18 +114,19 @@ test.describe("marking done", () => {
   });
 
   test("the Undo toast goes away after a few seconds, and a second done keeps its own Undo", async ({ page, request }) => {
-    await seedUpkeep(request, weekly("Today job", 7));
+    await seedUpkeep(request, weekly("First job", 7));
+    await seedUpkeep(request, weekly("Second job", 7));
     await page.clock.install({ time: new Date(`${todayUtc()}T12:00:00Z`) });
     await page.goto("/upkeep");
-    const toast = page.getByRole("status").filter({ hasText: "Today job done." });
-    await page.getByRole("button", { name: "Done: Today job" }).click();
-    await expect(toast).toBeVisible();
+    await page.getByRole("button", { name: "Done: First job" }).click();
+    await expect(page.getByRole("status").filter({ hasText: "First job done today." })).toBeVisible();
     await page.clock.fastForward(3_000);
     // The toast's clock starts when the save comes back, so wait for it before moving time on.
     const saved = page.waitForResponse((response) => response.url().includes("maintenance.markDone"));
-    await page.getByRole("button", { name: "Done: Today job" }).click();
+    await page.getByRole("button", { name: "Done: Second job" }).click();
     await saved;
-    await expect(page.getByRole("button", { name: "Done: Today job" })).toBeEnabled();
+    const toast = page.getByRole("status").filter({ hasText: "Second job done today." });
+    await expect(toast).toBeVisible();
     await page.clock.fastForward(10_000);
     // Thirteen seconds after the first done, but only ten after the second: its toast and Undo are still there.
     await expect(toast.getByRole("button", { name: "Undo" })).toBeVisible();
@@ -138,7 +139,7 @@ test.describe("marking done", () => {
     await page.clock.install({ time: new Date(`${todayUtc()}T12:00:00Z`) });
     await page.goto("/upkeep");
     await page.getByRole("button", { name: "Done: Today job" }).click();
-    const toast = page.getByRole("status").filter({ hasText: "Today job done." });
+    const toast = page.getByRole("status").filter({ hasText: "Today job done today." });
     await expect(toast).toBeVisible();
     await toast.hover();
     await page.clock.fastForward(30_000);
@@ -148,14 +149,17 @@ test.describe("marking done", () => {
     await expect(toast).toHaveCount(0);
   });
 
-  test("a second done on the same day is refused in words and the first stays", async ({ page, request }) => {
-    await seedUpkeep(request, weekly("Fresh job", 0));
+  test("a done made elsewhere first is refused in words, and the job stays as it is", async ({ page, request }) => {
+    const { id } = await seedUpkeep(request, weekly("Fresh job", 7));
     await page.goto("/upkeep");
-    await expect(row(page, "Fresh job")).toContainText("Due in 7 days");
+    await expect(row(page, "Fresh job")).toContainText("Due today");
+    // Another device marks it done before this page is told.
+    await seedDone(request, id, todayUtc());
     await page.getByRole("button", { name: "Done: Fresh job" }).click();
-    await expect(page.getByRole("alert")).toHaveText("Fresh job is already marked done today.");
+    await expect(page.getByRole("alert")).toContainText("Fresh job is already marked done today.");
     await expect(page.getByRole("button", { name: "Undo" })).toHaveCount(0);
   });
+
 
   test("marking done on a day that already has a done date says so in the dialog and keeps one entry", async ({ page, request }) => {
     await seedUpkeep(request, weekly("Gutters", 0));
@@ -182,7 +186,7 @@ test.describe("marking done", () => {
     await interceptCall(page, "maintenance.markDone", { answer: failure("Could not mark it done.") });
     await page.goto("/upkeep");
     await page.getByRole("button", { name: "Done: Today job" }).click();
-    await expect(page.getByRole("alert")).toHaveText("Could not mark it done.");
+    await expect(page.getByRole("alert")).toContainText("Could not mark it done.");
     await expect(page.getByRole("button", { name: "Undo" })).toHaveCount(0);
     await expect(row(page, "Today job")).toContainText("Due today");
   });
@@ -353,10 +357,10 @@ test.describe("failures and waiting", () => {
     await interceptCall(page, "maintenance.undoDone", { answer: failure("Could not undo it.") });
     await page.goto("/upkeep");
     await page.getByRole("button", { name: "Done: Today job" }).click();
-    await page.getByRole("status").filter({ hasText: "Today job done." }).getByRole("button", { name: "Undo" }).click();
-    await expect(page.getByRole("alert")).toHaveText("Could not undo it.");
+    await page.getByRole("status").filter({ hasText: "Today job done today." }).getByRole("button", { name: "Undo" }).click();
+    await expect(page.getByRole("alert")).toContainText("Could not undo it.");
     await expect(row(page, "Today job")).toContainText("Due in 7 days");
-    await expect(page.getByRole("status").filter({ hasText: "Today job done." })).toBeVisible();
+    await expect(page.getByRole("status").filter({ hasText: "Today job done today." })).toBeVisible();
   });
 
   test("Enter in the done date marks it and does not save the item", async ({ page, request }) => {
@@ -520,7 +524,7 @@ test.describe("dates, limits and focus", () => {
     await seedUpkeep(request, weekly("Gutters", 7));
     await page.goto("/upkeep");
     await page.getByRole("button", { name: "Done: Gutters" }).click();
-    await expect(page.getByRole("status").filter({ hasText: "Gutters done." })).toBeVisible();
+    await expect(page.getByRole("status").filter({ hasText: "Gutters done today." })).toBeVisible();
     await page.getByRole("button", { name: "Edit Gutters" }).click();
     await expect(page.getByRole("dialog").getByRole("button", { name: "Done on (2)" })).toBeVisible();
     await page.getByRole("dialog").getByRole("button", { name: "Cancel" }).click();

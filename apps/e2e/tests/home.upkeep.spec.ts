@@ -68,7 +68,7 @@ test.describe("the Upkeep card on Home", () => {
     await seedUpkeep(request, fortnightly("Today job"));
     await page.goto("/");
     await card(page).getByRole("button", { name: "Done: Today job" }).click();
-    const toast = page.getByRole("status").filter({ hasText: "Today job done." });
+    const toast = page.getByRole("status").filter({ hasText: "Today job done today." });
     await expect(toast).toBeVisible();
     await expect(card(page).getByText("Nothing due this week.")).toBeVisible();
     await toast.getByRole("button", { name: "Undo" }).click();
@@ -80,7 +80,7 @@ test.describe("the Upkeep card on Home", () => {
     await interceptCall(page, "maintenance.markDone", { answer: failure("Could not mark it done.") });
     await page.goto("/");
     await card(page).getByRole("button", { name: "Done: Today job" }).click();
-    await expect(card(page).getByRole("alert")).toHaveText("Could not mark it done.");
+    await expect(page.getByRole("alert")).toHaveText(/Could not mark it done\./);
     await expect(card(page).getByText("Today job", { exact: true })).toBeVisible();
   });
 
@@ -104,16 +104,6 @@ test.describe("the Upkeep card on Home", () => {
     await card(page).getByRole("button", { name: "Done: Today job" }).click();
     await expect(card(page).getByText("Nothing due this week.")).toBeVisible();
     await expect(card(page).locator(":focus")).toHaveCount(1);
-  });
-
-  test("a second done on the same day is refused in words, and the item stays", async ({ page, request }) => {
-    await seedUpkeep(request, weekly("Fresh job", 7));
-    await page.goto("/");
-    await card(page).getByRole("button", { name: "Done: Fresh job" }).click();
-    // The first save has to finish first: a button is disabled while it saves, so an early second tap does nothing.
-    await expect(page.getByRole("status").filter({ hasText: "Fresh job done." })).toBeVisible();
-    await card(page).getByRole("button", { name: "Done: Fresh job" }).click();
-    await expect(card(page).getByRole("alert")).toHaveText("Fresh job is already marked done today.");
   });
 
   test("the Done button is at least 44px tall and keyboard reachable", async ({ page, request }) => {
@@ -330,10 +320,10 @@ test.describe("motion", () => {
     await seedUpkeep(request, weekly("Other job", 10));
     await page.goto("/upkeep");
     await page.getByRole("button", { name: "Done: Moved job" }).click();
-    await expect(page.getByRole("status").filter({ hasText: "Moved job done." })).toBeVisible();
+    await expect(page.getByRole("status").filter({ hasText: "Moved job done today." })).toBeVisible();
     expect(await animationName(row(page, "Moved job"))).toBe("row-flash");
     expect(await animationName(row(page, "Other job"))).toBe("none");
-    expect(await animationName(page.getByRole("status").filter({ hasText: "Moved job done." }))).toBe("toast-in");
+    expect(await animationName(page.getByRole("status").filter({ hasText: "Moved job done today." }))).toBe("toast-in");
   });
 
   test("the flash is one short moment: the row stops being marked once it has played", async ({ page, request }) => {
@@ -348,7 +338,7 @@ test.describe("motion", () => {
     await seedUpkeep(request, weekly("Stays job", 7));
     await page.goto("/");
     await card(page).getByRole("button", { name: "Done: Stays job" }).click();
-    await expect(page.getByRole("status").filter({ hasText: "Stays job done." })).toBeVisible();
+    await expect(page.getByRole("status").filter({ hasText: "Stays job done today." })).toBeVisible();
     expect(await animationName(card(page).getByRole("listitem").filter({ hasText: "Stays job" }))).toBe("row-flash");
   });
 
@@ -356,7 +346,7 @@ test.describe("motion", () => {
     await seedUpkeep(request, weekly("Centre job", 20));
     await page.goto("/upkeep");
     await page.getByRole("button", { name: "Done: Centre job" }).click();
-    const toast = page.getByRole("status").filter({ hasText: "Centre job done." });
+    const toast = page.getByRole("status").filter({ hasText: "Centre job done today." });
     await expect(toast).toBeVisible();
     await expect
       .poll(async () => {
@@ -368,12 +358,14 @@ test.describe("motion", () => {
 
   test("a button that is saving does not shrink when pressed", async ({ page, request }) => {
     await seedUpkeep(request, weekly("Busy job", 7));
+    await seedUpkeep(request, weekly("Waiting job", 7));
     const held = gate();
     await interceptCall(page, "maintenance.markDone", { when: held.when });
     await page.goto("/upkeep");
     try {
       await page.getByRole("button", { name: "Done: Busy job" }).click();
-      const done = page.getByRole("button", { name: "Done: Busy job" });
+      // The job just done has no Done any more; every other row's Done is disabled while the save is on its way.
+      const done = page.getByRole("button", { name: "Done: Waiting job" });
       await expect(done).toBeDisabled();
       const box = await done.boundingBox();
       await page.mouse.move((box?.x ?? 0) + 10, (box?.y ?? 0) + 10);
@@ -402,7 +394,7 @@ test.describe("motion", () => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/upkeep");
     await page.getByRole("button", { name: "Done: Calm job" }).click();
-    const toast = page.getByRole("status").filter({ hasText: "Calm job done." });
+    const toast = page.getByRole("status").filter({ hasText: "Calm job done today." });
     await expect(toast).toBeVisible();
     expect(await animationName(toast)).toBe("none");
     expect(await animationName(row(page, "Calm job"))).toBe("none");

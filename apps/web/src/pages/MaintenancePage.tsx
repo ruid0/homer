@@ -1,3 +1,4 @@
+import { ErrorToast } from "../components/ErrorToast";
 import { keepPreviousData } from "@tanstack/react-query";
 import { PageHeader } from "../components/PageHeader";
 import { useEffect, useRef, useState } from "react";
@@ -99,7 +100,7 @@ export const MaintenancePage = () => {
 
       {list.isPending && <p role="status">{copy.maintenance.loading}</p>}
       {list.error && <p role="alert" className="text-late">{copy.maintenance.loadFailed}</p>}
-      {problem && <p role="alert" className="mb-4 text-late">{problem}</p>}
+      <ErrorToast message={problem} />
       {list.data && items.length === 0 && <MaintenanceStarters onPick={(suggestion) => open("new", suggestion)} />}
 
       {list.data && items.length > 0 && (

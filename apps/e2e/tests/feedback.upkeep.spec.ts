@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { contrastOf } from "./contrast";
 import { failure, gate, interceptCall } from "./intercept";
-import { clearUpkeep, daysAgo, doneDates, seedDone, seedUpkeep, todayUtc } from "./scratch";
+import { clearUpkeep, daysAgo, doneDates, seedUpkeep, todayUtc } from "./scratch";
 
 test.describe.configure({ mode: "serial", timeout: 60_000 });
 
@@ -18,12 +18,11 @@ const written = (daysFromToday: number): string => {
   return `${date.getUTCDate()} ${MONTHS[date.getUTCMonth()]}${year}`;
 };
 
-// A weekly job last done 10 days ago: overdue, so it sits under Due now, and no chip lands on its done date.
+// A weekly job last done 10 days ago: overdue, so it sits under Due now.
 const dueToday = (name: string) => ({ name, every: 1, unit: "weeks" as const, lastDoneOn: daysAgo(10) });
 
 const row = (page: Page, name: string) => page.getByRole("listitem").filter({ has: page.getByText(name, { exact: true }) });
 const toastOf = (page: Page, name: string) => page.getByRole("status").filter({ hasText: `${name} done` });
-const earlierChip = (page: Page, name: string, label: string) => toastOf(page, name).getByRole("button", { name: label });
 
 const markDone = async (page: Page, name: string) => {
   await page.goto("/upkeep");
@@ -31,142 +30,80 @@ const markDone = async (page: Page, name: string) => {
 };
 
 test.describe("the toast after Done", () => {
-  test("says the job is done and when it is next due", async ({ page, request }) => {
+  test("says the job is done today and when it is next due, with Undo", async ({ page, request }) => {
     await seedUpkeep(request, dueToday("Filter job"));
     await markDone(page, "Filter job");
-    await expect(toastOf(page, "Filter job")).toHaveText(new RegExp(`^Filter job done\\. Next due ${written(7)}\\.`));
+    await expect(toastOf(page, "Filter job")).toHaveText(new RegExp(`^Filter job done today\\. Next due ${written(7)}\\.`));
+    await expect(toastOf(page, "Filter job").getByRole("button", { name: "Undo" })).toBeVisible();
   });
 
-  test("offers Yesterday, 2 days ago and A week ago under Done earlier?", async ({ page, request }) => {
-    await seedUpkeep(request, dueToday("Chip job"));
-    await markDone(page, "Chip job");
-    const group = toastOf(page, "Chip job").getByRole("group", { name: "Done earlier?" });
-    await expect(group.getByRole("button")).toHaveText(["Yesterday", "2 days ago", "A week ago"]);
+  test("does not suggest an earlier day", async ({ page, request }) => {
+    await seedUpkeep(request, dueToday("Plain job"));
+    await markDone(page, "Plain job");
+    await expect(toastOf(page, "Plain job")).toBeVisible();
+    await expect(page.getByText("Done earlier?")).toHaveCount(0);
+    for (const label of ["Yesterday", "2 days ago", "A week ago"]) await expect(toastOf(page, "Plain job").getByRole("button", { name: label })).toHaveCount(0);
   });
 
-  test("a chip moves the done date back, updates the toast and keeps Undo", async ({ page, request }) => {
-    const { id } = await seedUpkeep(request, dueToday("Moved job"));
-    await markDone(page, "Moved job");
-    await earlierChip(page, "Moved job", "2 days ago").click();
-    await expect(toastOf(page, "Moved job")).toHaveText(new RegExp(`^Moved job done ${written(-2)}\\. Next due ${written(5)}\\.`));
-    // The chip just used is not offered again; the others stay.
-    await expect(earlierChip(page, "Moved job", "2 days ago")).toHaveCount(0);
-    await expect(earlierChip(page, "Moved job", "Yesterday")).toBeVisible();
-    await expect(toastOf(page, "Moved job").getByRole("button", { name: "Undo" })).toBeVisible();
-    expect(await doneDates(request, id)).toEqual([daysAgo(2), daysAgo(10)]);
-    await expect(row(page, "Moved job")).toContainText("Due in 5 days");
-  });
-
-  test("Undo after a chip removes that done date", async ({ page, request }) => {
+  test("Undo removes the done date and the toast goes", async ({ page, request }) => {
     const { id } = await seedUpkeep(request, dueToday("Undo job"));
     await markDone(page, "Undo job");
-    await earlierChip(page, "Undo job", "A week ago").click();
-    await expect(toastOf(page, "Undo job")).toContainText(`done ${written(-7)}`);
     await toastOf(page, "Undo job").getByRole("button", { name: "Undo" }).click();
     await expect(toastOf(page, "Undo job")).toHaveCount(0);
     expect(await doneDates(request, id)).toEqual([daysAgo(10)]);
   });
 
-  test("a day that already has a done date is refused in words, and the toast stays", async ({ page, request }) => {
-    const { id } = await seedUpkeep(request, dueToday("Twice job"));
-    await seedDone(request, id, daysAgo(1));
-    await markDone(page, "Twice job");
-    await earlierChip(page, "Twice job", "Yesterday").click();
-    await expect(page.getByRole("alert")).toHaveText("Twice job is already marked done on that day.");
-    await expect(toastOf(page, "Twice job").getByRole("button", { name: "Undo" })).toBeVisible();
-    expect(await doneDates(request, id)).toEqual([todayUtc(), daysAgo(1), daysAgo(10)]);
+  test("a failed Undo shows a red error toast and keeps the Undo toast", async ({ page, request }) => {
+    await seedUpkeep(request, dueToday("Stuck job"));
+    await markDone(page, "Stuck job");
+    await interceptCall(page, "maintenance.undoDone", { answer: failure("Could not undo. Try again.") });
+    await toastOf(page, "Stuck job").getByRole("button", { name: "Undo" }).click();
+    await expect(page.getByRole("alert").filter({ hasText: "Could not undo. Try again." })).toBeVisible();
+    await expect(toastOf(page, "Stuck job")).toBeVisible();
   });
 
-  test("a failed move shows the error and leaves the done date as it was", async ({ page, request }) => {
-    const { id } = await seedUpkeep(request, dueToday("Failing job"));
-    await markDone(page, "Failing job");
-    await interceptCall(page, "maintenance.redateDone", { answer: failure("The api is not answering.") });
-    await earlierChip(page, "Failing job", "Yesterday").click();
-    await expect(page.getByRole("alert")).toContainText("The api is not answering.");
-    await expect(toastOf(page, "Failing job")).toContainText(`Next due ${written(7)}`);
-    await expect(earlierChip(page, "Failing job", "Yesterday")).toBeEnabled();
-    expect(await doneDates(request, id)).toEqual([todayUtc(), daysAgo(10)]);
+  test("a job done today has no Done button, on the page and on the Home card", async ({ page, request }) => {
+    // Weekly and done today: due in 7 days, so it is "soon" and shows on the Home card too.
+    const { id } = await seedUpkeep(request, { name: "Today job", every: 1, unit: "weeks", lastDoneOn: todayUtc() });
+    await seedUpkeep(request, dueToday("Other job"));
+    await page.goto("/upkeep");
+    await expect(row(page, "Today job")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Done: Today job" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Done: Other job" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Edit Today job" })).toBeVisible();
+    await page.goto("/");
+    await expect(page.getByRole("region", { name: "Upkeep" }).getByText("Today job")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Done: Today job" })).toHaveCount(0);
+    expect(await doneDates(request, id)).toEqual([todayUtc()]);
   });
 
-  test("the chips are held while a move is on its way", async ({ page, request }) => {
-    await seedUpkeep(request, dueToday("Held job"));
-    await markDone(page, "Held job");
-    const held = gate();
-    await interceptCall(page, "maintenance.redateDone", { when: held.when });
-    try {
-      await earlierChip(page, "Held job", "Yesterday").click();
-      await expect(earlierChip(page, "Held job", "A week ago")).toBeDisabled();
-      // Undo waits too, so it cannot race the move.
-      await expect(toastOf(page, "Held job").getByRole("button", { name: "Undo" })).toBeDisabled();
-    } finally {
-      held.release();
-    }
-    await expect(toastOf(page, "Held job")).toContainText(`done ${written(-1)}`);
+  test("the Done button leaves the row the moment the job is done", async ({ page, request }) => {
+    await seedUpkeep(request, dueToday("Gone job"));
+    await markDone(page, "Gone job");
+    await expect(page.getByRole("button", { name: "Done: Gone job" })).toHaveCount(0);
+    await expect(row(page, "Gone job")).toContainText("Last done");
   });
 
-  test("the chips stay readable in dark mode", async ({ page, request }) => {
-    await page.emulateMedia({ colorScheme: "dark" });
-    await seedUpkeep(request, dueToday("Dark job"));
-    await markDone(page, "Dark job");
-    const chip = earlierChip(page, "Dark job", "Yesterday");
-    await expect(chip).toBeVisible();
-    expect(await contrastOf(chip)).toBeGreaterThanOrEqual(4.5);
-    expect(await contrastOf(toastOf(page, "Dark job").getByRole("button", { name: "Undo" }))).toBeGreaterThanOrEqual(4.5);
-  });
-
-  test("the toast stays up while a chip has focus, so a slow tap is not lost", async ({ page, request }) => {
-    await seedUpkeep(request, dueToday("Slow job"));
-    await markDone(page, "Slow job");
-    await page.clock.install();
-    await earlierChip(page, "Slow job", "Yesterday").focus();
-    await page.clock.fastForward(20_000);
-    await expect(earlierChip(page, "Slow job", "Yesterday")).toBeVisible();
-  });
-
-  test("the chips are 44px tall, readable, and reachable by keyboard", async ({ page, request }) => {
-    await seedUpkeep(request, dueToday("Keys job"));
-    await markDone(page, "Keys job");
-    const chip = earlierChip(page, "Keys job", "Yesterday");
-    expect((await chip.boundingBox())?.height).toBeGreaterThanOrEqual(44);
-    expect(await contrastOf(chip)).toBeGreaterThanOrEqual(4.5);
-    await chip.focus();
-    await page.keyboard.press("Enter");
-    await expect(toastOf(page, "Keys job")).toContainText(`done ${written(-1)}`);
-  });
-
-  test("choosing again keeps working: each chip leaves only while its date is the chosen one", async ({ page, request }) => {
-    await seedUpkeep(request, dueToday("Plain job"));
-    await markDone(page, "Plain job");
-    await earlierChip(page, "Plain job", "Yesterday").click();
-    await earlierChip(page, "Plain job", "2 days ago").click();
-    await earlierChip(page, "Plain job", "A week ago").click();
-    await expect(toastOf(page, "Plain job")).toContainText(`done ${written(-7)}`);
-    await expect(toastOf(page, "Plain job").getByRole("group", { name: "Done earlier?" }).getByRole("button")).toHaveText(["Yesterday", "2 days ago"]);
-  });
-
-  test("the Home card gives the same toast and chips", async ({ page, request }) => {
+  test("the Home card gives the same toast", async ({ page, request }) => {
     await seedUpkeep(request, dueToday("Home job"));
     await page.goto("/");
     await page.getByRole("button", { name: "Done: Home job" }).click();
-    await expect(toastOf(page, "Home job")).toContainText(`Next due ${written(7)}`);
-    await earlierChip(page, "Home job", "Yesterday").click();
-    await expect(toastOf(page, "Home job")).toContainText(`done ${written(-1)}`);
+    await expect(toastOf(page, "Home job")).toContainText(`done today. Next due ${written(7)}`);
   });
 
   test.describe("on a phone", () => {
     test.use({ viewport: { width: 375, height: 667 } });
 
-    test("the toast fits the screen, with every chip and button inside it", async ({ page, request }) => {
+    test("the toast fits the screen, with Undo and Dismiss inside it", async ({ page, request }) => {
       await seedUpkeep(request, dueToday("Phone job"));
       await markDone(page, "Phone job");
       const toast = toastOf(page, "Phone job");
-      await expect(toast.getByRole("button", { name: "A week ago" })).toBeVisible();
+      await expect(toast.getByRole("button", { name: "Undo" })).toBeVisible();
       const box = await toast.boundingBox();
       expect(box?.x).toBeGreaterThanOrEqual(0);
       expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(375);
-      for (const name of ["Yesterday", "2 days ago", "A week ago", "Undo", "Dismiss"]) {
-        const button = toast.getByRole("button", { name }).boundingBox();
-        const inside = await button;
+      for (const name of ["Undo", "Dismiss"]) {
+        const inside = await toast.getByRole("button", { name }).boundingBox();
         expect(inside?.x).toBeGreaterThanOrEqual(box?.x ?? 0);
         expect((inside?.x ?? 0) + (inside?.width ?? 0)).toBeLessThanOrEqual((box?.x ?? 0) + (box?.width ?? 0) + 0.5);
       }

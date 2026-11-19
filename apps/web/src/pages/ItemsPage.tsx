@@ -1,3 +1,4 @@
+import { ErrorToast } from "../components/ErrorToast";
 import { useState } from "react";
 import { PageHeader } from "../components/PageHeader";
 import type { ItemInput } from "@homer/shared";
@@ -75,7 +76,7 @@ export const ItemsPage = () => {
 
       {items.isPending && <p>{copy.items.loading}</p>}
       {items.error && <p role="alert">{copy.items.loadFailed}</p>}
-      {actionError && <p role="alert" className="mb-4 text-late">{copy.items.actionFailed(actionError)}</p>}
+      <ErrorToast message={actionError && copy.items.actionFailed(actionError)} />
       {items.data?.length === 0 && <p>{copy.items.empty}</p>}
 
       {items.data && items.data.length > 0 && (

@@ -37,6 +37,10 @@ export const dueWords = ({ lastDoneOn, status, daysUntil, dueOn, snoozedUntil = 
   return laterWords({ daysUntil, dueOn });
 };
 
+// Today is not passed in: it is the due date minus the days until it. A second done on the same day is refused, so there is no button for it.
+export const isDoneToday = ({ lastDoneOn, dueOn, daysUntil }: Pick<Words, "lastDoneOn" | "dueOn" | "daysUntil">): boolean =>
+  lastDoneOn !== null && lastDoneOn === addDays(dueOn, -daysUntil);
+
 export const needsDoing = (status: Words["status"]): boolean => status !== "later";
 
 type Details = { every: number; unit: "weeks" | "months" | "years"; lastDoneOn: string | null; dueOn: string; daysUntil: number };

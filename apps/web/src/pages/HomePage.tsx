@@ -1,3 +1,4 @@
+import { ErrorToast } from "../components/ErrorToast";
 import { keepPreviousData } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
@@ -106,7 +107,6 @@ export const HomePage = () => {
           {view.error && <p role="alert">{copy.home.timelineFailed}</p>}
           {view.data && <TimelineList rows={rows} nowTime={nowTime} busy={complete.isPending} onDone={finish} />}
           {nothingPlanned && <p className="border-t border-line py-4 text-muted">{copy.home.nothingPlanned}</p>}
-          {complete.error && <p role="alert" className="py-2 text-late">{complete.error.message}</p>}
         </ScrollCard>
 
         <Card
@@ -119,7 +119,6 @@ export const HomePage = () => {
             {upkeep.data && <UpkeepList items={due} busy={upkeepDone.busy || snooze.busy} justDoneId={upkeepDone.justDoneId} onDone={finishUpkeep} onSnooze={snooze.ask} />}
           </div>
           {upkeep.data && due.length === 0 && <p className="border-t border-line py-4 text-muted">{copy.home.nothingDue}</p>}
-          {upkeepProblem && <p role="alert" className="py-2 text-late">{upkeepProblem}</p>}
         </Card>
 
         <Card title={copy.home.runningOut}>
@@ -143,6 +142,7 @@ export const HomePage = () => {
       )}
       {/* One toast at a time: the Undo toast wins, since it is the only way back. */}
       {message && !toast && !snooze.toast && <Toast message={message} onClose={() => setMessage(null)} />}
+      <ErrorToast message={complete.error?.message ?? upkeepProblem} />
       <DoneToast done={upkeepDone} />
       <SnoozeUi snooze={snooze} today={today} />
     </div>
