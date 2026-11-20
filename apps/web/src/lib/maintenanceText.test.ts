@@ -76,9 +76,19 @@ describe("dates and sections", () => {
     expect(longDate("2026-11-10")).toBe("10 Nov 2026");
   });
 
-  it("needs doing unless it is later", () => {
-    expect(["overdue", "due", "soon"].every((status) => needsDoing(status as "soon"))).toBe(true);
-    expect(needsDoing("later")).toBe(false);
+  it("needs doing unless it is later, or was done today", () => {
+    const job = (status: "overdue" | "due" | "soon" | "later", lastDoneOn: string | null, daysUntil: number) => ({
+      status,
+      lastDoneOn,
+      dueOn: "2026-11-27",
+      daysUntil,
+    });
+    expect((["overdue", "due", "soon"] as const).every((status) => needsDoing(job(status, "2026-11-01", 3)))).toBe(
+      true,
+    );
+    expect(needsDoing(job("later", "2026-11-01", 30))).toBe(false);
+    // Done on 20 Nov and due on 27 Nov is 7 days out: soon, but done today.
+    expect(needsDoing(job("soon", "2026-11-20", 7))).toBe(false);
   });
 });
 

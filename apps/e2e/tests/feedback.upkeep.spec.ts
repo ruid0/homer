@@ -68,18 +68,21 @@ test.describe("the toast after Done", () => {
     await expect(toastOf(page, "Stuck job")).toBeVisible();
   });
 
-  test("a job done today has no Done button, on the page and on the Home card", async ({ page, request }) => {
-    // Weekly and done today: due in 7 days, so it is "soon" and shows on the Home card too.
+  test("a job done today has no Done button and waits under Later, and is not on the Home card", async ({
+    page,
+    request,
+  }) => {
+    // Weekly and done today: due in 7 days, but it has just been done, so it waits under Later.
     const { id } = await seedUpkeep(request, { name: "Today job", every: 1, unit: "weeks", lastDoneOn: todayUtc() });
     await seedUpkeep(request, dueToday("Other job"));
     await page.goto("/upkeep");
-    await expect(row(page, "Today job")).toBeVisible();
+    await expect(page.getByRole("region", { name: "Later" }).getByText("Today job", { exact: true })).toBeVisible();
     await expect(page.getByRole("button", { name: "Done: Today job" })).toHaveCount(0);
     await expect(page.getByRole("button", { name: "Done: Other job" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Edit Today job" })).toBeVisible();
     await page.goto("/");
-    await expect(page.getByRole("region", { name: "Upkeep" }).getByText("Today job")).toBeVisible();
-    await expect(page.getByRole("button", { name: "Done: Today job" })).toHaveCount(0);
+    await expect(page.getByRole("region", { name: "Upkeep" }).getByText("Other job")).toBeVisible();
+    await expect(page.getByRole("region", { name: "Upkeep" }).getByText("Today job")).toHaveCount(0);
     expect(await doneDates(request, id)).toEqual([todayUtc()]);
   });
 

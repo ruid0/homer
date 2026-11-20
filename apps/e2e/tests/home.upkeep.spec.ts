@@ -411,14 +411,6 @@ test.describe("motion", () => {
     await expect.poll(() => animationName(row(page, "Brief job")), { timeout: 5_000 }).toBe("none");
   });
 
-  test("a done on Home flashes the row that stays on the card", async ({ page, request }) => {
-    await seedUpkeep(request, weekly("Stays job", 7));
-    await page.goto("/");
-    await card(page).getByRole("button", { name: "Done: Stays job" }).click();
-    await expect(page.getByRole("status").filter({ hasText: "Stays job done today." })).toBeVisible();
-    expect(await animationName(card(page).getByRole("listitem").filter({ hasText: "Stays job" }))).toBe("row-flash");
-  });
-
   test("a toast settles in the middle of the screen once it has slid in", async ({ page, request }) => {
     await seedUpkeep(request, weekly("Centre job", 20));
     await page.goto("/upkeep");
@@ -602,8 +594,13 @@ test.describe("Home layout, naming and the nav", () => {
     await expect(nav.getByRole("link", { name: /^Upkeep$/ })).toBeVisible(RETRIES);
     await page.reload();
     await expect(nav.getByRole("link", { name: /^Upkeep$/ })).toBeVisible(RETRIES);
-    // The Home summary does not count it either.
+    // The Home summary does not count it either, and the card no longer lists it.
     await expect(page.locator("main header p")).not.toContainText("job");
+    await expect(card(page).getByText("Weekly badge", { exact: true })).toHaveCount(0);
+    // On the Upkeep page it waits under Later, not under Due now.
+    await page.goto("/upkeep");
+    await expect(page.getByRole("region", { name: "Later" }).getByText("Weekly badge", { exact: true })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Due now" }).getByText("Weekly badge")).toHaveCount(0);
   });
 
   test("the badge stops at 9+", async ({ page, request }) => {

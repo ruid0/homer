@@ -16,7 +16,7 @@ import { dateParts, dayHeading } from "../lib/dayHeading";
 import { homeSummary } from "../lib/homeSummary";
 import { dayItems } from "../lib/dayItems";
 import { localDate } from "../lib/localDate";
-import { isDoneToday, needsDoing } from "../lib/maintenanceText";
+import { needsDoing } from "../lib/maintenanceText";
 import { runningOut } from "../lib/runningOut";
 import { timelineRows } from "../lib/timeline";
 import { useFocusNextDone } from "../lib/useFocusNextDone";
@@ -65,7 +65,7 @@ export const HomePage = () => {
   const nothingPlanned = view.data !== undefined && rows.length === 1;
   const listedIds = new Set((groceries.data ?? []).flatMap((entry) => (entry.itemId === null ? [] : [entry.itemId])));
   const running = runningOut(items.data ?? [], listedIds);
-  const due = (upkeep.data ?? []).filter((item) => needsDoing(item.status));
+  const due = (upkeep.data ?? []).filter(needsDoing);
 
   const heading = dateParts(today);
   const loaded = view.data !== undefined && items.data !== undefined && upkeep.data !== undefined;
@@ -73,7 +73,7 @@ export const HomePage = () => {
     ? homeSummary({
         tasks: (view.data?.overdue.length ?? 0) + (day?.tasks.length ?? 0),
         events: (day?.events ?? []).filter((event) => event.time === null || event.time >= nowTime).length,
-        jobs: due.filter((item) => !isDoneToday(item)).length,
+        jobs: due.length,
         low: running.length,
       })
     : null;
@@ -147,7 +147,6 @@ export const HomePage = () => {
               <UpkeepList
                 items={due}
                 busy={upkeepDone.busy || snooze.busy}
-                justDoneId={upkeepDone.justDoneId}
                 onDone={finishUpkeep}
                 onSnooze={snooze.ask}
               />
