@@ -9,7 +9,7 @@ const newItem = async (request: Parameters<typeof seedItem>[0]) => {
 };
 
 const openEdit = async (page: Page, name: string) => {
-  await page.goto("/items");
+  await page.goto("/stock?view=everything");
   await page.getByRole("button", { name: `Edit ${name}` }).click();
   return page.getByRole("dialog");
 };
@@ -24,7 +24,7 @@ const inView = async (page: Page, box: { x: number; y: number; width: number; he
 test.describe("the page behind a dialog", () => {
   test("does not scroll while a dialog is open, and is where it was after it closes", async ({ page, request }) => {
     const name = await newItem(request);
-    await page.goto("/items");
+    await page.goto("/stock?view=everything");
     await page.evaluate(() => {
       document.body.style.minHeight = "3000px";
       window.scrollTo(0, 400);
@@ -94,7 +94,7 @@ test.describe("on a touch screen", () => {
   });
 
   for (const [label, path, opener, title] of [
-    ["Add item", "/items", "Add item", "Add item"],
+    ["Add item", "/stock?view=everything", "Add item", "Add item"],
     ["Add task", "/schedule", "Add task", "Add task"],
   ] as const) {
     test(`${label} at 360px high shows its title, first field and Save without scrolling`, async ({ page }) => {
@@ -122,7 +122,7 @@ test.describe("on a touch screen", () => {
     await seedPerson(request);
     const cases: [string, string, string, string][] = [
       ["/schedule", "Add event", "Add event", "Save"],
-      ["/items", `Bought it: ${item}`, "", "Save"],
+      ["/stock?view=everything", `Bought it: ${item}`, "", "Save"],
       ["/people", "Rename", "", "Save"],
     ];
     for (const [path, opener, title] of cases.map(([a, b, c]) => [a, b, c] as const)) {

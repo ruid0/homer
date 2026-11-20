@@ -1,14 +1,13 @@
-import { ErrorToast } from "../components/ErrorToast";
+import { ErrorToast } from "./ErrorToast";
 import { useState, type SubmitEvent } from "react";
-import { PageHeader } from "../components/PageHeader";
-import { GroceryRow } from "../components/GroceryRow";
-import { ListCard } from "../components/ListCard";
-import { RestockDialog } from "../components/RestockDialog";
-import { inputClass, primaryButton } from "../components/ui";
+import { GroceryRow } from "./GroceryRow";
+import { ListCard } from "./ListCard";
+import { RestockDialog } from "./RestockDialog";
+import { inputClass, primaryButton } from "./ui";
 import { trpc, type ListEntry } from "../trpc";
 import { copy } from "../copy";
 
-export const GroceriesPage = () => {
+export const StockBuy = () => {
   const utils = trpc.useUtils();
   const entries = trpc.groceries.list.useQuery();
   const items = trpc.inventory.list.useQuery();
@@ -48,9 +47,7 @@ export const GroceriesPage = () => {
   const actionError = add.error?.message ?? remove.error?.message ?? (buying ? undefined : bought.error?.message);
 
   return (
-    <div className="mx-auto max-w-3xl">
-      <PageHeader title={copy.groceries.title} />
-
+    <>
       <form onSubmit={submit} className="mb-4 flex items-end gap-3">
         <label className="grid flex-1 gap-1">
           <span>{copy.groceries.addLabel}</span>
@@ -101,6 +98,6 @@ export const GroceriesPage = () => {
           onClose={closeBuying}
         />
       )}
-    </div>
+    </>
   );
 };

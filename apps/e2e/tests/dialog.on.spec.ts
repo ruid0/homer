@@ -9,7 +9,7 @@ const newItem = async (request: Parameters<typeof seedItem>[0]) => {
 };
 
 const openEdit = async (page: Page, name: string) => {
-  await page.goto("/items");
+  await page.goto("/stock?view=everything");
   await page.getByRole("button", { name: `Edit ${name}` }).click();
   const dialog = page.getByRole("dialog");
   await expect(dialog).toBeVisible();
@@ -29,7 +29,7 @@ test.describe("clicking outside a dialog", () => {
   });
 
   test("closes the Add item dialog too", async ({ page }) => {
-    await page.goto("/items");
+    await page.goto("/stock?view=everything");
     await page.getByRole("button", { name: "Add item" }).first().click();
     await expect(page.getByRole("dialog")).toBeVisible();
     await page.mouse.click(OUTSIDE.x, OUTSIDE.y);

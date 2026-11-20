@@ -8,10 +8,12 @@ type Props = {
   item: ListItem;
   onList: boolean;
   onBought: () => void;
+  onAddToList: () => void;
+  adding: boolean;
   onEdit: () => void;
 };
 
-export const ItemRow = ({ item, onList, onBought, onEdit }: Props) => {
+export const ItemRow = ({ item, onList, onBought, onAddToList, adding, onEdit }: Props) => {
   const urgent = item.runningLow || item.quantity === 0;
   const note =
     item.estimateSource === "learned" && item.learnedFrom !== null
@@ -32,6 +34,17 @@ export const ItemRow = ({ item, onList, onBought, onEdit }: Props) => {
           <button type="button" className={quietButton} onClick={onEdit} aria-label={copy.items.editLabel(item.name)}>
             {copy.items.edit}
           </button>
+          {!onList && (
+            <button
+              type="button"
+              className={secondaryButton}
+              onClick={onAddToList}
+              disabled={adding}
+              aria-label={copy.stockPage.addToListLabel(item.name)}
+            >
+              {copy.stockPage.addToList}
+            </button>
+          )}
           <button
             type="button"
             className={`${secondaryButton} ${doneSize}`}

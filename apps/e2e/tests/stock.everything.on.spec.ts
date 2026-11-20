@@ -17,7 +17,7 @@ const row = (page: Page, name: string) =>
   page.getByRole("listitem").filter({ has: page.getByText(name, { exact: true }) });
 
 const openEdit = async (page: Page, name: string) => {
-  await page.goto("/items");
+  await page.goto("/stock?view=everything");
   await page.getByRole("button", { name: `Edit ${name}` }).click();
   return page.getByRole("dialog");
 };
@@ -25,7 +25,7 @@ const openEdit = async (page: Page, name: string) => {
 test.describe("the row", () => {
   test("has Edit and Bought it, and no Ran out", async ({ page, request }) => {
     const name = await newItem(request);
-    await page.goto("/items");
+    await page.goto("/stock?view=everything");
     await expect(row(page, name).getByRole("button", { name: `Edit ${name}` })).toBeVisible();
     await expect(row(page, name).getByRole("button", { name: `Bought it: ${name}` })).toBeVisible();
     await expect(row(page, name).getByRole("button", { name: /^Ran out/ })).toHaveCount(0);
@@ -74,7 +74,7 @@ test.describe("Ran out in the Edit dialog", () => {
   });
 
   test("is not in the Add item dialog", async ({ page }) => {
-    await page.goto("/items");
+    await page.goto("/stock?view=everything");
     await page.getByRole("button", { name: "Add item" }).click();
     await expect(page.getByRole("dialog").getByRole("button", { name: /^Ran out/ })).toHaveCount(0);
   });

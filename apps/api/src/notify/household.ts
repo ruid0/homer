@@ -18,7 +18,7 @@ export const householdNotifications = (
   const notify = notifier ?? createNtfyNotifier(config);
   const announceListed = (count: number) => {
     const message = notifyText.addedToList(count);
-    const note = { topic: config.householdTopic, title: notifyText.title, message, path: "/groceries" };
+    const note = { topic: config.householdTopic, title: notifyText.title, message, path: "/stock" };
     void notify(note).then((sent) => sent || log(notifyLog.sendFailed(message)));
   };
   return { topic: config.householdTopic, server: config.server, notify, announceListed };
