@@ -1,10 +1,15 @@
 import { useId } from "react";
 import { copy } from "../copy";
+import { cx } from "./ui";
 
 type Props = { label: string; value: string; min: number; max: number; onChange: (value: string) => void };
 
-const side =
-  "grid size-11 place-items-center border border-control bg-card text-xl transition-transform hover:bg-hover active:scale-[0.97] disabled:active:scale-100 focus-visible:z-10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink disabled:opacity-50";
+const side = cx(
+  "grid size-11 place-items-center border border-control bg-card text-xl transition-transform",
+  "hover:bg-hover active:scale-[0.97] disabled:active:scale-100 focus-visible:z-10",
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink",
+  "disabled:opacity-50",
+);
 
 // A number with a big minus and plus either side, for thumbs. The number stays a real number box, so it can still be
 // typed into.
@@ -35,7 +40,11 @@ export const Stepper = ({ label, value, min, max, onChange }: Props) => {
           max={max}
           value={value}
           onChange={(event) => onChange(event.target.value)}
-          className="h-11 w-12 min-w-0 border-y border-control bg-card text-center text-answer font-semibold [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+          className={cx(
+            "h-11 w-12 min-w-0 border-y border-control bg-card text-center text-answer font-semibold",
+            "[appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none",
+            "[&::-webkit-outer-spin-button]:appearance-none",
+          )}
         />
         <button
           type="button"

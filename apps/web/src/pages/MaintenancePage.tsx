@@ -9,7 +9,7 @@ import { MaintenanceStarters } from "../components/MaintenanceStarters";
 import type { Suggestion } from "../components/MaintenanceSuggestions";
 import { DoneToast } from "../components/DoneToast";
 import { SnoozeUi } from "../components/SnoozeUi";
-import { primaryButton, secondaryButton } from "../components/ui";
+import { cx, primaryButton, secondaryButton } from "../components/ui";
 import { copy } from "../copy";
 import { collapsesLater, laterNote, needsDoing } from "../lib/maintenanceText";
 import { useFocusNextDone } from "../lib/useFocusNextDone";
@@ -136,7 +136,11 @@ export const MaintenancePage = () => {
                     type="button"
                     aria-expanded={laterShown}
                     aria-controls="later-rows"
-                    className={`${secondaryButton} flex min-h-13 w-full items-center justify-between rounded-2xl bg-card px-4 text-left text-section font-semibold`}
+                    className={cx(
+                      secondaryButton,
+                      "flex min-h-13 w-full items-center justify-between rounded-2xl bg-card px-4",
+                      "text-left text-section font-semibold",
+                    )}
                     onClick={() => setLaterOpen(!laterShown)}
                   >
                     {copy.maintenance.laterToggle(later.length)}
