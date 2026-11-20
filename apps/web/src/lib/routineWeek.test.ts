@@ -1,6 +1,18 @@
 import { weekDates } from "@homer/shared";
 import { describe, expect, it } from "vitest";
-import { canGoEarlier, canGoLater, cycleCount, dayLabel, dayState, isFuture, mondayOf, oldestWeek, tickCount, weekdayInitial, weekRange } from "./routineWeek";
+import {
+  canGoEarlier,
+  canGoLater,
+  cycleCount,
+  dayLabel,
+  dayState,
+  isFuture,
+  mondayOf,
+  oldestWeek,
+  tickCount,
+  weekdayInitial,
+  weekRange,
+} from "./routineWeek";
 
 const today = "2026-11-05"; // Thursday
 

@@ -12,16 +12,20 @@ describe("ntfyConfig", () => {
 
   it("defaults to ntfy.sh and trims a trailing slash", () => {
     expect(ntfyConfig({ NTFY_HOUSEHOLD_TOPIC: "t" })).toMatchObject({ server: "https://ntfy.sh", householdTopic: "t" });
-    expect(ntfyConfig({ NTFY_HOUSEHOLD_TOPIC: "t", NTFY_SERVER: "https://my.example/" })?.server).toBe("https://my.example");
+    expect(ntfyConfig({ NTFY_HOUSEHOLD_TOPIC: "t", NTFY_SERVER: "https://my.example/" })?.server).toBe(
+      "https://my.example",
+    );
   });
 });
 
 describe("ntfyPayload", () => {
   it("adds a tap link only when a public address is set", () => {
     expect(ntfyPayload(config, { ...note, path: "/groceries" })).not.toHaveProperty("click");
-    expect(ntfyPayload({ ...config, openUrl: "https://home.example/" }, { ...note, path: "/groceries" })).toMatchObject({
-      click: "https://home.example/groceries",
-    });
+    expect(ntfyPayload({ ...config, openUrl: "https://home.example/" }, { ...note, path: "/groceries" })).toMatchObject(
+      {
+        click: "https://home.example/groceries",
+      },
+    );
   });
 
   it("keeps title and message within ntfy's limits", () => {
@@ -43,7 +47,9 @@ describe("createNtfyNotifier", () => {
 
   it("reports false for a refused or failed send and never throws", async () => {
     expect(await createNtfyNotifier(config, vi.fn().mockResolvedValue({ ok: false }) as never)(note)).toBe(false);
-    expect(await createNtfyNotifier(config, vi.fn().mockRejectedValue(new Error("offline")) as never)(note)).toBe(false);
+    expect(await createNtfyNotifier(config, vi.fn().mockRejectedValue(new Error("offline")) as never)(note)).toBe(
+      false,
+    );
   });
 });
 

@@ -46,7 +46,9 @@ const main = async () => {
     for (const golden of cases) {
       const result = await evaluateCase(golden, chat);
       results.push(result);
-      const detail = result.passed ? "" : `  ${result.reason}\n        reply: ${result.reply.replace(/\s+/g, " ").slice(0, 200)}`;
+      const detail = result.passed
+        ? ""
+        : `  ${result.reason}\n        reply: ${result.reply.replace(/\s+/g, " ").slice(0, 200)}`;
       console.log(`${result.passed ? "pass" : "FAIL"}  ${seconds(result.ms).padStart(6)}  ${golden.id}${detail}`);
     }
   }

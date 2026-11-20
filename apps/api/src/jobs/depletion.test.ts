@@ -131,9 +131,19 @@ describe("startDepletion", () => {
   it("tells onListed how many entries a run put on the list, and stays quiet otherwise", () => {
     const listed: number[] = [];
     const { db } = withItem({ quantity: 0.2 });
-    startDepletion(db, { time: "05:30", now: () => new Date(2026, 10, 5, 9), log: () => undefined, onListed: (n) => listed.push(n) })?.stop();
+    startDepletion(db, {
+      time: "05:30",
+      now: () => new Date(2026, 10, 5, 9),
+      log: () => undefined,
+      onListed: (n) => listed.push(n),
+    })?.stop();
     expect(listed).toEqual([1]);
-    startDepletion(db, { time: "05:30", now: () => new Date(2026, 10, 6, 9), log: () => undefined, onListed: (n) => listed.push(n) })?.stop();
+    startDepletion(db, {
+      time: "05:30",
+      now: () => new Date(2026, 10, 6, 9),
+      log: () => undefined,
+      onListed: (n) => listed.push(n),
+    })?.stop();
     expect(listed).toEqual([1]);
   });
 

@@ -10,7 +10,9 @@ export const PersonField = ({ label, people, value, onChange }: Props) => (
     <select className={inputClass} value={value} onChange={(e) => onChange(e.target.value)}>
       <option value="">{copy.common.nobody}</option>
       {people.map((person) => (
-        <option key={person.id} value={person.id}>{person.name}</option>
+        <option key={person.id} value={person.id}>
+          {person.name}
+        </option>
       ))}
     </select>
   </Field>

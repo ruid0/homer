@@ -64,9 +64,17 @@ export const peopleRouter = router({
     const server = ctx.ntfyServer;
     return ctx.db.transaction((tx) => {
       requirePerson(tx, input.id);
-      const existing = tx.select({ topic: people.notifyTopic }).from(people).where(eq(people.id, input.id)).get()?.topic;
+      const existing = tx
+        .select({ topic: people.notifyTopic })
+        .from(people)
+        .where(eq(people.id, input.id))
+        .get()?.topic;
       const topic = existing ?? newTopic();
-      if (!existing) tx.update(people).set({ notifyTopic: topic }).where(and(eq(people.id, input.id), isNull(people.notifyTopic))).run();
+      if (!existing)
+        tx.update(people)
+          .set({ notifyTopic: topic })
+          .where(and(eq(people.id, input.id), isNull(people.notifyTopic)))
+          .run();
       return { server, topic };
     });
   }),

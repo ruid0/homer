@@ -22,12 +22,23 @@ describe("timeInText", () => {
 
 describe("addSaidTime", () => {
   it("fills a time the model left out", () => {
-    expect(addSaidTime("add_task", { title: "x", dueDate: "2026-11-05" }, "at 18:00")).toEqual({ title: "x", dueDate: "2026-11-05", dueTime: "18:00" });
-    expect(addSaidTime("add_event", { title: "x", date: "2026-11-05", time: null }, "at 6pm")).toEqual({ title: "x", date: "2026-11-05", time: "18:00" });
+    expect(addSaidTime("add_task", { title: "x", dueDate: "2026-11-05" }, "at 18:00")).toEqual({
+      title: "x",
+      dueDate: "2026-11-05",
+      dueTime: "18:00",
+    });
+    expect(addSaidTime("add_event", { title: "x", date: "2026-11-05", time: null }, "at 6pm")).toEqual({
+      title: "x",
+      date: "2026-11-05",
+      time: "18:00",
+    });
   });
 
   it("keeps a time the model gave, and other tools alone", () => {
-    expect(addSaidTime("add_task", { dueDate: "2026-11-05", dueTime: "17:00" }, "at 18:00")).toEqual({ dueDate: "2026-11-05", dueTime: "17:00" });
+    expect(addSaidTime("add_task", { dueDate: "2026-11-05", dueTime: "17:00" }, "at 18:00")).toEqual({
+      dueDate: "2026-11-05",
+      dueTime: "17:00",
+    });
     expect(addSaidTime("mark_out", { name: "x" }, "at 18:00")).toEqual({ name: "x" });
   });
 });
@@ -73,11 +84,18 @@ describe("addSaidTime needs a day", () => {
   });
 
   it("fills an event that has a date", () => {
-    expect(addSaidTime("add_event", { title: "x", date: "2026-11-05" }, "at 18:00")).toEqual({ title: "x", date: "2026-11-05", time: "18:00" });
+    expect(addSaidTime("add_event", { title: "x", date: "2026-11-05" }, "at 18:00")).toEqual({
+      title: "x",
+      date: "2026-11-05",
+      time: "18:00",
+    });
   });
 
   it("keeps a time of its own and tolerates odd args", () => {
-    expect(addSaidTime("add_event", { date: "2026-11-05", time: "09:00" }, "at 18:00")).toEqual({ date: "2026-11-05", time: "09:00" });
+    expect(addSaidTime("add_event", { date: "2026-11-05", time: "09:00" }, "at 18:00")).toEqual({
+      date: "2026-11-05",
+      time: "09:00",
+    });
     expect(addSaidTime("add_task", null, "at 18:00")).toBeNull();
     expect(addSaidTime("add_task", [1], "at 18:00")).toEqual([1]);
   });

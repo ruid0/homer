@@ -18,9 +18,13 @@ const openRow = async (page: Page, name = "Row A") => {
 const turnOn = (page: Page) => card(page).getByRole("button", { name: "Turn on reminders" }).click();
 
 test.describe("loading and failed states", () => {
-  // The row dialog cannot be opened while this check is loading: the grid and the check load in one request, so the grid waits too.
+  // The row dialog cannot be opened while this check is loading: the grid and the check load in one request, so the
+  // grid waits too.
   // What the dialog shows while loading (no notice, controls disabled) is covered by the reminderState unit tests.
-  test("while the notifications check is loading, nothing says off or failed and nothing can be pressed", async ({ page, request }) => {
+  test("while the notifications check is loading, nothing says off or failed and nothing can be pressed", async ({
+    page,
+    request,
+  }) => {
     const id = await seedPerson(request);
     const held = gate();
     // The page asks for the grid and this answer in one request, so the grid waits too.
@@ -38,7 +42,10 @@ test.describe("loading and failed states", () => {
     await expect(page.getByText(/Notifications are off|Couldn't check/)).toHaveCount(0);
   });
 
-  test("when the notifications check fails, the card and the dialog both say so and stay disabled", async ({ page, request }) => {
+  test("when the notifications check fails, the card and the dialog both say so and stay disabled", async ({
+    page,
+    request,
+  }) => {
     const id = await seedPerson(request);
     await interceptCall(page, "people.notificationsOn", { answer: failure("down") });
     await page.goto(`/people/${id}/routine`);
@@ -52,7 +59,10 @@ test.describe("loading and failed states", () => {
 });
 
 test.describe("api errors", () => {
-  test("turning reminders on fails: the card shows the error and the button stays usable", async ({ page, request }) => {
+  test("turning reminders on fails: the card shows the error and the button stays usable", async ({
+    page,
+    request,
+  }) => {
     const id = await seedPerson(request);
     await interceptCall(page, "people.reminderSetup", { answer: failure("Setup broke.") });
     await page.goto(`/people/${id}/routine`);
@@ -98,7 +108,10 @@ test.describe("api errors", () => {
 });
 
 test.describe("what stays after a reload", () => {
-  test("reminders turned on stay on: the card offers the setup again, never the topic, and the pickers work", async ({ page, request }) => {
+  test("reminders turned on stay on: the card offers the setup again, never the topic, and the pickers work", async ({
+    page,
+    request,
+  }) => {
     const id = await seedPerson(request);
     await page.goto(`/people/${id}/routine`);
     await expect(page.getByText(/homer-[0-9a-f]{32}/)).toHaveCount(0);
@@ -114,7 +127,10 @@ test.describe("what stays after a reload", () => {
     await expect(dialog.getByRole("button", { name: "Add reminder" })).toBeEnabled();
   });
 
-  test("a reminder and its removal both survive a reload, and a reminder belongs only to its own row", async ({ page, request }) => {
+  test("a reminder and its removal both survive a reload, and a reminder belongs only to its own row", async ({
+    page,
+    request,
+  }) => {
     const id = await seedPerson(request);
     const other = await addRow(request, id, "Row B");
     await seedReminder(request, id, other.id, "in 3 hours");
@@ -205,7 +221,9 @@ test.describe("touch targets and small screens", () => {
   test("the setup button is tall enough before reminders are on", async ({ page, request }) => {
     const id = await seedPerson(request);
     await page.goto(`/people/${id}/routine`);
-    expect((await card(page).getByRole("button", { name: "Turn on reminders" }).boundingBox())?.height).toBeGreaterThanOrEqual(44);
+    expect(
+      (await card(page).getByRole("button", { name: "Turn on reminders" }).boundingBox())?.height,
+    ).toBeGreaterThanOrEqual(44);
   });
 
   test.describe("on a tablet", () => {
@@ -217,7 +235,9 @@ test.describe("touch targets and small screens", () => {
       await page.goto(`/people/${id}/routine`);
       const dialog = await openRow(page);
       await expect(dialog.getByRole("button", { name: "Add reminder" })).toBeInViewport();
-      expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth),
+      ).toBeLessThanOrEqual(0);
     });
   });
 
@@ -232,7 +252,9 @@ test.describe("touch targets and small screens", () => {
       const dialog = await openRow(page);
       await dialog.getByRole("button", { name: "Add reminder" }).scrollIntoViewIfNeeded();
       await expect(dialog.getByRole("button", { name: "Add reminder" })).toBeInViewport();
-      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      const overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      );
       expect(overflow).toBeLessThanOrEqual(0);
       const box = await dialog.boundingBox();
       expect((box?.x ?? 0) + (box?.width ?? 0)).toBeLessThanOrEqual(375);
@@ -246,7 +268,10 @@ test.describe("touch targets and small screens", () => {
     const cardText = [card(page).getByRole("heading"), card(page).getByRole("button", { name: "Turn on reminders" })];
     for (const text of cardText) expect(await contrastOf(text)).toBeGreaterThanOrEqual(4.5);
     const dialog = await openRow(page);
-    for (const text of [dialog.getByText("Turn on reminders for this person first"), dialog.getByText(/^Reminders only say/)]) {
+    for (const text of [
+      dialog.getByText("Turn on reminders for this person first"),
+      dialog.getByText(/^Reminders only say/),
+    ]) {
       expect(await contrastOf(text)).toBeGreaterThanOrEqual(4.5);
     }
   });
@@ -265,11 +290,12 @@ test.describe("touch targets and small screens", () => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto(`/people/${id}/routine`);
     await openRow(page);
-    const running = await page.evaluate(() =>
-      [...document.querySelectorAll("dialog, dialog *, section, section *")].filter((element) => {
-        const style = getComputedStyle(element);
-        return parseFloat(style.transitionDuration) > 0 || parseFloat(style.animationDuration) > 0;
-      }).length,
+    const running = await page.evaluate(
+      () =>
+        [...document.querySelectorAll("dialog, dialog *, section, section *")].filter((element) => {
+          const style = getComputedStyle(element);
+          return parseFloat(style.transitionDuration) > 0 || parseFloat(style.animationDuration) > 0;
+        }).length,
     );
     expect(running).toBe(0);
   });
@@ -293,7 +319,10 @@ test.describe("saving and keyboard", () => {
     await expect(dialog.getByText(/^(Today|Tomorrow) at \d\d:\d\d$/)).toHaveCount(1);
   });
 
-  test("the pickers can be reached and used from the keyboard, and show where the focus is", async ({ page, request }) => {
+  test("the pickers can be reached and used from the keyboard, and show where the focus is", async ({
+    page,
+    request,
+  }) => {
     const id = await seedPerson(request);
     await seedReminder(request, id, (await addRow(request, id, "Row B")).id, "in 2 hours");
     await page.goto(`/people/${id}/routine`);

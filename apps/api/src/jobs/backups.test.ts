@@ -19,7 +19,8 @@ describe("needsCatchUp", () => {
   const todays = ["homer-2026-11-05.db"];
 
   it("is false before the scheduled time", () => expect(needsCatchUp(at(5, 59), "06:00", [])).toBe(false));
-  it("is true after the time when today has no backup", () => expect(needsCatchUp(at(9), "06:00", ["homer-2026-11-04.db"])).toBe(true));
+  it("is true after the time when today has no backup", () =>
+    expect(needsCatchUp(at(9), "06:00", ["homer-2026-11-04.db"])).toBe(true));
   it("is false once today's backup exists", () => expect(needsCatchUp(at(9), "06:00", todays)).toBe(false));
   it("is true exactly at the time", () => expect(needsCatchUp(at(6), "06:00", [])).toBe(true));
 });
@@ -49,7 +50,11 @@ describe("startBackups", () => {
     const blocker = join(dir, "file");
     writeFileSync(blocker, "x");
     const logged: string[] = [];
-    const task = startBackups(createDb(":memory:"), { dir: join(blocker, "inside"), time: "06:00", log: (m) => logged.push(m) });
+    const task = startBackups(createDb(":memory:"), {
+      dir: join(blocker, "inside"),
+      time: "06:00",
+      log: (m) => logged.push(m),
+    });
     expect(task).toBeNull();
     expect(logged[0]).toMatch(/backup failed/);
   });

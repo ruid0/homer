@@ -68,7 +68,11 @@ export const ItemsPage = () => {
     <div className="mx-auto max-w-3xl">
       <PageHeader
         title={copy.items.title}
-        action={<button type="button" className={primaryButton} onClick={() => setEditing("new")}>{copy.items.addItem}</button>}
+        action={
+          <button type="button" className={primaryButton} onClick={() => setEditing("new")}>
+            {copy.items.addItem}
+          </button>
+        }
       />
 
       {items.isPending && <p>{copy.items.loading}</p>}
@@ -102,7 +106,9 @@ export const ItemsPage = () => {
           item={editing}
           pending={update.isPending}
           // Removing is only reachable from this dialog, so its error shows here, not on the page behind it.
-          serverError={update.error?.message ?? (archive.error ? copy.items.actionFailed(archive.error.message) : undefined)}
+          serverError={
+            update.error?.message ?? (archive.error ? copy.items.actionFailed(archive.error.message) : undefined)
+          }
           onSave={(values) => update.mutate({ id: editing.id, ...values })}
           onRemove={() => removeItem(editing)}
           onOut={() => markOut.mutate({ id: editing.id })}

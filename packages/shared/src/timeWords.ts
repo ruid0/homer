@@ -17,7 +17,9 @@ const toTime = (hour: number, minute: number, meridiem: string | undefined): str
 export const timeInText = (text: string): string | null => {
   if (range.test(text)) return null;
   const found = [...text.matchAll(timePattern)].map((match) =>
-    match[1] !== undefined ? toTime(Number(match[1]), Number(match[2]), match[3]) : toTime(Number(match[4]), 0, match[5]),
+    match[1] !== undefined
+      ? toTime(Number(match[1]), Number(match[2]), match[3])
+      : toTime(Number(match[4]), 0, match[5]),
   );
   const [first, ...rest] = found;
   return first !== undefined && first !== null && rest.every((time) => time === first) ? first : null;
@@ -30,7 +32,8 @@ export const takesTime = (toolName: string) => Object.hasOwn(timeField, toolName
 
 const dateField: Record<string, string> = { add_task: "dueDate", add_event: "date" };
 
-// Models drop the time from "at 18:00". When the person said exactly one time, the call has a day and no time, code puts it in.
+// Models drop the time from "at 18:00". When the person said exactly one time, the call has a day and no time, code
+// puts it in.
 // The caller applies this only when one call in the turn can take a time, so the time cannot belong to another call.
 export const addSaidTime = (toolName: string, args: unknown, text: string): unknown => {
   const field = timeField[toolName];

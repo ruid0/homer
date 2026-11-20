@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 
-// Run in Safari's engine with an iPhone profile (project "iphone-webkit"): this is where date and time fields pushed past the sheet.
+// Run in Safari's engine with an iPhone profile (project "iphone-webkit"): this is where date and time fields pushed
+// past the sheet.
 const openAddEvent = async (page: Page) => {
   await page.goto("/schedule");
   await page.getByRole("button", { name: "Add event" }).click();

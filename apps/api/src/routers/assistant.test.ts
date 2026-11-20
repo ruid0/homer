@@ -19,7 +19,14 @@ describe("assistant.send", () => {
     const { api } = setup([useTool("mark_out", { name: "salt" }), say("Marked salt as out.")]);
     await api.inventory.create(salt);
     const done = await api.assistant.send({ text: "We're out of salt", after: 0 });
-    expect(done).toMatchObject({ status: "reply", message: { role: "assistant", text: "Marked Salt as out and added it to groceries.", actions: [{ tool: "mark_out", undone: false }] } });
+    expect(done).toMatchObject({
+      status: "reply",
+      message: {
+        role: "assistant",
+        text: "Marked Salt as out and added it to groceries.",
+        actions: [{ tool: "mark_out", undone: false }],
+      },
+    });
     const { messages } = await api.assistant.history();
     expect(messages.map((message) => [message.role, message.text])).toEqual([
       ["user", "We're out of salt"],
@@ -73,7 +80,10 @@ describe("assistant.undo", () => {
     const sent = await api.assistant.send({ text: "out of salt", after: 0 });
     await api.inventory.restock({ itemId: id, quantity: 1 });
     const actionId = sent.status === "reply" ? sent.message.actions[0]!.id : 0;
-    expect(await api.assistant.undo({ actionId })).toMatchObject({ ok: false, message: expect.stringContaining("Salt") });
+    expect(await api.assistant.undo({ actionId })).toMatchObject({
+      ok: false,
+      message: expect.stringContaining("Salt"),
+    });
   });
 });
 

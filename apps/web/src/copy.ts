@@ -135,7 +135,7 @@ export const copy = {
     clearFailed: "Couldn't clear the chat. Check that the api is running, then try again.",
     unreachable: "The assistant can't reach Ollama. Start Ollama, then refresh. The rest of HOMER still works.",
     noModel: "The assistant's model isn't installed. Pull it with Ollama, then refresh. The rest of HOMER still works.",
-    examplesHint: "Try one of these, or say what changed, like \"We're out of salt\".",
+    examplesHint: 'Try one of these, or say what changed, like "We\'re out of salt".',
     examples: ["What do we need?", "What's on today?", "What's running out?"],
   },
 
@@ -237,8 +237,10 @@ export const copy = {
     doneToday: "Done today",
     notDone: "Not done",
     progress: (done: number, target: number) => `${done} of ${target}`,
-    todayTick: (name: string, position: number, target: number) => (target === 1 ? `${name}, today` : `${name}, today, ${position} of ${target}`),
-    dayState: (done: number, target: number) => (done >= target ? "done" : done > 0 ? `${done} of ${target}` : "not done"),
+    todayTick: (name: string, position: number, target: number) =>
+      target === 1 ? `${name}, today` : `${name}, today, ${position} of ${target}`,
+    dayState: (done: number, target: number) =>
+      done >= target ? "done" : done > 0 ? `${done} of ${target}` : "not done",
     dayLabel: (name: string, day: string, state: string) => `${name}, ${day}: ${state}`,
     cellFuture: (name: string, day: string) => `${name}, ${day}, not yet`,
     legendLabel: "Key",
@@ -274,7 +276,9 @@ export const copy = {
     overdueDays: (days: number) => (days === 1 ? "1 day overdue" : `${days} days overdue`),
     dueOn: (date: string) => `Due ${date}`,
     cycle: (every: number, unit: "weeks" | "months" | "years") =>
-      every === 1 ? { weeks: "Every week", months: "Every month", years: "Every year" }[unit] : `Every ${every} ${unitNames[unit]}`,
+      every === 1
+        ? { weeks: "Every week", months: "Every month", years: "Every year" }[unit]
+        : `Every ${every} ${unitNames[unit]}`,
     lastDone: (date: string) => `Last done ${date}`,
     laterToggle: (count: number) => `Later (${count})`,
     laterNext: (name: string, when: string) => `Next: ${name}, ${when}.`,
@@ -305,7 +309,13 @@ export const copy = {
     unit: "Unit",
     unitNames,
     lastDoneLabel: "Last done",
-    lastDoneChoices: { now: "Needs doing now", today: "Today", week: "A week ago", month: "A month ago", date: "Pick a date…" },
+    lastDoneChoices: {
+      now: "Needs doing now",
+      today: "Today",
+      week: "A week ago",
+      month: "A month ago",
+      date: "Pick a date…",
+    },
     lastDoneDateLabel: "Done on",
     lessLabel: "One less",
     moreLabel: "One more",
@@ -341,7 +351,8 @@ export const copy = {
     statusFailed: "Couldn't check whether notifications are on. Check that the api is running, then refresh.",
     needSetup: "Turn on reminders for this person first, in the box at the bottom of the page.",
     notificationsOff: "Notifications are off, so reminders can't be sent yet. See the box at the bottom of the page.",
-    notificationsOffSetup: "Notifications are off for this household, so reminders can't be sent yet. Set NTFY_HOUSEHOLD_TOPIC in .env.local, then rebuild.",
+    notificationsOffSetup:
+      "Notifications are off for this household, so reminders can't be sent yet. Set NTFY_HOUSEHOLD_TOPIC in .env.local, then rebuild.",
     kindLabel: "Remind",
     inKind: "After a wait",
     atKind: "At a time",
@@ -360,7 +371,8 @@ export const copy = {
     turnOn: "Turn on reminders",
     showSetup: "Show phone setup",
     hideSetup: "Hide phone setup",
-    setupSteps: (server: string) => `Install the ntfy app, then subscribe to the topic below on the server ${server}. Keep the topic private: anyone who has it can read this person's reminders.`,
+    setupSteps: (server: string) =>
+      `Install the ntfy app, then subscribe to the topic below on the server ${server}. Keep the topic private: anyone who has it can read this person's reminders.`,
     serverLabel: "Server",
     topicLabel: "Topic",
     privacyNote: "Reminders only say how many rows are not done. They never name a row.",

@@ -7,7 +7,8 @@ const start = Date.parse("2026-01-01T09:00:00.000Z");
 const at = (days: number) => new Date(start + days * DAY).toISOString();
 const restock = (days: number, quantity = 1) => ({ quantity, restockedAt: at(days) });
 // One restock every `every` days, `count` of them.
-const regular = (count: number, every: number, quantity = 1) => Array.from({ length: count }, (_, index) => restock(index * every, quantity));
+const regular = (count: number, every: number, quantity = 1) =>
+  Array.from({ length: count }, (_, index) => restock(index * every, quantity));
 
 describe("learnDaysPerUnit", () => {
   it("learns 20 days per bag from a bag every 20 days", () => {
@@ -58,7 +59,10 @@ describe("learnDaysPerUnit", () => {
   });
 
   it("applies the window to trips, not to raw restocks", () => {
-    const taps = Array.from({ length: 8 }, (_, index) => ({ quantity: 1, restockedAt: new Date(start + index * 3_600_000).toISOString() }));
+    const taps = Array.from({ length: 8 }, (_, index) => ({
+      quantity: 1,
+      restockedAt: new Date(start + index * 3_600_000).toISOString(),
+    }));
     // Eight taps in one morning are one trip, so the older trips are still inside the window of six.
     expect(learnDaysPerUnit([restock(-100), restock(-60), restock(-20), ...taps])?.restocks).toBe(4);
   });
@@ -80,7 +84,10 @@ describe("learnDaysPerUnit", () => {
 
   it("always answers with a positive, finite number when there is enough history", () => {
     const history = fc
-      .tuple(fc.uniqueArray(fc.integer({ min: 2, max: 400 }), { minLength: 2, maxLength: 10 }), fc.double({ min: 0.5, max: 20, noNaN: true }))
+      .tuple(
+        fc.uniqueArray(fc.integer({ min: 2, max: 400 }), { minLength: 2, maxLength: 10 }),
+        fc.double({ min: 0.5, max: 20, noNaN: true }),
+      )
       .map(([days, quantity]) => [0, ...days].map((day) => restock(day, quantity)));
     fc.assert(
       fc.property(history, (rows) => {
@@ -103,7 +110,9 @@ describe("learnDaysPerUnit", () => {
       fc.property(rows, (generated) => {
         const history = generated.map(({ day, quantity }) => restock(day, quantity));
         expect(learnDaysPerUnit([...history].reverse())).toEqual(learnDaysPerUnit(history));
-        expect(learnDaysPerUnit([...history].sort((a, b) => a.quantity - b.quantity))).toEqual(learnDaysPerUnit(history));
+        expect(learnDaysPerUnit([...history].sort((a, b) => a.quantity - b.quantity))).toEqual(
+          learnDaysPerUnit(history),
+        );
       }),
     );
   });

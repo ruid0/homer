@@ -125,9 +125,7 @@ const dueDateRule = { error: schemaMessages.dueDateNeeded, path: ["dueDate"] };
 
 export const taskInputSchema = taskFields.refine(hasDueDateWhenNeeded, dueDateRule);
 
-export const updateTaskInputSchema = taskFields
-  .extend(idInputSchema.shape)
-  .refine(hasDueDateWhenNeeded, dueDateRule);
+export const updateTaskInputSchema = taskFields.extend(idInputSchema.shape).refine(hasDueDateWhenNeeded, dueDateRule);
 
 export const completeTaskInputSchema = z.object({ id: z.number().int(), today: dateSchema });
 
@@ -182,11 +180,17 @@ export const routineItemInputSchema = z.object({
 });
 
 // The target is required here, so a rename that leaves it out cannot silently reset it to 1.
-export const updateRoutineItemInputSchema = z.object({ name: routineName, targetPerDay: routineTarget }).extend(idInputSchema.shape);
+export const updateRoutineItemInputSchema = z
+  .object({ name: routineName, targetPerDay: routineTarget })
+  .extend(idInputSchema.shape);
 
 export const moveRoutineItemInputSchema = idInputSchema.extend({ direction: z.enum(["up", "down"]) });
 
-export const routineWeekInputSchema = z.object({ personId: personIdSchema, today: dateSchema, weekOf: dateSchema.optional() });
+export const routineWeekInputSchema = z.object({
+  personId: personIdSchema,
+  today: dateSchema,
+  weekOf: dateSchema.optional(),
+});
 
 export const setRoutineCountInputSchema = z.object({
   itemId: z.number().int(),
@@ -248,7 +252,8 @@ const maintenanceEvery = z.number().int().min(1).max(MAX_MAINTENANCE_EVERY);
 const maintenanceUnit = z.enum(maintenanceUnitValues);
 
 // A done or last-done date: a real date, not after today, and not more than a year before it.
-const withinYearUpTo = (date: string, today: string) => date <= today && date >= addDays(today, -MAX_MAINTENANCE_DAYS_BACK);
+const withinYearUpTo = (date: string, today: string) =>
+  date <= today && date >= addDays(today, -MAX_MAINTENANCE_DAYS_BACK);
 
 export const maintenanceItemInputSchema = z
   .object({
@@ -265,19 +270,26 @@ export const maintenanceItemInputSchema = z
 
 export const maintenanceListInputSchema = z.object({ today: dateSchema });
 
-// The interval is required here, so a rename cannot silently reset it. The last done date changes only through done and undo.
+// The interval is required here, so a rename cannot silently reset it. The last done date changes only through done and
+// undo.
 export const updateMaintenanceItemInputSchema = z
   .object({ name: maintenanceName, every: maintenanceEvery, unit: maintenanceUnit })
   .extend(idInputSchema.shape);
 
 export const markMaintenanceDoneInputSchema = idInputSchema
   .extend({ doneOn: dateSchema, today: dateSchema })
-  .refine(({ doneOn, today }) => withinYearUpTo(doneOn, today), { path: ["doneOn"], message: schemaMessages.maintenanceDateRange });
+  .refine(({ doneOn, today }) => withinYearUpTo(doneOn, today), {
+    path: ["doneOn"],
+    message: schemaMessages.maintenanceDateRange,
+  });
 
 // Moves one done record to another day, so "done earlier" is one step that cannot leave the job undone.
 export const redateMaintenanceDoneInputSchema = z
   .object({ doneId: z.number().int().positive(), doneOn: dateSchema, today: dateSchema })
-  .refine(({ doneOn, today }) => withinYearUpTo(doneOn, today), { path: ["doneOn"], message: schemaMessages.maintenanceDateRange });
+  .refine(({ doneOn, today }) => withinYearUpTo(doneOn, today), {
+    path: ["doneOn"],
+    message: schemaMessages.maintenanceDateRange,
+  });
 
 // Hide a job from Due now until a day after today and within a year; null clears the snooze (Undo).
 export const snoozeMaintenanceInputSchema = idInputSchema

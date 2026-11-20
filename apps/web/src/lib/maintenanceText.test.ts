@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { collapsesLater, dueWords, isDoneToday, laterNote, longDate, needsDoing, rowChips, shortDate } from "./maintenanceText";
+import {
+  collapsesLater,
+  dueWords,
+  isDoneToday,
+  laterNote,
+  longDate,
+  needsDoing,
+  rowChips,
+  shortDate,
+} from "./maintenanceText";
 
 const base = { lastDoneOn: "2026-11-01", dueOn: "2027-02-01" };
 
@@ -19,12 +28,16 @@ describe("dueWords", () => {
   });
 
   it("tells a due date a year or more away with its year, so it is not read as last year", () => {
-    expect(dueWords({ lastDoneOn: "2026-11-05", dueOn: "2027-11-05", status: "later", daysUntil: 365 })).toBe("Due 5 Nov 2027");
+    expect(dueWords({ lastDoneOn: "2026-11-05", dueOn: "2027-11-05", status: "later", daysUntil: 365 })).toBe(
+      "Due 5 Nov 2027",
+    );
   });
 
   it("says a snoozed job that is due or overdue is snoozed, and until when", () => {
     expect(dueWords({ ...base, status: "later", daysUntil: -3, snoozedUntil: "2026-11-26" })).toBe("Snoozed to 26 Nov");
-    expect(dueWords({ lastDoneOn: null, dueOn: "2026-11-05", status: "later", daysUntil: 0, snoozedUntil: "2026-11-26" })).toBe("Snoozed to 26 Nov");
+    expect(
+      dueWords({ lastDoneOn: null, dueOn: "2026-11-05", status: "later", daysUntil: 0, snoozedUntil: "2026-11-26" }),
+    ).toBe("Snoozed to 26 Nov");
   });
 
   it("leaves a job that is not yet due in its own words, snoozed or not", () => {
@@ -41,7 +54,10 @@ describe("dueWords", () => {
 describe("rowChips", () => {
   it("names the cycle, singular or plural, and the last done date when there is one", () => {
     const when = { dueOn: "2027-02-10", daysUntil: 97 };
-    expect(rowChips({ every: 3, unit: "months", lastDoneOn: "2026-11-10", ...when })).toEqual(["Every 3 months", "Last done 10 Nov"]);
+    expect(rowChips({ every: 3, unit: "months", lastDoneOn: "2026-11-10", ...when })).toEqual([
+      "Every 3 months",
+      "Last done 10 Nov",
+    ]);
     expect(rowChips({ every: 1, unit: "weeks", lastDoneOn: null, ...when })).toEqual(["Every week"]);
     expect(rowChips({ every: 1, unit: "years", lastDoneOn: null, ...when })).toEqual(["Every year"]);
   });
@@ -73,10 +89,18 @@ describe("the Later section", () => {
   });
 
   it("names the next job and when, so a closed Later still says what is coming", () => {
-    expect(laterNote({ name: "Smoke alarm batteries", lastDoneOn: "2026-09-14", dueOn: "2027-03-14", status: "later", daysUntil: 125 })).toBe(
-      "Next: Smoke alarm batteries, due in 4 months.",
-    );
-    expect(laterNote({ name: "Gutters", lastDoneOn: "2026-10-01", dueOn: "2026-12-20", status: "later", daysUntil: 41 })).toBe("Next: Gutters, due 20 Dec.");
+    expect(
+      laterNote({
+        name: "Smoke alarm batteries",
+        lastDoneOn: "2026-09-14",
+        dueOn: "2027-03-14",
+        status: "later",
+        daysUntil: 125,
+      }),
+    ).toBe("Next: Smoke alarm batteries, due in 4 months.");
+    expect(
+      laterNote({ name: "Gutters", lastDoneOn: "2026-10-01", dueOn: "2026-12-20", status: "later", daysUntil: 41 }),
+    ).toBe("Next: Gutters, due 20 Dec.");
   });
 });
 

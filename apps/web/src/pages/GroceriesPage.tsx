@@ -62,9 +62,13 @@ export const GroceriesPage = () => {
           />
         </label>
         <datalist id="tracked-names">
-          {(items.data ?? []).map((item) => <option key={item.id} value={item.name} />)}
+          {(items.data ?? []).map((item) => (
+            <option key={item.id} value={item.name} />
+          ))}
         </datalist>
-        <button type="submit" className={primaryButton} disabled={add.isPending}>{copy.groceries.add}</button>
+        <button type="submit" className={primaryButton} disabled={add.isPending}>
+          {copy.groceries.add}
+        </button>
       </form>
 
       {entries.isPending && <p>{copy.groceries.loading}</p>}

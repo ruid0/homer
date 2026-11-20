@@ -8,7 +8,11 @@ const SHOW_WITH_ACTION_FOR_MS = 15_000;
 // Holding pauses the toast, but not for ever: a pointer left resting on it must not keep it up all day.
 const MOST_SHOWN_FOR_MS = 60_000;
 
-type Props = { message: string; onClose: () => void; action?: { label: string; onClick: () => void; disabled?: boolean } };
+type Props = {
+  message: string;
+  onClose: () => void;
+  action?: { label: string; onClick: () => void; disabled?: boolean };
+};
 
 export const Toast = ({ message, onClose, action }: Props) => {
   // Only a new message restarts the timer, not a parent re-render with a new onClose.
@@ -41,7 +45,12 @@ export const Toast = ({ message, onClose, action }: Props) => {
       <span className="font-medium">{message}</span>
       <div className="flex gap-2">
         {action && (
-          <button type="button" className={`${secondaryButton} border-on-primary`} disabled={action.disabled} onClick={action.onClick}>
+          <button
+            type="button"
+            className={`${secondaryButton} border-on-primary`}
+            disabled={action.disabled}
+            onClick={action.onClick}
+          >
             {action.label}
           </button>
         )}

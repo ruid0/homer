@@ -1,18 +1,15 @@
 export type Named = { id: number; name: string };
 
-export type Resolution<T extends Named> =
-  | { kind: "one"; match: T }
-  | { kind: "many"; matches: T[] }
-  | { kind: "none" };
+export type Resolution<T extends Named> = { kind: "one"; match: T } | { kind: "many"; matches: T[] } | { kind: "none" };
 
 // "salts" and "salt" are the same word. Words ending in "ss" (glass) keep it.
-const singular = (word: string) => (word.length > 3 && word.endsWith("s") && !word.endsWith("ss") ? word.slice(0, -1) : word);
+const singular = (word: string) =>
+  word.length > 3 && word.endsWith("s") && !word.endsWith("ss") ? word.slice(0, -1) : word;
 
 const words = (text: string): string[] => text.toLowerCase().split(/\s+/).filter(Boolean).map(singular);
 
 const containsRun = (haystack: string[], needle: string[]) =>
-  needle.length > 0 &&
-  haystack.some((_, start) => needle.every((word, offset) => haystack[start + offset] === word));
+  needle.length > 0 && haystack.some((_, start) => needle.every((word, offset) => haystack[start + offset] === word));
 
 const pick = <T extends Named>(matches: T[]): Resolution<T> => {
   const [first] = matches;

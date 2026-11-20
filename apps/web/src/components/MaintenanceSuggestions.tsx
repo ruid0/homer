@@ -29,7 +29,9 @@ export const MaintenanceSuggestions = ({ takenNames, selectedName, onPick }: Pro
       >
         <option value="">{copy.maintenance.suggestionsPlaceholder}</option>
         {suggestions.map((suggestion) => (
-          <option key={suggestion.name} value={suggestion.name}>{suggestion.name}</option>
+          <option key={suggestion.name} value={suggestion.name}>
+            {suggestion.name}
+          </option>
         ))}
       </select>
     </Field>

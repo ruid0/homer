@@ -36,7 +36,10 @@ test.describe("clicking outside a dialog", () => {
     await expect(page.getByRole("dialog")).toHaveCount(0);
   });
 
-  test("does not close it when the click is on the dialog: its title, a field or its own padding", async ({ page, request }) => {
+  test("does not close it when the click is on the dialog: its title, a field or its own padding", async ({
+    page,
+    request,
+  }) => {
     const name = await newItem(request);
     const dialog = await openEdit(page, name);
     await dialog.getByRole("heading").click();
@@ -46,7 +49,10 @@ test.describe("clicking outside a dialog", () => {
     await expect(dialog).toBeVisible();
   });
 
-  test("does not close it when a press starts inside and lets go outside, like selecting text in a field", async ({ page, request }) => {
+  test("does not close it when a press starts inside and lets go outside, like selecting text in a field", async ({
+    page,
+    request,
+  }) => {
     const name = await newItem(request);
     const dialog = await openEdit(page, name);
     const field = await dialog.getByRole("textbox", { name: "Name" }).boundingBox();

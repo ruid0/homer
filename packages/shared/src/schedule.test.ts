@@ -24,9 +24,11 @@ describe("addDays", () => {
   });
 
   it("is undone by adding the opposite", () => {
-    fc.assert(fc.property(date, fc.integer({ min: -4000, max: 4000 }), (day, n) => {
-      expect(addDays(addDays(day, n), -n)).toBe(day);
-    }));
+    fc.assert(
+      fc.property(date, fc.integer({ min: -4000, max: 4000 }), (day, n) => {
+        expect(addDays(addDays(day, n), -n)).toBe(day);
+      }),
+    );
   });
 });
 
@@ -55,11 +57,13 @@ describe("addMonths", () => {
   });
 
   it("moves the month by exactly n and keeps the day, or the month end when it is shorter", () => {
-    fc.assert(fc.property(date, fc.integer({ min: 0, max: 600 }), (day, n) => {
-      const moved = addMonths(day, n);
-      expect(monthIndex(moved) - monthIndex(day)).toBe(n);
-      expect(Number(moved.slice(8))).toBe(Math.min(Number(day.slice(8)), lastDayOfMonth(moved)));
-    }));
+    fc.assert(
+      fc.property(date, fc.integer({ min: 0, max: 600 }), (day, n) => {
+        const moved = addMonths(day, n);
+        expect(monthIndex(moved) - monthIndex(day)).toBe(n);
+        expect(Number(moved.slice(8))).toBe(Math.min(Number(day.slice(8)), lastDayOfMonth(moved)));
+      }),
+    );
   });
 });
 
@@ -99,42 +103,52 @@ describe("nextDueDate", () => {
   });
 
   it("is always after both the due date and today", () => {
-    fc.assert(fc.property(date, repeat, date, (due, every, today) => {
-      const next = nextDueDate(due, every, today);
-      expect(next > due && next > today).toBe(true);
-    }));
+    fc.assert(
+      fc.property(date, repeat, date, (due, every, today) => {
+        const next = nextDueDate(due, every, today);
+        expect(next > due && next > today).toBe(true);
+      }),
+    );
   });
 
   it("keeps the weekday for weekly", () => {
-    fc.assert(fc.property(date, date, (due, today) => {
-      expect(weekdayOf(nextDueDate(due, "weekly", today))).toBe(weekdayOf(due));
-    }));
+    fc.assert(
+      fc.property(date, date, (due, today) => {
+        expect(weekdayOf(nextDueDate(due, "weekly", today))).toBe(weekdayOf(due));
+      }),
+    );
   });
 
   it("never skips a repeat that is still ahead", () => {
-    fc.assert(fc.property(date, date, (due, today) => {
-      const bar = later(due, today);
-      expect(addDays(nextDueDate(due, "daily", today), -1) <= bar).toBe(true);
-      expect(addDays(nextDueDate(due, "weekly", today), -7) <= bar).toBe(true);
-    }));
+    fc.assert(
+      fc.property(date, date, (due, today) => {
+        const bar = later(due, today);
+        expect(addDays(nextDueDate(due, "daily", today), -1) <= bar).toBe(true);
+        expect(addDays(nextDueDate(due, "weekly", today), -7) <= bar).toBe(true);
+      }),
+    );
   });
 
   it("lands monthly on the first repeat after both dates, not later", () => {
     const steps = Array.from({ length: 1300 }, (_, index) => index + 1);
-    fc.assert(fc.property(date, date, (due, today) => {
-      const next = nextDueDate(due, "monthly", today);
-      const step = steps.find((months) => addMonths(due, months) === next);
-      expect(step).toBeDefined();
-      expect(addMonths(due, (step ?? 1) - 1) <= later(due, today)).toBe(true);
-    }));
+    fc.assert(
+      fc.property(date, date, (due, today) => {
+        const next = nextDueDate(due, "monthly", today);
+        const step = steps.find((months) => addMonths(due, months) === next);
+        expect(step).toBeDefined();
+        expect(addMonths(due, (step ?? 1) - 1) <= later(due, today)).toBe(true);
+      }),
+    );
   });
 
   it("keeps the day of the month for monthly, or the month end when it is shorter", () => {
-    fc.assert(fc.property(date, date, (due, today) => {
-      const next = nextDueDate(due, "monthly", today);
-      const lastDayOfNextMonth = Number(addDays(addMonths(`${next.slice(0, 7)}-01`, 1), -1).slice(8));
-      expect(Number(next.slice(8))).toBe(Math.min(Number(due.slice(8)), lastDayOfNextMonth));
-    }));
+    fc.assert(
+      fc.property(date, date, (due, today) => {
+        const next = nextDueDate(due, "monthly", today);
+        const lastDayOfNextMonth = Number(addDays(addMonths(`${next.slice(0, 7)}-01`, 1), -1).slice(8));
+        expect(Number(next.slice(8))).toBe(Math.min(Number(due.slice(8)), lastDayOfNextMonth));
+      }),
+    );
   });
 });
 
@@ -157,10 +171,12 @@ describe("isOverdue", () => {
   });
 
   it("flips exactly at the date", () => {
-    fc.assert(fc.property(date, fc.integer({ min: -400, max: 400 }), (due, offset) => {
-      const today = addDays(due, offset);
-      expect(isOverdue({ dueDate: due, doneAt: null, removedAt: null }, today)).toBe(offset > 0);
-    }));
+    fc.assert(
+      fc.property(date, fc.integer({ min: -400, max: 400 }), (due, offset) => {
+        const today = addDays(due, offset);
+        expect(isOverdue({ dueDate: due, doneAt: null, removedAt: null }, today)).toBe(offset > 0);
+      }),
+    );
   });
 });
 
@@ -191,22 +207,32 @@ describe("compareSchedule", () => {
   });
 
   it("is antisymmetric and transitive", () => {
-    fc.assert(fc.property(entry, entry, entry, (a, b, c) => {
-      expect(Math.sign(compareSchedule(a, b)) + Math.sign(compareSchedule(b, a))).toBe(0);
-      if (compareSchedule(a, b) <= 0 && compareSchedule(b, c) <= 0) expect(compareSchedule(a, c)).toBeLessThanOrEqual(0);
-    }));
+    fc.assert(
+      fc.property(entry, entry, entry, (a, b, c) => {
+        expect(Math.sign(compareSchedule(a, b)) + Math.sign(compareSchedule(b, a))).toBe(0);
+        if (compareSchedule(a, b) <= 0 && compareSchedule(b, c) <= 0)
+          expect(compareSchedule(a, c)).toBeLessThanOrEqual(0);
+      }),
+    );
   });
 
   it("never puts an entry that is not overdue before an overdue one", () => {
-    fc.assert(fc.property(entry, entry, (a, b) => {
-      if (a.overdue && !b.overdue) expect(compareSchedule(a, b)).toBeLessThan(0);
-    }));
+    fc.assert(
+      fc.property(entry, entry, (a, b) => {
+        if (a.overdue && !b.overdue) expect(compareSchedule(a, b)).toBeLessThan(0);
+      }),
+    );
   });
 });
 
 describe("repeatDates", () => {
   it("lists a daily task on every day after today, up to the last day", () => {
-    expect(repeatDates("2026-11-19", "daily", "2026-11-19", "2026-11-23")).toEqual(["2026-11-20", "2026-11-21", "2026-11-22", "2026-11-23"]);
+    expect(repeatDates("2026-11-19", "daily", "2026-11-19", "2026-11-23")).toEqual([
+      "2026-11-20",
+      "2026-11-21",
+      "2026-11-22",
+      "2026-11-23",
+    ]);
   });
 
   it("starts after the due date when it is still ahead", () => {
@@ -222,7 +248,11 @@ describe("repeatDates", () => {
   });
 
   it("lists a monthly task on its day of the month, or the month end, each step as completing on time would make it", () => {
-    expect(repeatDates("2026-01-15", "monthly", "2026-01-15", "2026-04-30")).toEqual(["2026-02-15", "2026-03-15", "2026-04-15"]);
+    expect(repeatDates("2026-01-15", "monthly", "2026-01-15", "2026-04-30")).toEqual([
+      "2026-02-15",
+      "2026-03-15",
+      "2026-04-15",
+    ]);
     // A short month moves the day for the steps after it, the same as completing the task each month does.
     expect(repeatDates("2026-01-31", "monthly", "2026-01-31", "2026-03-31")).toEqual(["2026-02-28", "2026-03-28"]);
   });
@@ -233,15 +263,21 @@ describe("repeatDates", () => {
 
   it("is after both dates, up to the last day, in order, and never repeats a day", () => {
     fc.assert(
-      fc.property(date, repeat, fc.integer({ min: -400, max: 400 }), fc.integer({ min: 0, max: 60 }), (due, kind, offset, span) => {
-        const today = addDays(due, offset);
-        const last = addDays(today, span);
-        const dates = repeatDates(due, kind, today, last);
-        for (const [index, date] of dates.entries()) {
-          expect(date > due && date > today && date <= last).toBe(true);
-          if (index > 0) expect(date > dates[index - 1]!).toBe(true);
-        }
-      }),
+      fc.property(
+        date,
+        repeat,
+        fc.integer({ min: -400, max: 400 }),
+        fc.integer({ min: 0, max: 60 }),
+        (due, kind, offset, span) => {
+          const today = addDays(due, offset);
+          const last = addDays(today, span);
+          const dates = repeatDates(due, kind, today, last);
+          for (const [index, date] of dates.entries()) {
+            expect(date > due && date > today && date <= last).toBe(true);
+            if (index > 0) expect(date > dates[index - 1]!).toBe(true);
+          }
+        },
+      ),
     );
   });
 

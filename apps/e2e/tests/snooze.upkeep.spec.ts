@@ -22,10 +22,12 @@ const overdue = (name: string) => ({ name, every: 1, unit: "weeks" as const, las
 // Done yesterday: due in 6 days, so it is "soon": under Due now, but nothing to put off.
 const notYet = (name: string) => ({ name, every: 1, unit: "weeks" as const, lastDoneOn: daysAgo(1) });
 
-const row = (page: Page, name: string) => page.getByRole("listitem").filter({ has: page.getByText(name, { exact: true }) });
+const row = (page: Page, name: string) =>
+  page.getByRole("listitem").filter({ has: page.getByText(name, { exact: true }) });
 const notToday = (page: Page, name: string) => page.getByRole("button", { name: `Not today: ${name}` });
 const toastOf = (page: Page, name: string) => page.getByRole("status").filter({ hasText: `${name} snoozed` });
-const choices = (page: Page, name: string) => page.getByRole("dialog").filter({ has: page.getByRole("heading", { name: `Not today: ${name}` }) });
+const choices = (page: Page, name: string) =>
+  page.getByRole("dialog").filter({ has: page.getByRole("heading", { name: `Not today: ${name}` }) });
 
 const ask = async (page: Page, name: string) => {
   await page.goto("/upkeep");
@@ -66,10 +68,14 @@ test.describe("Not today on the Upkeep page", () => {
   test("a choice moves the job to Later as Snoozed, with a toast", async ({ page, request }) => {
     await seedUpkeep(request, overdue("Moved job"));
     await ask(page, "Moved job");
-    await choices(page, "Moved job").getByRole("button", { name: /^In a week/ }).click();
+    await choices(page, "Moved job")
+      .getByRole("button", { name: /^In a week/ })
+      .click();
     await expect(toastOf(page, "Moved job")).toHaveText(new RegExp(`^Moved job snoozed to ${written(7)}\\.`));
     const later = page.getByRole("region", { name: "Later" });
-    await expect(later.getByRole("listitem").filter({ hasText: "Moved job" })).toContainText(`Snoozed to ${written(7)}`);
+    await expect(later.getByRole("listitem").filter({ hasText: "Moved job" })).toContainText(
+      `Snoozed to ${written(7)}`,
+    );
     await expect(page.getByRole("region", { name: "Due now" }).getByText("Moved job")).toHaveCount(0);
     // Later rows have no Not today.
     await expect(notToday(page, "Moved job")).toHaveCount(0);
@@ -78,7 +84,9 @@ test.describe("Not today on the Upkeep page", () => {
   test("Undo puts the job back under Due now", async ({ page, request }) => {
     await seedUpkeep(request, overdue("Undone job"));
     await ask(page, "Undone job");
-    await choices(page, "Undone job").getByRole("button", { name: /^Tomorrow/ }).click();
+    await choices(page, "Undone job")
+      .getByRole("button", { name: /^Tomorrow/ })
+      .click();
     await toastOf(page, "Undone job").getByRole("button", { name: "Undo" }).click();
     await expect(toastOf(page, "Undone job")).toHaveCount(0);
     await expect(page.getByRole("region", { name: "Due now" }).getByText("Undone job")).toBeVisible();
@@ -88,7 +96,9 @@ test.describe("Not today on the Upkeep page", () => {
   test("Done on a snoozed job clears the snooze", async ({ page, request }) => {
     await seedUpkeep(request, overdue("Done job"));
     await ask(page, "Done job");
-    await choices(page, "Done job").getByRole("button", { name: /^In a month/ }).click();
+    await choices(page, "Done job")
+      .getByRole("button", { name: /^In a month/ })
+      .click();
     await row(page, "Done job").getByRole("button", { name: "Done: Done job" }).click();
     await expect(row(page, "Done job")).toContainText("Due in 7 days");
     await expect(row(page, "Done job")).not.toContainText("Snoozed");
@@ -100,7 +110,9 @@ test.describe("Not today on the Upkeep page", () => {
     await seedUpkeep(request, overdue("Failed job"));
     await interceptCall(page, "maintenance.snooze", { answer: failure("Could not save. Try again.") });
     await ask(page, "Failed job");
-    await choices(page, "Failed job").getByRole("button", { name: /^Tomorrow/ }).click();
+    await choices(page, "Failed job")
+      .getByRole("button", { name: /^Tomorrow/ })
+      .click();
     await expect(page.getByRole("alert").filter({ hasText: "Could not save. Try again." })).toBeVisible();
     await expect(page.getByRole("region", { name: "Due now" }).getByText("Failed job")).toBeVisible();
     await expect(toastOf(page, "Failed job")).toHaveCount(0);
@@ -109,7 +121,9 @@ test.describe("Not today on the Upkeep page", () => {
   test("a snoozed job leaves Due now and the empty line shows when it was the only one", async ({ page, request }) => {
     await seedUpkeep(request, overdue("Only job"));
     await ask(page, "Only job");
-    await choices(page, "Only job").getByRole("button", { name: /^Tomorrow/ }).click();
+    await choices(page, "Only job")
+      .getByRole("button", { name: /^Tomorrow/ })
+      .click();
     await expect(page.getByText("Nothing due this week.")).toBeVisible();
   });
 });
@@ -121,7 +135,9 @@ test.describe("Not today on the Home card", () => {
     await seedUpkeep(request, overdue("Home job"));
     await page.goto("/");
     await notToday(page, "Home job").click();
-    await choices(page, "Home job").getByRole("button", { name: /^Tomorrow/ }).click();
+    await choices(page, "Home job")
+      .getByRole("button", { name: /^Tomorrow/ })
+      .click();
     await expect(toastOf(page, "Home job")).toContainText(`snoozed to ${written(1)}`);
     await expect(card(page).getByText("Home job")).toHaveCount(0);
     await toastOf(page, "Home job").getByRole("button", { name: "Undo" }).click();
@@ -133,7 +149,9 @@ test.describe("Not today, more states", () => {
   test("a failed Undo keeps the toast, says why, and can be tried again", async ({ page, request }) => {
     await seedUpkeep(request, overdue("Retry job"));
     await ask(page, "Retry job");
-    await choices(page, "Retry job").getByRole("button", { name: /^Tomorrow/ }).click();
+    await choices(page, "Retry job")
+      .getByRole("button", { name: /^Tomorrow/ })
+      .click();
     await expect(toastOf(page, "Retry job")).toBeVisible();
     await interceptCall(page, "maintenance.snooze", { answer: failure("Could not undo. Try again.") });
     await toastOf(page, "Retry job").getByRole("button", { name: "Undo" }).click();
@@ -164,19 +182,26 @@ test.describe("Not today, more states", () => {
     await expect(page.getByRole("status").filter({ hasText: "snoozed" })).toHaveCount(0);
   });
 
-  test("on Home, only one toast is up: a Done closes a snooze toast, and a snooze closes a Done toast", async ({ page, request }) => {
+  test("on Home, only one toast is up: a Done closes a snooze toast, and a snooze closes a Done toast", async ({
+    page,
+    request,
+  }) => {
     await seedUpkeep(request, overdue("Snooze one"));
     await seedUpkeep(request, overdue("Done one"));
     await seedUpkeep(request, overdue("Snooze two"));
     await page.goto("/");
     await notToday(page, "Snooze one").click();
-    await choices(page, "Snooze one").getByRole("button", { name: /^Tomorrow/ }).click();
+    await choices(page, "Snooze one")
+      .getByRole("button", { name: /^Tomorrow/ })
+      .click();
     await expect(toastOf(page, "Snooze one")).toBeVisible();
     await page.getByRole("button", { name: "Done: Done one" }).click();
     await expect(page.getByRole("status").filter({ hasText: "Done one done" })).toBeVisible();
     await expect(toastOf(page, "Snooze one")).toHaveCount(0);
     await notToday(page, "Snooze two").click();
-    await choices(page, "Snooze two").getByRole("button", { name: /^Tomorrow/ }).click();
+    await choices(page, "Snooze two")
+      .getByRole("button", { name: /^Tomorrow/ })
+      .click();
     await expect(toastOf(page, "Snooze two")).toBeVisible();
     await expect(page.getByRole("status").filter({ hasText: "Done one done" })).toHaveCount(0);
   });
@@ -202,7 +227,10 @@ test.describe("Not today on a phone", () => {
     await page.setViewportSize({ width: 360, height: 640 });
     await seedUpkeep(request, overdue("Smoke alarm batteries"));
     await page.goto("/");
-    const item = page.getByRole("region", { name: "Upkeep" }).getByRole("listitem").filter({ hasText: "Smoke alarm batteries" });
+    const item = page
+      .getByRole("region", { name: "Upkeep" })
+      .getByRole("listitem")
+      .filter({ hasText: "Smoke alarm batteries" });
     expect((await item.getByText("Smoke alarm batteries").boundingBox())?.width).toBeGreaterThanOrEqual(150);
     expect((await item.boundingBox())?.height).toBeLessThanOrEqual(120);
   });

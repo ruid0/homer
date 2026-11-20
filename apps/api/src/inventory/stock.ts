@@ -29,12 +29,21 @@ export const learnedFrom = (store: Pick<Db, "select">, item: Learning): number |
 
 // Keeps the stored learned estimate in step with the restock history. Null until there is enough history to trust.
 export const relearn = (store: Pick<Db, "select" | "update">, itemId: number): void => {
-  const since = store.select({ since: items.learningSince }).from(items).where(eq(items.id, itemId)).get()?.since ?? null;
+  const since =
+    store.select({ since: items.learningSince }).from(items).where(eq(items.id, itemId)).get()?.since ?? null;
   const learned = learnedFromHistory(store, itemId, since);
-  store.update(items).set({ daysPerUnitLearned: learned?.daysPerUnit ?? null }).where(eq(items.id, itemId)).run();
+  store
+    .update(items)
+    .set({ daysPerUnitLearned: learned?.daysPerUnit ?? null })
+    .where(eq(items.id, itemId))
+    .run();
 };
 
-export const applyRestock = (store: Pick<Db, "select" | "update" | "insert">, itemId: number, quantity: number): void => {
+export const applyRestock = (
+  store: Pick<Db, "select" | "update" | "insert">,
+  itemId: number,
+  quantity: number,
+): void => {
   store
     .update(items)
     .set({ quantity: sql`${items.quantity} + ${quantity}` })

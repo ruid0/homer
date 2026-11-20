@@ -3,8 +3,10 @@ import { copy } from "../copy";
 
 const SHOW_FOR_MS = 8000;
 
-// A failed save or undo: red, at the bottom above the Undo toast (so it never covers the buttons at the top of the page), gone after a few
-// seconds or on Dismiss. The clock stops while it is hovered or focused. A new message shows again; the message going back to empty
+// A failed save or undo: red, at the bottom above the Undo toast (so it never covers the buttons at the top of the
+// page), gone after a few
+// seconds or on Dismiss. The clock stops while it is hovered or focused. A new message shows again; the message going
+// back to empty
 // (the next attempt) clears a dismissal.
 export const ErrorToast = ({ message }: { message?: string | null }) => {
   const [dismissed, setDismissed] = useState(false);

@@ -26,8 +26,14 @@ export const RoutineReminders = ({ personId, itemId, state }: Props) => {
 
   const list = trpc.routines.reminders.useQuery({ personId });
   const refresh = () => utils.routines.reminders.invalidate();
-  const add = trpc.routines.addReminder.useMutation({ onSuccess: refresh, onError: (failure) => setError(failure.message) });
-  const remove = trpc.routines.removeReminder.useMutation({ onError: (failure) => setError(failure.message), onSettled: refresh });
+  const add = trpc.routines.addReminder.useMutation({
+    onSuccess: refresh,
+    onError: (failure) => setError(failure.message),
+  });
+  const remove = trpc.routines.removeReminder.useMutation({
+    onError: (failure) => setError(failure.message),
+    onSettled: refresh,
+  });
 
   // A day is the longest wait, so 24 hours leaves no minutes.
   const pickHours = (next: number) => {
@@ -44,7 +50,11 @@ export const RoutineReminders = ({ personId, itemId, state }: Props) => {
     if (kind === "in" && !isValidDuration(hours, minutes)) return setError(copy.reminders.badDuration);
     if (kind === "at" && time === "") return setError(copy.reminders.blankTime);
     setError(undefined);
-    add.mutate({ itemId, text: kind === "in" ? durationAsText(hours, minutes) : time, repeatDaily: kind === "at" && everyDay });
+    add.mutate({
+      itemId,
+      text: kind === "in" ? durationAsText(hours, minutes) : time,
+      repeatDaily: kind === "at" && everyDay,
+    });
   };
 
   // Enter inside the pickers adds the reminder. It must not save the row form around this section.
@@ -61,8 +71,14 @@ export const RoutineReminders = ({ personId, itemId, state }: Props) => {
 
   return (
     <section className="grid gap-3 border-t border-line pt-4" aria-labelledby={`reminders-${itemId}`} onKeyDown={enter}>
-      <h3 id={`reminders-${itemId}`} className="font-semibold">{copy.reminders.title}</h3>
-      {list.error && <p role="alert" className="text-late">{copy.reminders.loadFailed}</p>}
+      <h3 id={`reminders-${itemId}`} className="font-semibold">
+        {copy.reminders.title}
+      </h3>
+      {list.error && (
+        <p role="alert" className="text-late">
+          {copy.reminders.loadFailed}
+        </p>
+      )}
       {list.data && mine.length === 0 && <p className="text-muted">{copy.reminders.none}</p>}
       {mine.length > 0 && (
         <ul className="grid gap-1">
@@ -86,28 +102,60 @@ export const RoutineReminders = ({ personId, itemId, state }: Props) => {
         </ul>
       )}
 
-      {state === "failed" && <p role="alert" className="text-late">{copy.reminders.statusFailed}</p>}
+      {state === "failed" && (
+        <p role="alert" className="text-late">
+          {copy.reminders.statusFailed}
+        </p>
+      )}
       {state === "notificationsOff" && <p className="text-muted">{copy.reminders.notificationsOff}</p>}
       {state === "needsSetup" && <p className="text-muted">{copy.reminders.needSetup}</p>}
       <div className="grid gap-3">
         <div className="flex gap-2" role="group" aria-label={copy.reminders.kindLabel}>
-          <button type="button" aria-pressed={kind === "in"} className={toggleButton(kind === "in")} onClick={() => pickKind("in")}>
+          <button
+            type="button"
+            aria-pressed={kind === "in"}
+            className={toggleButton(kind === "in")}
+            onClick={() => pickKind("in")}
+          >
             {copy.reminders.inKind}
           </button>
-          <button type="button" aria-pressed={kind === "at"} className={toggleButton(kind === "at")} onClick={() => pickKind("at")}>
+          <button
+            type="button"
+            aria-pressed={kind === "at"}
+            className={toggleButton(kind === "at")}
+            onClick={() => pickKind("at")}
+          >
             {copy.reminders.atKind}
           </button>
         </div>
         {kind === "in" && (
           <div className="grid grid-cols-2 gap-3">
             <Field label={copy.reminders.hours}>
-              <select className={inputClass} disabled={!ready} value={hours} onChange={(event) => pickHours(Number(event.target.value))}>
-                {HOURS.map((hour) => <option key={hour} value={hour}>{copy.reminders.hoursOption(hour)}</option>)}
+              <select
+                className={inputClass}
+                disabled={!ready}
+                value={hours}
+                onChange={(event) => pickHours(Number(event.target.value))}
+              >
+                {HOURS.map((hour) => (
+                  <option key={hour} value={hour}>
+                    {copy.reminders.hoursOption(hour)}
+                  </option>
+                ))}
               </select>
             </Field>
             <Field label={copy.reminders.minutes}>
-              <select className={inputClass} value={minutes} disabled={!ready || hours === MAX_HOURS} onChange={(event) => setMinutes(Number(event.target.value))}>
-                {MINUTES.map((minute) => <option key={minute} value={minute}>{copy.reminders.minutesOption(minute)}</option>)}
+              <select
+                className={inputClass}
+                value={minutes}
+                disabled={!ready || hours === MAX_HOURS}
+                onChange={(event) => setMinutes(Number(event.target.value))}
+              >
+                {MINUTES.map((minute) => (
+                  <option key={minute} value={minute}>
+                    {copy.reminders.minutesOption(minute)}
+                  </option>
+                ))}
               </select>
             </Field>
           </div>
@@ -115,16 +163,37 @@ export const RoutineReminders = ({ personId, itemId, state }: Props) => {
         {kind === "at" && (
           <>
             <Field label={copy.reminders.timeLabel}>
-              <input className={inputClass} type="time" disabled={!ready} value={time} onChange={(event) => setTime(event.target.value)} />
+              <input
+                className={inputClass}
+                type="time"
+                disabled={!ready}
+                value={time}
+                onChange={(event) => setTime(event.target.value)}
+              />
             </Field>
             <label className="flex min-h-11 items-center gap-2">
-              <input type="checkbox" className="size-5" disabled={!ready} checked={everyDay} onChange={(event) => setEveryDay(event.target.checked)} />
+              <input
+                type="checkbox"
+                className="size-5"
+                disabled={!ready}
+                checked={everyDay}
+                onChange={(event) => setEveryDay(event.target.checked)}
+              />
               {copy.reminders.everyDayLabel}
             </label>
           </>
         )}
-        {error && <p role="alert" className="text-late">{error}</p>}
-        <button type="button" className={`${secondaryButton} justify-self-start`} disabled={add.isPending || !ready} onClick={submit}>
+        {error && (
+          <p role="alert" className="text-late">
+            {error}
+          </p>
+        )}
+        <button
+          type="button"
+          className={`${secondaryButton} justify-self-start`}
+          disabled={add.isPending || !ready}
+          onClick={submit}
+        >
           {copy.reminders.add}
         </button>
         <p className="text-muted">{copy.reminders.privacyNote}</p>

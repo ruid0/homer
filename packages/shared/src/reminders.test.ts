@@ -28,9 +28,12 @@ describe("parseReminderWhen: relative", () => {
     ["  IN   10   MINUTES ", 10],
   ])("reads %s", (text, minutes) => expect(parseReminderWhen(text)).toEqual(inMinutes(minutes)));
 
-  it.each(["in 0 minutes", "in 25 hours", "in 1441 minutes", "in hours", "in a while", "in -5 minutes"])("rejects %s", (text) => {
-    expect(parseReminderWhen(text)).toBeNull();
-  });
+  it.each(["in 0 minutes", "in 25 hours", "in 1441 minutes", "in hours", "in a while", "in -5 minutes"])(
+    "rejects %s",
+    (text) => {
+      expect(parseReminderWhen(text)).toBeNull();
+    },
+  );
 
   it("accepts the full day and nothing beyond", () => {
     expect(parseReminderWhen(`in ${MAX_REMINDER_MINUTES} minutes`)).toEqual(inMinutes(MAX_REMINDER_MINUTES));
@@ -54,9 +57,12 @@ describe("parseReminderWhen: clock times", () => {
     ["23:59", at(23, 59)],
   ])("reads %s", (text, expected) => expect(parseReminderWhen(text)).toEqual(expected));
 
-  it.each(["13", "24:00", "12:60", "0pm", "13pm", "at 25", "sometime", "", "  ", "at", "at 9", "1:30", "9.15"])("rejects %s", (text) => {
-    expect(parseReminderWhen(text)).toBeNull();
-  });
+  it.each(["13", "24:00", "12:60", "0pm", "13pm", "at 25", "sometime", "", "  ", "at", "at 9", "1:30", "9.15"])(
+    "rejects %s",
+    (text) => {
+      expect(parseReminderWhen(text)).toBeNull();
+    },
+  );
 
   it("reads every valid 24-hour time", () => {
     fc.assert(

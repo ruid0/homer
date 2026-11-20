@@ -7,6 +7,8 @@
     "dev": "concurrently -n api,web \"pnpm --filter @homer/api dev\" \"pnpm --filter @homer/web dev\"",
     "test": "vitest run",
     "db:migrate": "pnpm --filter @homer/api db:migrate",
+    "format": "prettier --write \"apps/**/*.{ts,tsx}\" \"packages/**/*.{ts,tsx}\" \"*.ts\"",
+    "format:check": "prettier --check \"apps/**/*.{ts,tsx}\" \"packages/**/*.{ts,tsx}\" \"*.ts\"",
     "typecheck": "pnpm -r --if-present typecheck",
     "eval": "pnpm --filter @homer/api eval",
     "e2e": "pnpm --filter @homer/e2e e2e"
@@ -26,6 +28,7 @@
   "devDependencies": {
     "concurrently": "^10.0.6",
     "fast-check": "^4.10.2",
+    "prettier": "^3.10.1",
     "typescript": "^7.0.2",
     "vitest": "^5.0.5"
   }

@@ -19,7 +19,10 @@ const taskParts = (result: Result): string[] => {
   const repeat = orNull(result.repeat);
   const person = orNull(result.person);
   return [
-    [date === null ? report.noDate : report.forDay(dayLabel(date)), ...(time === null ? [] : [report.atTime(time)])].join(" "),
+    [
+      date === null ? report.noDate : report.forDay(dayLabel(date)),
+      ...(time === null ? [] : [report.atTime(time)]),
+    ].join(" "),
     ...(repeat === null ? [] : [report.repeating(repeat)]),
     ...(person === null ? [] : [report.forPerson(person)]),
   ];
@@ -30,7 +33,11 @@ const eventParts = (result: Result): string[] => {
   const time = orNull(result.time);
   const person = orNull(result.person);
   return [
-    [report.onDay(dayLabel(str(result.date))), ...(time === null ? [] : [report.atTime(time)]), ...(person === null ? [] : [report.forPerson(person)])].join(" "),
+    [
+      report.onDay(dayLabel(str(result.date))),
+      ...(time === null ? [] : [report.atTime(time)]),
+      ...(person === null ? [] : [report.forPerson(person)]),
+    ].join(" "),
   ];
 };
 
@@ -42,7 +49,12 @@ export const reportLine = (name: string, result: Result): string => {
     case "mark_out":
       return report.markOut(str(result.item));
     case "restock_item":
-      return report.restock(str(result.item), numberOrNull(result.added), str(result.unit), numberOrNull(result.quantity));
+      return report.restock(
+        str(result.item),
+        numberOrNull(result.added),
+        str(result.unit),
+        numberOrNull(result.quantity),
+      );
     case "add_item":
       return report.addItem(str(result.item), numberOrNull(result.quantity), str(result.unit));
     case "add_to_groceries":
@@ -89,11 +101,16 @@ export const isWriteTool = (name: string) => writeTools.has(name);
 
 const participle = "added|marked|restocked|completed|scheduled|created|saved|recorded|removed|booked";
 
-// First person, past tense, about a change ("I've added ...", "Added the ..."). Passive and present-tense wording is left
-// alone, because "your appointment is scheduled for Thursday" is an honest answer to a question. Best effort: a model can
+// First person, past tense, about a change ("I've added ...", "Added the ..."). Passive and present-tense wording is
+// left
+// alone, because "your appointment is scheduled for Thursday" is an honest answer to a question. Best effort: a model
+// can
 // always phrase a false claim some other way, which is why a change is only ever reported from the recorded result.
 const claims = [
-  new RegExp(`\\bI(?:'ve| have)?\\s+(?:just\\s+|now\\s+|gone ahead and\\s+)?(?:${participle}|started tracking|set up|put)\\b`, "i"),
+  new RegExp(
+    `\\bI(?:'ve| have)?\\s+(?:just\\s+|now\\s+|gone ahead and\\s+)?(?:${participle}|started tracking|set up|put)\\b`,
+    "i",
+  ),
   new RegExp(`^\\s*(?:ok(?:ay)?|sure|got it|done)[,.!]?\\s+(?:${participle})\\b`, "i"),
   new RegExp(`^\\s*(?:${participle})\\s+(?:the|a|an|it|your|\\d)`, "i"),
 ];
@@ -108,7 +125,8 @@ const closingQuestion = (reply: string): string | null =>
 
 type Outcome = { done: DoneChange[]; skipped?: Result[] };
 
-// The text for a turn. Changes are reported by code. The model's own words are used for what code cannot know: a question
+// The text for a turn. Changes are reported by code. The model's own words are used for what code cannot know: a
+// question
 // back to the person, or an answer when nothing changed.
 export const composeReply = ({ done, skipped = [] }: Outcome, modelText: string): string => {
   const said = modelText.trim();
@@ -125,4 +143,6 @@ export const composeReply = ({ done, skipped = [] }: Outcome, modelText: string)
 
 // What a turn that stopped early still has to say about the changes already made.
 export const withChanges = ({ done }: Outcome, text: string): string =>
-  done.length === 0 ? text : assistantCopy.doneBefore(done.map(({ name, result }) => reportLine(name, result)).join("\n"), text);
+  done.length === 0
+    ? text
+    : assistantCopy.doneBefore(done.map(({ name, result }) => reportLine(name, result)).join("\n"), text);

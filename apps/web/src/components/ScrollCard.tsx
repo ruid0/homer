@@ -29,9 +29,18 @@ export const ScrollCard = ({ title, children, className = "", hideTitle = false 
   }, [measure]);
 
   return (
-    <section aria-labelledby={headingId} className={`relative flex min-h-0 flex-col rounded-2xl border border-line bg-card ${className}`}>
-      <h2 id={headingId} className={hideTitle ? "sr-only" : "px-5 pb-2 pt-4 text-section font-semibold"}>{title}</h2>
-      <div ref={body} onScroll={measure} className={`min-h-0 flex-1 overflow-y-auto px-5 pb-4 ${hideTitle ? "pt-4" : ""}`}>
+    <section
+      aria-labelledby={headingId}
+      className={`relative flex min-h-0 flex-col rounded-2xl border border-line bg-card ${className}`}
+    >
+      <h2 id={headingId} className={hideTitle ? "sr-only" : "px-5 pb-2 pt-4 text-section font-semibold"}>
+        {title}
+      </h2>
+      <div
+        ref={body}
+        onScroll={measure}
+        className={`min-h-0 flex-1 overflow-y-auto px-5 pb-4 ${hideTitle ? "pt-4" : ""}`}
+      >
         <div ref={content}>{children}</div>
       </div>
       {hasMore && (

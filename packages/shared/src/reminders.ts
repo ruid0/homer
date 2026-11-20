@@ -10,7 +10,9 @@ const HOUR_WORDS = "(?:h|hr|hrs|hour|hours)";
 const MINUTE_WORDS = "(?:m|min|mins|minute|minutes)";
 
 const withinLimit = (minutes: number): ReminderWhen | null =>
-  Number.isFinite(minutes) && minutes >= 1 && minutes <= MAX_REMINDER_MINUTES ? { kind: "in", minutes: Math.round(minutes) } : null;
+  Number.isFinite(minutes) && minutes >= 1 && minutes <= MAX_REMINDER_MINUTES
+    ? { kind: "in", minutes: Math.round(minutes) }
+    : null;
 
 // "in an hour", "in half an hour", "in 30 minutes", "in 1.5 hours", "in 1 hour 30 minutes", "45 min".
 const relative = (text: string): ReminderWhen | null => {
@@ -51,7 +53,9 @@ export const parseReminderWhen = (text: string): ReminderWhen | null => {
 // The first time after `after` that the clock reads hour:minute, in the process's own time zone.
 export const nextClockTime = (hour: number, minute: number, after: Date): Date => {
   const today = new Date(after.getFullYear(), after.getMonth(), after.getDate(), hour, minute);
-  return today.getTime() > after.getTime() ? today : new Date(after.getFullYear(), after.getMonth(), after.getDate() + 1, hour, minute);
+  return today.getTime() > after.getTime()
+    ? today
+    : new Date(after.getFullYear(), after.getMonth(), after.getDate() + 1, hour, minute);
 };
 
 export const reminderFireAt = (when: ReminderWhen, now: Date): Date =>

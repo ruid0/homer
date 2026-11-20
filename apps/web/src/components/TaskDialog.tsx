@@ -23,7 +23,16 @@ type Props = {
 
 const orNull = (text: string) => (text === "" ? null : text);
 
-export const TaskDialog = ({ task, people, defaultPersonId, pending, serverError, onSave, onRemove, onClose }: Props) => {
+export const TaskDialog = ({
+  task,
+  people,
+  defaultPersonId,
+  pending,
+  serverError,
+  onSave,
+  onRemove,
+  onClose,
+}: Props) => {
   const [title, setTitle] = useState(task?.title ?? "");
   const [dueDate, setDueDate] = useState(task?.dueDate ?? "");
   const [dueTime, setDueTime] = useState(task?.dueTime ?? "");
@@ -65,12 +74,19 @@ export const TaskDialog = ({ task, people, defaultPersonId, pending, serverError
           <select className={inputClass} value={repeat} onChange={(e) => setRepeat(e.target.value)}>
             <option value="">{copy.taskForm.noRepeat}</option>
             {repeatValues.map((value) => (
-              <option key={value} value={value}>{copy.taskForm.repeatOptions[value]}</option>
+              <option key={value} value={value}>
+                {copy.taskForm.repeatOptions[value]}
+              </option>
             ))}
           </select>
         </Field>
         <PersonField label={copy.taskForm.person} people={people} value={personId} onChange={setPersonId} />
-        <DialogActions pending={pending} error={error ?? serverError} onCancel={onClose} remove={onRemove ? { label: copy.taskForm.removeTask, onClick: onRemove } : undefined} />
+        <DialogActions
+          pending={pending}
+          error={error ?? serverError}
+          onCancel={onClose}
+          remove={onRemove ? { label: copy.taskForm.removeTask, onClick: onRemove } : undefined}
+        />
       </form>
     </Dialog>
   );

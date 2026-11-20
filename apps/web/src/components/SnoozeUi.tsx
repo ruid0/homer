@@ -7,7 +7,8 @@ import { secondaryButton } from "./ui";
 
 type Props = { snooze: ReturnType<typeof useSnooze>; today: string };
 
-// The "Not today" choices and the toast after one. The dialog is the same sheet as every other, so Escape and a tap outside close it.
+// The "Not today" choices and the toast after one. The dialog is the same sheet as every other, so Escape and a tap
+// outside close it.
 export const SnoozeUi = ({ snooze, today }: Props) => {
   const { asking, toast } = snooze;
   return (
@@ -19,7 +20,11 @@ export const SnoozeUi = ({ snooze, today }: Props) => {
               const until = snoozeUntil(choice, today);
               return (
                 <li key={choice.label}>
-                  <button type="button" className={`${secondaryButton} flex w-full items-center justify-between`} onClick={() => snooze.choose(asking, until)}>
+                  <button
+                    type="button"
+                    className={`${secondaryButton} flex w-full items-center justify-between`}
+                    onClick={() => snooze.choose(asking, until)}
+                  >
                     {choice.label}
                     <span className="text-meta text-muted">{pastDate(until, today)}</span>
                   </button>
@@ -28,12 +33,18 @@ export const SnoozeUi = ({ snooze, today }: Props) => {
             })}
           </ul>
           <div className="mt-4 flex justify-end">
-            <button type="button" className={secondaryButton} onClick={snooze.cancel}>{copy.common.cancel}</button>
+            <button type="button" className={secondaryButton} onClick={snooze.cancel}>
+              {copy.common.cancel}
+            </button>
           </div>
         </Dialog>
       )}
       {toast && (
-        <Toast message={toast.message} onClose={snooze.closeToast} action={{ label: copy.maintenance.undo, onClick: snooze.takeBack, disabled: toast.busy }} />
+        <Toast
+          message={toast.message}
+          onClose={snooze.closeToast}
+          action={{ label: copy.maintenance.undo, onClick: snooze.takeBack, disabled: toast.busy }}
+        />
       )}
     </>
   );

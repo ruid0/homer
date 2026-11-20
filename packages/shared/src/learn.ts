@@ -11,7 +11,8 @@ export type Learned = { daysPerUnit: number; restocks: number };
 
 type Trip = { at: number; quantity: number };
 
-// A trip is every restock within a day of its first one, however many times "Bought it" was tapped. A chain of taps a little
+// A trip is every restock within a day of its first one, however many times "Bought it" was tapped. A chain of taps a
+// little
 // under a day apart does not stretch one trip forever: once a restock is a day past the trip's start, it is a new trip.
 const trips = (rows: readonly RestockRow[]): Trip[] =>
   rows
@@ -25,7 +26,8 @@ const trips = (rows: readonly RestockRow[]): Trip[] =>
         : [...merged, row];
     }, []);
 
-// How long a unit lasts, from the shop trips: the days between the first and last trip, over what was bought before the last one
+// How long a unit lasts, from the shop trips: the days between the first and last trip, over what was bought before the
+// last one
 // (the last trip's stock has not been used up yet). Null until there is enough history to trust.
 export const learnDaysPerUnit = (rows: readonly RestockRow[]): Learned | null => {
   const recent = trips(rows).slice(-LEARN_WINDOW);

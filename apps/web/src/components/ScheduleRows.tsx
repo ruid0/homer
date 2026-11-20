@@ -14,7 +14,9 @@ export const TaskRow = ({ task, busy, onDone, onEdit }: TaskRowProps) => {
       title={task.title}
       overdue={overdue}
       faded={task.projected}
-      status={overdue ? <span className={statusClass("late")}>{copy.schedule.overdueBy(task.daysOverdue)}</span> : undefined}
+      status={
+        overdue ? <span className={statusClass("late")}>{copy.schedule.overdueBy(task.daysOverdue)}</span> : undefined
+      }
       details={[task.personName, repeatText].filter((part) => part !== null)}
       actions={
         <>

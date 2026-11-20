@@ -9,7 +9,11 @@ import {
 
 describe("routineItemInputSchema", () => {
   it("defaults the target to one a day and trims the name", () => {
-    expect(routineItemInputSchema.parse({ personId: 1, name: "  Row A " })).toEqual({ personId: 1, name: "Row A", targetPerDay: 1 });
+    expect(routineItemInputSchema.parse({ personId: 1, name: "  Row A " })).toEqual({
+      personId: 1,
+      name: "Row A",
+      targetPerDay: 1,
+    });
   });
 
   it.each([0, -1, 1.5, MAX_ROUTINE_TARGET + 1])("rejects a target of %s", (targetPerDay) => {

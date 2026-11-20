@@ -7,7 +7,8 @@ import { publicProcedure, router } from "../trpc";
 type TaskRow = typeof tasks.$inferSelect;
 type EventRow = typeof events.$inferSelect;
 type EventView = EventRow & { personName: string | null };
-// `projected` marks a day a repeating task will come round to, not its real due date, so it cannot be ticked yet. It keeps the real due date, so Edit opens the real task.
+// `projected` marks a day a repeating task will come round to, not its real due date, so it cannot be ticked yet. It
+// keeps the real due date, so Edit opens the real task.
 type TaskView = TaskRow & { personName: string | null; daysOverdue: number; projected: boolean };
 
 const byWhen = (today: string) => (a: TaskRow, b: TaskRow) => {
@@ -24,12 +25,14 @@ const entryOf = (event: { date: string; time: string | null }) => ({ ...event, o
 const eventOrder = (a: EventView, b: EventView) =>
   compareSchedule(entryOf(a), entryOf(b)) || a.title.localeCompare(b.title) || a.id - b.id;
 
-const toView = (today: string) => ({ task, personName }: { task: TaskRow; personName: string | null }): TaskView => ({
-  ...task,
-  personName,
-  daysOverdue: isOverdue(task, today) && task.dueDate !== null ? daysBetween(task.dueDate, today) : 0,
-  projected: false,
-});
+const toView =
+  (today: string) =>
+  ({ task, personName }: { task: TaskRow; personName: string | null }): TaskView => ({
+    ...task,
+    personName,
+    daysOverdue: isOverdue(task, today) && task.dueDate !== null ? daysBetween(task.dueDate, today) : 0,
+    projected: false,
+  });
 
 const repeatsOn = (views: TaskView[], today: string, dates: string[]) => {
   const last = dates[dates.length - 1] ?? today;

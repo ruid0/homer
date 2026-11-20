@@ -276,7 +276,9 @@ describe("schedule.view repeats", () => {
     expect(view.days[0]?.tasks.map((task) => [task.title, task.projected])).toEqual([["Pills", false]]);
     expect(view.days[0]?.repeats).toEqual([]);
     for (const day of view.days.slice(1)) {
-      expect(day.repeats.map((task) => [task.title, task.projected, task.dueDate, task.dueTime])).toEqual([["Pills", true, today, "08:00"]]);
+      expect(day.repeats.map((task) => [task.title, task.projected, task.dueDate, task.dueTime])).toEqual([
+        ["Pills", true, today, "08:00"],
+      ]);
       expect(day.tasks).toEqual([]);
     }
   });
@@ -286,7 +288,9 @@ describe("schedule.view repeats", () => {
     await api.tasks.add({ title: "Bins", dueDate: "2026-11-03", repeat: "weekly" });
     await api.tasks.add({ title: "Rent", dueDate: "2026-11-02", repeat: "monthly" });
     const view = await api.schedule.view({ today, days: 14 });
-    const withBins = view.days.filter((day) => day.repeats.some((task) => task.title === "Bins")).map((day) => day.date);
+    const withBins = view.days
+      .filter((day) => day.repeats.some((task) => task.title === "Bins"))
+      .map((day) => day.date);
     expect(withBins).toEqual(["2026-11-10"]);
     expect(view.days.some((day) => day.repeats.some((task) => task.title === "Rent"))).toBe(false);
   });

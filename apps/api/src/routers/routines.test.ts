@@ -30,7 +30,9 @@ describe("routines.addItem", () => {
   it("rejects a person who does not exist and a blank name", async () => {
     const { api, person } = await setup();
     await expect(api.routines.addItem({ personId: 99, name: "Row A" })).rejects.toMatchObject({ code: "NOT_FOUND" });
-    await expect(api.routines.addItem({ personId: person.id, name: " " })).rejects.toMatchObject({ code: "BAD_REQUEST" });
+    await expect(api.routines.addItem({ personId: person.id, name: " " })).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+    });
   });
 });
 
@@ -91,36 +93,39 @@ describe("routines.setCount", () => {
 
   it("rejects a day that has not happened yet", async () => {
     const { api, row } = await withRow();
-    await expect(
-      api.routines.setCount({ itemId: row.id, date: "2026-11-06", today, count: 1 }),
-    ).rejects.toMatchObject({ code: "BAD_REQUEST", message: messages.routineDateInFuture });
+    await expect(api.routines.setCount({ itemId: row.id, date: "2026-11-06", today, count: 1 })).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+      message: messages.routineDateInFuture,
+    });
   });
 
   it("allows the oldest day of the eighth week back and rejects the day before it", async () => {
     const { api, row } = await withRow();
     // This week starts 2026-11-02, so eight weeks back is 2026-09-07.
     await expect(api.routines.setCount({ itemId: row.id, date: "2026-09-07", today, count: 1 })).resolves.toBeDefined();
-    await expect(
-      api.routines.setCount({ itemId: row.id, date: "2026-09-06", today, count: 1 }),
-    ).rejects.toMatchObject({ code: "BAD_REQUEST", message: messages.routineDateTooOld(8) });
+    await expect(api.routines.setCount({ itemId: row.id, date: "2026-09-06", today, count: 1 })).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+      message: messages.routineDateTooOld(8),
+    });
   });
 
   it("rejects a removed row and a row that does not exist", async () => {
     const { api, row } = await withRow();
     await api.routines.removeItem({ id: row.id });
-    await expect(
-      api.routines.setCount({ itemId: row.id, date: today, today, count: 1 }),
-    ).rejects.toMatchObject({ code: "NOT_FOUND", message: messages.routineRowRemoved });
-    await expect(
-      api.routines.setCount({ itemId: 99, date: today, today, count: 1 }),
-    ).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await expect(api.routines.setCount({ itemId: row.id, date: today, today, count: 1 })).rejects.toMatchObject({
+      code: "NOT_FOUND",
+      message: messages.routineRowRemoved,
+    });
+    await expect(api.routines.setCount({ itemId: 99, date: today, today, count: 1 })).rejects.toMatchObject({
+      code: "NOT_FOUND",
+    });
   });
 
   it("rejects a negative count", async () => {
     const { api, row } = await withRow();
-    await expect(
-      api.routines.setCount({ itemId: row.id, date: today, today, count: -1 }),
-    ).rejects.toMatchObject({ code: "BAD_REQUEST" });
+    await expect(api.routines.setCount({ itemId: row.id, date: today, today, count: -1 })).rejects.toMatchObject({
+      code: "BAD_REQUEST",
+    });
   });
 });
 

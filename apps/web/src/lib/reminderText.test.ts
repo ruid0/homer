@@ -45,7 +45,8 @@ describe("reminderWhenLabel", () => {
 
 describe("reminderChip", () => {
   const now = new Date(2026, 10, 19, 12, 0, 0);
-  const at = (minutes: number, seconds = 0) => new Date(now.getTime() + minutes * 60_000 + seconds * 1000).toISOString();
+  const at = (minutes: number, seconds = 0) =>
+    new Date(now.getTime() + minutes * 60_000 + seconds * 1000).toISOString();
 
   it("counts down in whole minutes, rounding up, inside the hour", () => {
     expect(reminderChip(at(12), null, now)).toEqual({ text: "Reminder in 12 min", soon: true });

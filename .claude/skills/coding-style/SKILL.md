@@ -1,6 +1,6 @@
 ---
 name: coding-style
-description: The owner's code style for this repo — functional and non-mutating, arrow functions, comments only for the ambiguous, ~600 LOC file ceiling, 120-column line limit, and UI labels that read like variable names. Use when writing, editing or reviewing any TypeScript, React or UI copy in this project.
+description: The owner's code style for this repo — functional and non-mutating, arrow functions, comments only for the ambiguous, ~600 LOC file ceiling, 120-column line limit (Prettier), and UI labels that read like variable names. Use when writing, editing or reviewing any TypeScript, React or UI copy in this project.
 ---
 
 # Coding
@@ -32,13 +32,12 @@ mutable state is not. When a loop is genuinely clearer, use it and say why in a 
 A file near or over that is **split by responsibility** into several files, not trimmed to fit. The
 limit is only the signal that the split is due. Check with `wc -l` before adding to a large file.
 
-## 2a. 120 columns is the longest a line gets
+## 2a. 120 columns, kept by Prettier
 
-Break a line that goes past 120 characters: put each argument, property or JSX attribute on its own
-line, or pull a long expression into a named `const`. Applies to code and comments you write or touch.
-Do not reformat untouched code to comply; existing long lines are fixed when their line is edited.
-Strings that cannot be broken (a URL, a copy string) are the one exception.
-Check with `git diff -U0 | grep '^+' | awk 'length>121'` (the `+` takes one character).
+`.prettierrc.json` sets `printWidth: 120` and Prettier formats all `.ts` and `.tsx` files. Run `pnpm format`
+after editing, and `pnpm format:check` to see what is off. Prettier does not wrap comments or strings, so
+break a comment past 120 yourself. A string that cannot be broken (a copy string, a class list, a path) is
+the one exception.
 
 ## 3. Functions should be small and focused
 

@@ -21,12 +21,19 @@ test("on a phone, the stepper and the unit buttons share one row and are 44px ta
   const dialog = page.getByRole("dialog");
   // The sheet slides up when it opens, so read the boxes only once they agree on where the row is.
   const box = async (name: string) => dialog.getByRole("button", { name }).boundingBox();
-  const unit = () => dialog.locator("label").filter({ hasText: /^months$/i }).boundingBox();
+  const unit = () =>
+    dialog
+      .locator("label")
+      .filter({ hasText: /^months$/i })
+      .boundingBox();
   await expect.poll(async () => (await box("One less"))?.y === (await unit())?.y).toBe(true);
   expect((await box("One less"))?.height).toBe(44);
   expect((await unit())?.height).toBe(44);
   const edge = (await dialog.boundingBox())?.width ?? 0;
-  const years = await dialog.locator("label").filter({ hasText: /^years$/i }).boundingBox();
+  const years = await dialog
+    .locator("label")
+    .filter({ hasText: /^years$/i })
+    .boundingBox();
   expect((years?.x ?? 0) + (years?.width ?? 0)).toBeLessThanOrEqual(edge);
 });
 
@@ -35,11 +42,16 @@ test("on a phone, an event's Edit sits at the right edge like a task's", async (
   await seedEvent(request, { title: `Edge event ${tag}`, date: todayUtc(), time: "09:00" });
   await page.goto("/schedule");
   const edit = await page.getByRole("button", { name: `Edit Edge event ${tag}` }).boundingBox();
-  const row = await page.getByRole("listitem").filter({ hasText: `Edge event ${tag}` }).boundingBox();
+  const row = await page
+    .getByRole("listitem")
+    .filter({ hasText: `Edge event ${tag}` })
+    .boundingBox();
   expect((row?.x ?? 0) + (row?.width ?? 0) - ((edit?.x ?? 0) + (edit?.width ?? 0))).toBeLessThanOrEqual(8);
 });
 
-test("on a phone, with the keyboard up the sheet fits above it and the first field stays on screen", async ({ page }) => {
+test("on a phone, with the keyboard up the sheet fits above it and the first field stays on screen", async ({
+  page,
+}) => {
   // Chromium has no on-screen keyboard, so the visible area is faked the way iOS reports it.
   await page.addInitScript(() => {
     const fake = Object.assign(new EventTarget(), { height: 844, offsetTop: 0, width: 390, offsetLeft: 0, scale: 1 });
@@ -54,7 +66,7 @@ test("on a phone, with the keyboard up the sheet fits above it and the first fie
   const dialog = page.getByRole("dialog");
   await page.evaluate(() => (window as unknown as { fakeKeyboard: (height: number) => void }).fakeKeyboard(400));
   // Wait out the slide-in, then measure.
-  await expect.poll(async () => ((await dialog.boundingBox())?.y ?? 9999)).toBeLessThanOrEqual(8);
+  await expect.poll(async () => (await dialog.boundingBox())?.y ?? 9999).toBeLessThanOrEqual(8);
   const box = await dialog.boundingBox();
   expect((box?.y ?? 0) + (box?.height ?? 9999)).toBeLessThanOrEqual(400);
   await expect(page.getByLabel("Name")).toBeInViewport();
@@ -65,10 +77,15 @@ test("on a phone, with the keyboard up the sheet fits above it and the first fie
 // 375x667 is an iPhone SE; 375x568 is the same phone with Safari's toolbars showing.
 const saveBottom = (dialog: Locator) =>
   // The sheet slides up when it opens, so this settles once it stops moving.
-  dialog.getByRole("button", { name: "Save" }).boundingBox().then((save) => (save?.y ?? Infinity) + (save?.height ?? 0));
+  dialog
+    .getByRole("button", { name: "Save" })
+    .boundingBox()
+    .then((save) => (save?.y ?? Infinity) + (save?.height ?? 0));
 
 for (const height of [667, 568]) {
-  test(`on a ${height}px-tall phone, the add-job dialog fits without scrolling inside itself, and Save is on screen`, async ({ page }) => {
+  test(`on a ${height}px-tall phone, the add-job dialog fits without scrolling inside itself, and Save is on screen`, async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 375, height });
     await page.goto("/upkeep");
     await page.getByRole("button", { name: "Add job" }).click();
@@ -80,7 +97,9 @@ for (const height of [667, 568]) {
     await expect.poll(() => saveBottom(dialog)).toBeLessThanOrEqual(height);
   });
 
-  test(`on a ${height}px-tall phone, with a date to pick Save stays on screen while the fields scroll`, async ({ page }) => {
+  test(`on a ${height}px-tall phone, with a date to pick Save stays on screen while the fields scroll`, async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 375, height });
     await page.goto("/upkeep");
     await page.getByRole("button", { name: "Add job" }).click();
@@ -113,11 +132,17 @@ for (const height of [667, 568]) {
 
 // 360 is the commonest Android width, 375 an iPhone SE or mini. Nothing may stick out past the dialog's side padding.
 for (const width of [375, 360]) {
-  test(`on a ${width}px-wide phone, the add and edit dialogs do not scroll sideways and every control stays inside the padding`, async ({ page, request }) => {
+  test(`on a ${width}px-wide phone, the add and edit dialogs do not scroll sideways and every control stays inside the padding`, async ({
+    page,
+    request,
+  }) => {
     await seedUpkeep(request, { name: `Wide job ${width}`, every: 3, unit: "months", lastDoneOn: daysAgo(5) });
     await page.setViewportSize({ width, height: 700 });
     await page.goto("/upkeep");
-    for (const open of [() => page.getByRole("button", { name: "Add job" }).click(), () => page.getByRole("button", { name: `Edit Wide job ${width}` }).click()]) {
+    for (const open of [
+      () => page.getByRole("button", { name: "Add job" }).click(),
+      () => page.getByRole("button", { name: `Edit Wide job ${width}` }).click(),
+    ]) {
       await open();
       const dialog = page.getByRole("dialog");
       await expect.poll(async () => (await dialog.boundingBox())?.y ?? 9999).toBeLessThan(300);
@@ -125,7 +150,9 @@ for (const width of [375, 360]) {
       if ((await dates.count()) > 0) await dates.click();
       expect(await dialog.evaluate((element) => element.scrollWidth - element.clientWidth)).toBeLessThanOrEqual(0);
       const edge = (await dialog.boundingBox())?.width ?? 0;
-      for (const control of await dialog.locator("input:not([type=radio]), select, label:has(input[type=radio]), button").all()) {
+      for (const control of await dialog
+        .locator("input:not([type=radio]), select, label:has(input[type=radio]), button")
+        .all()) {
         const box = await control.boundingBox();
         if (!box) continue;
         // The sticky Save row spans the whole width on purpose; its buttons are inside the padding like the fields.

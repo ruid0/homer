@@ -57,7 +57,10 @@ test.describe("on a mouse and keyboard screen", () => {
 test.describe("on a touch screen", () => {
   test.use({ viewport: { width: 375, height: 667 }, hasTouch: true, isMobile: true });
 
-  test("no field takes focus on its own, so the keyboard stays down and the title is in view", async ({ page, request }) => {
+  test("no field takes focus on its own, so the keyboard stays down and the title is in view", async ({
+    page,
+    request,
+  }) => {
     const name = await newItem(request);
     expect(await page.evaluate(() => matchMedia("(pointer: coarse)").matches)).toBe(true);
     const dialog = await openEdit(page, name);
@@ -74,7 +77,10 @@ test.describe("on a touch screen", () => {
     await expect(dialog.getByLabel("Name")).toBeFocused();
   });
 
-  test("with only 360px of height (the keyboard up), the title, the first field and Save are all on screen", async ({ page, request }) => {
+  test("with only 360px of height (the keyboard up), the title, the first field and Save are all on screen", async ({
+    page,
+    request,
+  }) => {
     const name = await newItem(request);
     await page.setViewportSize({ width: 375, height: 360 });
     // Measured at rest, not while the sheet is still sliding in.
@@ -104,8 +110,12 @@ test.describe("on a touch screen", () => {
     });
   }
 
-  // Rename person and Restock set autoFocus on their field in JSX, a different path from Edit item, so each is checked on its own.
-  test("Add event, Restock and Rename person start on the title and keep Save in view at 360px high", async ({ page, request }) => {
+  // Rename person and Restock set autoFocus on their field in JSX, a different path from Edit item, so each is checked
+  // on its own.
+  test("Add event, Restock and Rename person start on the title and keep Save in view at 360px high", async ({
+    page,
+    request,
+  }) => {
     await page.setViewportSize({ width: 375, height: 360 });
     await page.emulateMedia({ reducedMotion: "reduce" });
     const item = await newItem(request);
@@ -128,7 +138,9 @@ test.describe("on a touch screen", () => {
     }
   });
 
-  test("Add event: the date and time fields stay inside the sheet and have no native look to push them out", async ({ page }) => {
+  test("Add event: the date and time fields stay inside the sheet and have no native look to push them out", async ({
+    page,
+  }) => {
     await page.goto("/schedule");
     await page.getByRole("button", { name: "Add event" }).click();
     const dialog = page.getByRole("dialog");

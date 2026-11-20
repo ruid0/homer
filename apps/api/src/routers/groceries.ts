@@ -12,14 +12,16 @@ import { publicProcedure, router } from "../trpc";
 
 type EntryRow = typeof groceryEntries.$inferSelect;
 
-const entryClosed = () =>
-  new TRPCError({ code: "NOT_FOUND", message: messages.entryClosed });
+const entryClosed = () => new TRPCError({ code: "NOT_FOUND", message: messages.entryClosed });
 
-const quantityNeeded = () =>
-  new TRPCError({ code: "BAD_REQUEST", message: messages.quantityNeeded });
+const quantityNeeded = () => new TRPCError({ code: "BAD_REQUEST", message: messages.quantityNeeded });
 
 const findOpenEntry = (db: Pick<Db, "select">, id: number): EntryRow => {
-  const row = db.select().from(groceryEntries).where(and(eq(groceryEntries.id, id), isOpen)).get();
+  const row = db
+    .select()
+    .from(groceryEntries)
+    .where(and(eq(groceryEntries.id, id), isOpen))
+    .get();
   if (!row) throw entryClosed();
   return row;
 };
@@ -88,13 +90,20 @@ export const groceriesRouter = router({
         if (input.quantity === undefined) throw quantityNeeded();
         applyRestock(tx, entry.itemId, input.quantity);
       }
-      tx.update(groceryEntries).set({ boughtAt: new Date().toISOString() }).where(eq(groceryEntries.id, entry.id)).run();
+      tx.update(groceryEntries)
+        .set({ boughtAt: new Date().toISOString() })
+        .where(eq(groceryEntries.id, entry.id))
+        .run();
       if (entry.itemId !== null) syncGrocery(tx, entry.itemId);
     }),
   ),
 
   remove: publicProcedure.input(idInputSchema).mutation(({ ctx, input }) => {
     const entry = findOpenEntry(ctx.db, input.id);
-    ctx.db.update(groceryEntries).set({ removedAt: new Date().toISOString() }).where(eq(groceryEntries.id, entry.id)).run();
+    ctx.db
+      .update(groceryEntries)
+      .set({ removedAt: new Date().toISOString() })
+      .where(eq(groceryEntries.id, entry.id))
+      .run();
   }),
 });

@@ -45,7 +45,13 @@ describe("parseToolCall", () => {
   });
 
   it("accepts null for optional fields, as models often send them", () => {
-    const result = parseToolCall("add_task", { title: "Call plumber", dueDate: "2026-11-06", dueTime: null, repeat: null, person: null });
+    const result = parseToolCall("add_task", {
+      title: "Call plumber",
+      dueDate: "2026-11-06",
+      dueTime: null,
+      repeat: null,
+      person: null,
+    });
     expect(result.ok).toBe(true);
   });
 
@@ -117,7 +123,8 @@ describe("parseToolCall", () => {
 });
 
 describe("date fields in the tool schema", () => {
-  const propertiesOf = (name: string) => (toolDefinitions.find((tool) => tool.name === name)!.parameters.properties ?? {}) as Record<string, unknown>;
+  const propertiesOf = (name: string) =>
+    (toolDefinitions.find((tool) => tool.name === name)!.parameters.properties ?? {}) as Record<string, unknown>;
 
   it("do not demand the strict date pattern, because a day can be said in words", () => {
     for (const tool of toolDefinitions) {
@@ -132,7 +139,9 @@ describe("date fields in the tool schema", () => {
   });
 
   it("are only used by the tools that mean a day by them", () => {
-    const using = toolDefinitions.filter((tool) => Object.keys(propertiesOf(tool.name)).some((field) => dateFields.includes(field)));
+    const using = toolDefinitions.filter((tool) =>
+      Object.keys(propertiesOf(tool.name)).some((field) => dateFields.includes(field)),
+    );
     expect(using.map((tool) => tool.name).sort()).toEqual(["add_event", "add_task", "list_tasks"]);
   });
 

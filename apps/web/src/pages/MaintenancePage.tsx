@@ -33,7 +33,8 @@ export const MaintenancePage = () => {
 
   const add = trpc.maintenance.add.useMutation({ onSuccess: () => closed() });
   const update = trpc.maintenance.update.useMutation({ onSuccess: () => closed() });
-  // A failed remove keeps the dialog open with the error. If the item is already gone the dialog goes away with the refresh.
+  // A failed remove keeps the dialog open with the error. If the item is already gone the dialog goes away with the
+  // refresh.
   const remove = trpc.maintenance.remove.useMutation({ onSuccess: () => closed(), onError: refresh });
   const resetDialogErrors = () => [add, update, remove].forEach((mutation) => mutation.reset());
   const closed = () => {
@@ -85,7 +86,15 @@ export const MaintenancePage = () => {
   const rows = (group: MaintenanceItem[]) => (
     <ListCard>
       {group.map((item) => (
-        <MaintenanceRow key={item.id} item={item} busy={busy || snooze.busy} justDone={item.id === justDoneId} onDone={() => finish(item)} onEdit={() => open(item.id)} onSnooze={() => snooze.ask(item)} />
+        <MaintenanceRow
+          key={item.id}
+          item={item}
+          busy={busy || snooze.busy}
+          justDone={item.id === justDoneId}
+          onDone={() => finish(item)}
+          onEdit={() => open(item.id)}
+          onSnooze={() => snooze.ask(item)}
+        />
       ))}
     </ListCard>
   );
@@ -95,18 +104,28 @@ export const MaintenancePage = () => {
       <PageHeader
         title={copy.maintenance.title}
         blurb={copy.maintenance.blurb}
-        action={<button ref={addButton} type="button" className={primaryButton} onClick={() => open("new")}>{copy.maintenance.addItem}</button>}
+        action={
+          <button ref={addButton} type="button" className={primaryButton} onClick={() => open("new")}>
+            {copy.maintenance.addItem}
+          </button>
+        }
       />
 
       {list.isPending && <p role="status">{copy.maintenance.loading}</p>}
-      {list.error && <p role="alert" className="text-late">{copy.maintenance.loadFailed}</p>}
+      {list.error && (
+        <p role="alert" className="text-late">
+          {copy.maintenance.loadFailed}
+        </p>
+      )}
       <ErrorToast message={problem} />
       {list.data && items.length === 0 && <MaintenanceStarters onPick={(suggestion) => open("new", suggestion)} />}
 
       {list.data && items.length > 0 && (
         <div ref={listArea} className="grid gap-6">
           <section aria-labelledby="needs-doing" className="grid gap-2">
-            <h2 id="needs-doing" className="text-section font-semibold">{copy.maintenance.needsDoing}</h2>
+            <h2 id="needs-doing" className="text-section font-semibold">
+              {copy.maintenance.needsDoing}
+            </h2>
             {urgent.length === 0 ? <p className="text-muted">{copy.maintenance.nothingDue}</p> : rows(urgent)}
           </section>
           {later.length > 0 && (
@@ -121,7 +140,9 @@ export const MaintenancePage = () => {
                     onClick={() => setLaterOpen(!laterShown)}
                   >
                     {copy.maintenance.laterToggle(later.length)}
-                    <span aria-hidden="true" className={`transition-transform ${laterShown ? "rotate-180" : ""}`}>⌄</span>
+                    <span aria-hidden="true" className={`transition-transform ${laterShown ? "rotate-180" : ""}`}>
+                      ⌄
+                    </span>
                   </button>
                 ) : (
                   copy.maintenance.later

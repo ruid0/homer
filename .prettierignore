@@ -1,0 +1,13 @@
+node_modules
+dist
+build
+pnpm-lock.yaml
+backups
+*.md
+*.json
+*.css
+*.html
+apps/api/src/db/migrations
+.claude
+.playwright-mcp
+docs

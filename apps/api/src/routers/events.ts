@@ -12,7 +12,11 @@ const removed = () => new TRPCError({ code: "NOT_FOUND", message: messages.event
 export const isShown = isNull(events.removedAt);
 
 const requireShown = (db: Pick<Db, "select">, id: number): void => {
-  const found = db.select({ id: events.id }).from(events).where(and(eq(events.id, id), isShown)).get();
+  const found = db
+    .select({ id: events.id })
+    .from(events)
+    .where(and(eq(events.id, id), isShown))
+    .get();
   if (!found) throw removed();
 };
 

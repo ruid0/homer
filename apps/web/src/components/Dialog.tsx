@@ -3,8 +3,10 @@ import { keyboardFit } from "../lib/keyboardFit";
 
 type Props = { title: string; onClose: () => void; children: ReactNode };
 
-// The page behind a modal must not scroll. Hiding overflow is not enough on iOS Safari, so the body is pinned where it is and put back
-// afterwards. The counter is for two dialogs mounted at once; a dialog that replaces another releases the page for an instant and locks it again.
+// The page behind a modal must not scroll. Hiding overflow is not enough on iOS Safari, so the body is pinned where it
+// is and put back
+// afterwards. The counter is for two dialogs mounted at once; a dialog that replaces another releases the page for an
+// instant and locks it again.
 let locks = 0;
 let lockedAt = 0;
 
@@ -20,8 +22,10 @@ const unlockPage = () => {
   window.scrollTo({ top: lockedAt, behavior: "instant" });
 };
 
-// On a phone or tablet a field that takes focus on its own raises the on-screen keyboard, which covers the sheet before anyone has read its
-// title. So a touch screen starts on the title (which a screen reader reads out); a mouse and keyboard still land on the first field.
+// On a phone or tablet a field that takes focus on its own raises the on-screen keyboard, which covers the sheet before
+// anyone has read its
+// title. So a touch screen starts on the title (which a screen reader reads out); a mouse and keyboard still land on
+// the first field.
 const hasTouchScreen = () => window.matchMedia("(pointer: coarse)").matches;
 
 export const Dialog = ({ title, onClose, children }: Props) => {
@@ -39,8 +43,10 @@ export const Dialog = ({ title, onClose, children }: Props) => {
         heading.current.setAttribute("autofocus", "");
       }
       ref.current.showModal();
-      // Some phones focus the first field whatever the autofocus attribute says, which raises the keyboard over the sheet.
-      if (hasTouchScreen() && heading.current && document.activeElement !== heading.current) heading.current.focus({ preventScroll: true });
+      // Some phones focus the first field whatever the autofocus attribute says, which raises the keyboard over the
+      // sheet.
+      if (hasTouchScreen() && heading.current && document.activeElement !== heading.current)
+        heading.current.focus({ preventScroll: true });
     }
     // Closing removes the dialog, so focus goes back to the control that opened it instead of the top of the page.
     // It waits a tick: while the dialog is still open, everything behind it cannot take focus.
@@ -48,19 +54,25 @@ export const Dialog = ({ title, onClose, children }: Props) => {
     return () => {
       unlockPage();
       window.setTimeout(() => {
-        const target = opener instanceof HTMLElement && opener.isConnected ? opener : document.querySelector<HTMLElement>("main");
+        const target =
+          opener instanceof HTMLElement && opener.isConnected ? opener : document.querySelector<HTMLElement>("main");
         target?.focus();
       }, 0);
     };
   }, [opener]);
 
-  // A click on the dimmed page behind closes the dialog, like Escape. The press must start there too, so selecting text in a field and
-  // letting go outside does not close it. The dialog's own padding is also "the dialog" to the browser, so the position decides.
-  // A click made with the keyboard (Enter or Space on a button) has no position, and no pointer press behind it: it never closes the dialog.
+  // A click on the dimmed page behind closes the dialog, like Escape. The press must start there too, so selecting text
+  // in a field and
+  // letting go outside does not close it. The dialog's own padding is also "the dialog" to the browser, so the position
+  // decides.
+  // A click made with the keyboard (Enter or Space on a button) has no position, and no pointer press behind it: it
+  // never closes the dialog.
   const pressedOutside = useRef(false);
   const isOutside = (event: MouseEvent<HTMLDialogElement>) => {
     const box = event.currentTarget.getBoundingClientRect();
-    return event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom;
+    return (
+      event.clientX < box.left || event.clientX > box.right || event.clientY < box.top || event.clientY > box.bottom
+    );
   };
 
   // With the keyboard up, the sheet is fitted to the visible area so the first fields stay on screen.
@@ -98,7 +110,9 @@ export const Dialog = ({ title, onClose, children }: Props) => {
       }}
       className="m-auto max-h-[calc(100dvh-2rem)] w-[min(28rem,calc(100vw-2rem))] overflow-y-auto overscroll-contain rounded-xl bg-card p-5 text-inherit backdrop:animate-backdrop-in backdrop:bg-scrim max-md:mb-0 max-md:w-full max-md:max-w-none max-md:animate-sheet-up max-md:rounded-b-none max-md:rounded-t-2xl max-md:pb-[max(1.25rem,env(safe-area-inset-bottom))] md:animate-dialog-in"
     >
-      <h2 ref={heading} className="mb-4 text-section font-semibold outline-none">{title}</h2>
+      <h2 ref={heading} className="mb-4 text-section font-semibold outline-none">
+        {title}
+      </h2>
       {children}
     </dialog>
   );

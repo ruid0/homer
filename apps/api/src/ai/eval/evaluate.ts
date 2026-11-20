@@ -31,13 +31,21 @@ export const evaluateCase = async (golden: GoldenCase, chat: ChatClient): Promis
     ...chat,
     chat: async (messages, tools) => {
       const reply = await chat.chat(messages, tools);
-      calls.push(...reply.toolCalls.map((call) => ({ name: call.name, args: asArgs(call.name, call.args, golden.prompt) })));
+      calls.push(
+        ...reply.toolCalls.map((call) => ({ name: call.name, args: asArgs(call.name, call.args, golden.prompt) })),
+      );
       return reply;
     },
   };
   const started = performance.now();
   try {
-    const { reply, actionIds } = await runAssistant({ db, chat: recording, today: EVAL_TODAY, history: [], text: golden.prompt });
+    const { reply, actionIds } = await runAssistant({
+      db,
+      chat: recording,
+      today: EVAL_TODAY,
+      history: [],
+      text: golden.prompt,
+    });
     const reason = await golden.check({ reply, calls, writes: actionIds.length, api });
     return { id: golden.id, passed: reason === null, reason, ms: performance.now() - started, reply, calls };
   } catch (error) {
@@ -45,7 +53,8 @@ export const evaluateCase = async (golden: GoldenCase, chat: ChatClient): Promis
   }
 };
 
-const percentile = (sorted: number[], share: number) => sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * share))] ?? 0;
+const percentile = (sorted: number[], share: number) =>
+  sorted[Math.min(sorted.length - 1, Math.floor(sorted.length * share))] ?? 0;
 
 const median = (sorted: number[]) => {
   const middle = Math.floor(sorted.length / 2);

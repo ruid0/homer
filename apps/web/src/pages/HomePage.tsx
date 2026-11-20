@@ -72,7 +72,9 @@ export const HomePage = () => {
       {
         onSuccess: ({ next }) =>
           setMessage(
-            next?.dueDate ? copy.home.taskDoneNext(task.title, dayHeading(next.dueDate, today)) : copy.home.taskDone(task.title),
+            next?.dueDate
+              ? copy.home.taskDoneNext(task.title, dayHeading(next.dueDate, today))
+              : copy.home.taskDone(task.title),
           ),
       },
     );
@@ -100,7 +102,8 @@ export const HomePage = () => {
     <div className="flex flex-col gap-4">
       <h1 className="text-page font-semibold">{dateName(today)}</h1>
 
-      {/* One column up to lg, two equal columns from lg, 3 to 2 from xl. One to three late jobs jump to the top of the single column. */}
+      {/* One column up to lg, two equal columns from lg, 3 to 2 from xl.
+          One to three late jobs jump to the top of the single column. */}
       <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2 xl:grid-cols-[3fr_2fr]">
         <ScrollCard title={copy.home.today} className="lg:row-span-2 lg:max-h-[calc(100dvh-8rem)]">
           {view.isPending && <p role="status">{copy.home.loading}</p>}
@@ -110,22 +113,38 @@ export const HomePage = () => {
         </ScrollCard>
 
         <Card
-          title={<Link to="/upkeep" className="inline-block py-2 underline-offset-4 hover:underline focus-visible:underline">{copy.home.upkeep}</Link>}
+          title={
+            <Link to="/upkeep" className="inline-block py-2 underline-offset-4 hover:underline focus-visible:underline">
+              {copy.home.upkeep}
+            </Link>
+          }
           className={jumpFirst ? "order-first lg:order-none" : ""}
         >
           {upkeep.isPending && <p role="status">{copy.home.loading}</p>}
           {upkeep.error && <p role="alert">{copy.home.upkeepFailed}</p>}
           <div ref={dueArea} tabIndex={-1} className="outline-none">
-            {upkeep.data && <UpkeepList items={due} busy={upkeepDone.busy || snooze.busy} justDoneId={upkeepDone.justDoneId} onDone={finishUpkeep} onSnooze={snooze.ask} />}
+            {upkeep.data && (
+              <UpkeepList
+                items={due}
+                busy={upkeepDone.busy || snooze.busy}
+                justDoneId={upkeepDone.justDoneId}
+                onDone={finishUpkeep}
+                onSnooze={snooze.ask}
+              />
+            )}
           </div>
-          {upkeep.data && due.length === 0 && <p className="border-t border-line py-4 text-muted">{copy.home.nothingDue}</p>}
+          {upkeep.data && due.length === 0 && (
+            <p className="border-t border-line py-4 text-muted">{copy.home.nothingDue}</p>
+          )}
         </Card>
 
         <Card title={copy.home.runningOut}>
           {items.isPending && <p role="status">{copy.home.loading}</p>}
           {items.error && <p role="alert">{copy.home.runningOutFailed}</p>}
           {items.data && <RunningOutList rows={running} onBought={setRestocking} />}
-          {items.data && running.length === 0 && <p className="border-t border-line py-4 text-muted">{copy.home.nothingRunningOut}</p>}
+          {items.data && running.length === 0 && (
+            <p className="border-t border-line py-4 text-muted">{copy.home.nothingRunningOut}</p>
+          )}
         </Card>
       </div>
 

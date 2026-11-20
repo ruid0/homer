@@ -6,7 +6,12 @@ import { createCaller } from "../routers";
 
 const setup = () => {
   const db = createDb(":memory:");
-  const openEntries = () => db.select().from(groceryEntries).all().filter((e) => !e.boughtAt && !e.removedAt);
+  const openEntries = () =>
+    db
+      .select()
+      .from(groceryEntries)
+      .all()
+      .filter((e) => !e.boughtAt && !e.removedAt);
   return { db, api: createCaller({ db }), openEntries };
 };
 

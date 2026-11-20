@@ -6,11 +6,14 @@ import { messages } from "../messages";
 
 export type ItemRow = typeof items.$inferSelect;
 
-export const notFound = () =>
-  new TRPCError({ code: "NOT_FOUND", message: messages.itemNotFound });
+export const notFound = () => new TRPCError({ code: "NOT_FOUND", message: messages.itemNotFound });
 
 export const findActive = (db: Pick<Db, "select">, id: number): ItemRow => {
-  const row = db.select().from(items).where(and(eq(items.id, id), isNull(items.archivedAt))).get();
+  const row = db
+    .select()
+    .from(items)
+    .where(and(eq(items.id, id), isNull(items.archivedAt)))
+    .get();
   if (!row) throw notFound();
   return row;
 };

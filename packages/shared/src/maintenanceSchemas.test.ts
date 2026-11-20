@@ -14,7 +14,13 @@ const base = { name: "  Filter ", every: 3, unit: "months" as const, today };
 
 describe("maintenanceItemInputSchema", () => {
   it("trims the name and defaults last done to never", () => {
-    expect(maintenanceItemInputSchema.parse(base)).toEqual({ name: "Filter", every: 3, unit: "months", lastDoneOn: null, today });
+    expect(maintenanceItemInputSchema.parse(base)).toEqual({
+      name: "Filter",
+      every: 3,
+      unit: "months",
+      lastDoneOn: null,
+      today,
+    });
   });
 
   it.each([0, -1, 1.5, MAX_MAINTENANCE_EVERY + 1])("rejects an interval of %s", (every) => {

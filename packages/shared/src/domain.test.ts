@@ -94,17 +94,26 @@ describe("needsRestock", () => {
 
   it("is always true when out, whatever the estimate or threshold", () => {
     fc.assert(
-      fc.property(fc.option(fc.integer({ min: 0, max: 365 }), { nil: null }), fc.integer({ min: 0, max: 365 }), (days, threshold) => {
-        expect(needsRestock(stock(0, days, threshold))).toBe(true);
-      }),
+      fc.property(
+        fc.option(fc.integer({ min: 0, max: 365 }), { nil: null }),
+        fc.integer({ min: 0, max: 365 }),
+        (days, threshold) => {
+          expect(needsRestock(stock(0, days, threshold))).toBe(true);
+        },
+      ),
     );
   });
 
   it("flips exactly at the threshold when stock remains", () => {
     fc.assert(
-      fc.property(positive, fc.integer({ min: 0, max: 365 }), fc.integer({ min: 0, max: 365 }), (quantity, days, threshold) => {
-        expect(needsRestock(stock(quantity, days, threshold))).toBe(days <= threshold);
-      }),
+      fc.property(
+        positive,
+        fc.integer({ min: 0, max: 365 }),
+        fc.integer({ min: 0, max: 365 }),
+        (quantity, days, threshold) => {
+          expect(needsRestock(stock(quantity, days, threshold))).toBe(days <= threshold);
+        },
+      ),
     );
   });
 });

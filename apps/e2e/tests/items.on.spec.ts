@@ -13,7 +13,8 @@ const newItem = async (request: Parameters<typeof seedItem>[0]) => {
   return name;
 };
 
-const row = (page: Page, name: string) => page.getByRole("listitem").filter({ has: page.getByText(name, { exact: true }) });
+const row = (page: Page, name: string) =>
+  page.getByRole("listitem").filter({ has: page.getByText(name, { exact: true }) });
 
 const openEdit = async (page: Page, name: string) => {
   await page.goto("/items");
@@ -36,7 +37,9 @@ test.describe("Ran out in the Edit dialog", () => {
     const name = await newItem(request);
     const dialog = await openEdit(page, name);
     await expect(dialog.getByText("Sets the quantity to 0 and puts it on the grocery list.")).toBeVisible();
-    await expect(dialog.getByRole("button", { name: `Ran out: ${name}` })).toHaveAccessibleDescription("Sets the quantity to 0 and puts it on the grocery list.");
+    await expect(dialog.getByRole("button", { name: `Ran out: ${name}` })).toHaveAccessibleDescription(
+      "Sets the quantity to 0 and puts it on the grocery list.",
+    );
     await dialog.getByRole("button", { name: `Ran out: ${name}` }).click();
     await expect(dialog).toHaveCount(0);
     await expect(row(page, name)).toContainText("Ran out");
@@ -54,7 +57,10 @@ test.describe("Ran out in the Edit dialog", () => {
     await expect(page.getByRole("dialog").getByRole("button", { name: /^Ran out/ })).toHaveCount(0);
   });
 
-  test("is not offered while the form has unsaved changes, and comes back when they are undone", async ({ page, request }) => {
+  test("is not offered while the form has unsaved changes, and comes back when they are undone", async ({
+    page,
+    request,
+  }) => {
     const name = await newItem(request);
     const dialog = await openEdit(page, name);
     const ranOut = dialog.getByRole("button", { name: `Ran out: ${name}` });
@@ -86,7 +92,10 @@ test.describe("Ran out in the Edit dialog", () => {
     await expect(page.getByRole("dialog").getByRole("alert")).toHaveCount(0);
   });
 
-  test("the error goes away once the form is changed, and the button's lock holds against Save", async ({ page, request }) => {
+  test("the error goes away once the form is changed, and the button's lock holds against Save", async ({
+    page,
+    request,
+  }) => {
     const name = await newItem(request);
     await interceptCall(page, "inventory.markOut", { answer: failure("Could not mark it out.") });
     const dialog = await openEdit(page, name);
@@ -132,7 +141,10 @@ test.describe("Ran out in the Edit dialog", () => {
     await expect(page.getByRole("button", { name: `Edit ${name}` })).toBeFocused();
   });
 
-  test("has a 44px-tall button that fits the dialog, and keeps its contrast in dark mode", async ({ page, request }) => {
+  test("has a 44px-tall button that fits the dialog, and keeps its contrast in dark mode", async ({
+    page,
+    request,
+  }) => {
     const name = await newItem(request);
     await page.emulateMedia({ colorScheme: "dark" });
     const dialog = await openEdit(page, name);

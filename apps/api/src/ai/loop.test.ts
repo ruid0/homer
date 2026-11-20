@@ -77,13 +77,21 @@ describe("runAssistant", () => {
       ],
       text: "Next",
     });
-    expect(chat.calls[0]!.slice(1).map((message) => message.content)).toEqual(["Earlier question", "Earlier answer", "Next"]);
+    expect(chat.calls[0]!.slice(1).map((message) => message.content)).toEqual([
+      "Earlier question",
+      "Earlier answer",
+      "Next",
+    ]);
   });
 
   it("tells the model what was wrong with invalid arguments, and lets it try again", async () => {
     const { db, api } = setup();
     await api.inventory.create(salt);
-    const chat = scriptedChat([useTool("restock_item", { name: "salt", quantity: -1 }), useTool("restock_item", { name: "salt", quantity: 2 }), say("Added 2.")]);
+    const chat = scriptedChat([
+      useTool("restock_item", { name: "salt", quantity: -1 }),
+      useTool("restock_item", { name: "salt", quantity: 2 }),
+      say("Added 2."),
+    ]);
     const done = await runAssistant({ db, chat, today, history: [], text: "Bought 2 salt" });
     expect(done.reply).toBe("Restocked Salt: added 2 bag, now 4.");
     const retry = chat.calls[1]!.at(-1) as { content: string };
@@ -161,7 +169,10 @@ describe("runAssistant", () => {
 
   it("puts in the time the person said when the model leaves it out", async () => {
     const { db } = setup();
-    const chat = scriptedChat([useTool("add_task", { title: "Water the plants", dueDate: "2026-11-05" }), say("Added.")]);
+    const chat = scriptedChat([
+      useTool("add_task", { title: "Water the plants", dueDate: "2026-11-05" }),
+      say("Added."),
+    ]);
     await runAssistant({ db, chat, today, history: [], text: "Water the plants Thursday at 18:00" });
     expect(db.select().from(tasks).all()[0]).toMatchObject({ dueTime: "18:00" });
   });
@@ -210,10 +221,18 @@ describe("runAssistant", () => {
     const { db, api } = setup();
     await api.inventory.create(salt);
     const chat = scriptedChat([
-      { content: "", toolCalls: [{ name: "mark_out", args: { name: "salt" } }, { name: "mark_out", args: { name: "flour" } }] },
+      {
+        content: "",
+        toolCalls: [
+          { name: "mark_out", args: { name: "salt" } },
+          { name: "mark_out", args: { name: "flour" } },
+        ],
+      },
       say("Marked salt. Flour is not tracked."),
     ]);
     const done = await runAssistant({ db, chat, today, history: [], text: "out of salt and flour" });
-    expect(done.reply).toBe("Marked Salt as out and added it to groceries.\nflour isn't tracked, so nothing changed for it.");
+    expect(done.reply).toBe(
+      "Marked Salt as out and added it to groceries.\nflour isn't tracked, so nothing changed for it.",
+    );
   });
 });

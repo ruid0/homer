@@ -66,7 +66,12 @@ export const EventDialog = ({
           <input className={inputClass} type="time" value={time} onChange={(e) => setTime(e.target.value)} />
         </Field>
         <PersonField label={copy.eventForm.person} people={people} value={personId} onChange={setPersonId} />
-        <DialogActions pending={pending} error={error ?? serverError} onCancel={onClose} remove={onRemove ? { label: copy.eventForm.removeEvent, onClick: onRemove } : undefined} />
+        <DialogActions
+          pending={pending}
+          error={error ?? serverError}
+          onCancel={onClose}
+          remove={onRemove ? { label: copy.eventForm.removeEvent, onClick: onRemove } : undefined}
+        />
       </form>
     </Dialog>
   );

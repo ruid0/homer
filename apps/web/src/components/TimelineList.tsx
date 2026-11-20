@@ -14,7 +14,15 @@ const rowClass = "flex min-h-20 items-center gap-4 border-t border-line py-3";
 const timeClass = "w-24 shrink-0 text-title font-semibold tabular-nums";
 const subline = (parts: (string | null)[]) => parts.filter(Boolean).join(copy.common.separator);
 
-const DoneButton = ({ task, busy, onDone }: { task: ScheduleTask; busy: boolean; onDone: (task: ScheduleTask) => void }) => (
+const DoneButton = ({
+  task,
+  busy,
+  onDone,
+}: {
+  task: ScheduleTask;
+  busy: boolean;
+  onDone: (task: ScheduleTask) => void;
+}) => (
   <button
     type="button"
     className={`${secondaryButton} ${doneSize} shrink-0`}
@@ -54,7 +62,9 @@ export const TimelineList = ({ rows, nowTime, busy, onDone }: Props) => (
           <span className={timeClass}>{task.dueTime ?? copy.home.anyTime}</span>
           <div className="min-w-0 flex-1">
             <p className="text-title font-semibold">{task.title}</p>
-            {row.kind === "overdue" && <p className={statusClass("late")}>{copy.schedule.overdueBy(task.daysOverdue)}</p>}
+            {row.kind === "overdue" && (
+              <p className={statusClass("late")}>{copy.schedule.overdueBy(task.daysOverdue)}</p>
+            )}
             {task.personName && <p className="text-meta text-muted">{task.personName}</p>}
           </div>
           <DoneButton task={task} busy={busy} onDone={onDone} />

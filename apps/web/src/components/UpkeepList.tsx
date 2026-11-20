@@ -4,7 +4,13 @@ import type { MaintenanceItem } from "../trpc";
 import { HomeRow } from "./HomeRow";
 import { doneSize, quietButton, secondaryButton } from "./ui";
 
-type Props = { items: MaintenanceItem[]; busy: boolean; justDoneId?: number | null; onDone: (item: MaintenanceItem) => void; onSnooze: (item: MaintenanceItem) => void };
+type Props = {
+  items: MaintenanceItem[];
+  busy: boolean;
+  justDoneId?: number | null;
+  onDone: (item: MaintenanceItem) => void;
+  onSnooze: (item: MaintenanceItem) => void;
+};
 
 // Buttons stack on a phone, so the name keeps its width.
 export const UpkeepList = ({ items, busy, justDoneId = null, onDone, onSnooze }: Props) => (
@@ -20,7 +26,13 @@ export const UpkeepList = ({ items, busy, justDoneId = null, onDone, onSnooze }:
         action={
           <div className="flex shrink-0 flex-col items-end sm:flex-row sm:items-center">
             {item.status !== "soon" && (
-              <button type="button" className={quietButton} disabled={busy} aria-label={copy.maintenance.notTodayLabel(item.name)} onClick={() => onSnooze(item)}>
+              <button
+                type="button"
+                className={quietButton}
+                disabled={busy}
+                aria-label={copy.maintenance.notTodayLabel(item.name)}
+                onClick={() => onSnooze(item)}
+              >
                 {copy.maintenance.notToday}
               </button>
             )}

@@ -27,9 +27,15 @@ export const ReminderSetup = ({ personId, state, onTurnedOn }: Props) => {
 
   return (
     <section className="mt-6 grid gap-2 rounded-xl border border-line p-4" aria-labelledby="reminder-setup">
-      <h2 id="reminder-setup" className="font-semibold">{copy.reminders.setupTitle}</h2>
+      <h2 id="reminder-setup" className="font-semibold">
+        {copy.reminders.setupTitle}
+      </h2>
       {state === "notificationsOff" && <p>{copy.reminders.notificationsOffSetup}</p>}
-      {state === "failed" && <p role="alert" className="text-late">{copy.reminders.statusFailed}</p>}
+      {state === "failed" && (
+        <p role="alert" className="text-late">
+          {copy.reminders.statusFailed}
+        </p>
+      )}
       {(state === "needsSetup" || state === "ready") && !shown && (
         <button
           type="button"
@@ -40,7 +46,11 @@ export const ReminderSetup = ({ personId, state, onTurnedOn }: Props) => {
           {state === "ready" ? copy.reminders.showSetup : copy.reminders.turnOn}
         </button>
       )}
-      {setup.error && <p role="alert" className="text-late">{setup.error.message}</p>}
+      {setup.error && (
+        <p role="alert" className="text-late">
+          {setup.error.message}
+        </p>
+      )}
       {shown && setup.data && (
         <div className="grid gap-2">
           <p>{copy.reminders.setupSteps(setup.data.server)}</p>
@@ -52,7 +62,9 @@ export const ReminderSetup = ({ personId, state, onTurnedOn }: Props) => {
             <span className="text-muted">{copy.reminders.topicLabel}: </span>
             <code className="break-all">{setup.data.topic}</code>
           </p>
-          <button type="button" className={`${secondaryButton} justify-self-start`} onClick={hide}>{copy.reminders.hideSetup}</button>
+          <button type="button" className={`${secondaryButton} justify-self-start`} onClick={hide}>
+            {copy.reminders.hideSetup}
+          </button>
         </div>
       )}
     </section>

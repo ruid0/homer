@@ -28,10 +28,12 @@ test.describe("error toasts", () => {
     const box = await toast.boundingBox();
     expect(box?.y).toBeGreaterThan((page.viewportSize()?.height ?? 0) / 2);
     await expect(page.getByRole("button", { name: "Add job" })).toBeVisible();
-    expect(await page.getByRole("button", { name: "Add job" }).evaluate((element) => {
-      const rect = element.getBoundingClientRect();
-      return document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2) === element;
-    })).toBe(true);
+    expect(
+      await page.getByRole("button", { name: "Add job" }).evaluate((element) => {
+        const rect = element.getBoundingClientRect();
+        return document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2) === element;
+      }),
+    ).toBe(true);
     // Floating over the page, not a line that moves the content.
     expect(await toast.evaluate((element) => getComputedStyle(element).position)).toBe("fixed");
   });
@@ -90,7 +92,8 @@ test.describe("error toasts", () => {
 });
 
 test.describe("error toasts on the other pages", () => {
-  const failed = (page: import("@playwright/test").Page) => page.getByRole("alert").filter({ hasText: "Could not save. Try again." });
+  const failed = (page: import("@playwright/test").Page) =>
+    page.getByRole("alert").filter({ hasText: "Could not save. Try again." });
 
   test("Home: a failed task Done", async ({ page, request }) => {
     await seedTask(request, { title: "Home toast task", dueDate: todayUtc() });

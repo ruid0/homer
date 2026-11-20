@@ -10,8 +10,10 @@ const iconPaths = {
   groceries: "M3 4h2l2.4 11h10.2l2-8H6.2M9 19.5a.5.5 0 1 0 0 1 .5.5 0 0 0 0-1M17 19.5a.5.5 0 1 0 0 1 .5.5 0 0 0 0-1",
   schedule: "M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zM4 10h16M8 3v4M16 3v4",
   assistant: "M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12zM8.5 11.5h.01M12 11.5h.01M15.5 11.5h.01",
-  upkeep: "M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z",
-  people: "M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM2 20c0-3.3 3-6 7-6s7 2.7 7 6M16 4.3a3.5 3.5 0 0 1 0 6.4M18 14.3c2.3.7 4 2.6 4 5.7",
+  upkeep:
+    "M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z",
+  people:
+    "M9 11a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7zM2 20c0-3.3 3-6 7-6s7 2.7 7 6M16 4.3a3.5 3.5 0 0 1 0 6.4M18 14.3c2.3.7 4 2.6 4 5.7",
 };
 
 const navItems: { to: string; label: string; icon: string; end?: boolean; badge?: boolean }[] = [
@@ -76,14 +78,17 @@ const NavContent = ({ item, size }: { item: Item; size: string }) => {
   );
 };
 
-const linkClass = (layout: string) => ({ isActive }: { isActive: boolean }) =>
-  `flex flex-col items-center justify-center font-bold transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${layout} ${
-    isActive ? "bg-primary text-on-primary" : "hover:bg-hover"
-  }`;
+const linkClass =
+  (layout: string) =>
+  ({ isActive }: { isActive: boolean }) =>
+    `flex flex-col items-center justify-center font-bold transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${layout} ${
+      isActive ? "bg-primary text-on-primary" : "hover:bg-hover"
+    }`;
 
 // The rail is w-32, which fits "Groceries" at text-base; a longer label needs a wider rail.
 const railLink = linkClass("gap-1 rounded-2xl py-2 text-base");
-// Seven labels share the width of a phone, so the bar uses a small size and a tight track. the nav token keeps "Groceries" inside its cell at 360px.
+// Seven labels share the width of a phone, so the bar uses a small size and a tight track. the nav token keeps
+// "Groceries" inside its cell at 360px.
 const barLink = linkClass("min-h-14 min-w-0 gap-0.5 rounded-xl text-nav tracking-tight");
 
 export const RailNav = ({ header }: { header: React.ReactNode }) => (

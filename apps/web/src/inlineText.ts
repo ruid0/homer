@@ -11,7 +11,8 @@ const textAttribute = /\b(?:aria-label|placeholder|title|alt|label)=(?:"[^"]*[A-
 const visibleCall = /(?:window\.(?:confirm|alert)\(|setError\(|\bmessage:|\?\?)\s*(["'`])[^"'`\n]*[A-Za-z]/g;
 
 // Heuristic, not a parser: TypeScript 7 has no JS compiler API. It finds capitalised string
-// literals, string literals where visible text goes (confirm, setError, message, ??), text between JSX tags (also across lines and next to expressions), and text props.
+// literals, string literals where visible text goes (confirm, setError, message, ??), text between JSX tags (also
+// across lines and next to expressions), and text props.
 export const findInlineText = (source: string, isTsx: boolean): string[] => {
   const code = withoutComments(source).replace(/^import .*$/gm, "");
   const markup = isTsx ? withoutBraces(code.replaceAll("=>", "  ")) : "";
