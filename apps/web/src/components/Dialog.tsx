@@ -39,6 +39,8 @@ export const Dialog = ({ title, onClose, children }: Props) => {
         heading.current.setAttribute("autofocus", "");
       }
       ref.current.showModal();
+      // Some phones focus the first field whatever the autofocus attribute says, which raises the keyboard over the sheet.
+      if (hasTouchScreen() && heading.current && document.activeElement !== heading.current) heading.current.focus({ preventScroll: true });
     }
     // Closing removes the dialog, so focus goes back to the control that opened it instead of the top of the page.
     // It waits a tick: while the dialog is still open, everything behind it cannot take focus.

@@ -25,7 +25,7 @@ pnpm db:generate   # new Drizzle migration from apps/api/src/db/schema.ts (run i
 pnpm db:migrate    # apply migrations by hand; the api also applies them on boot
 ```
 
-Household copy: `docker compose up -d --build` (see the README). Browser UI tests: `pnpm e2e` (Playwright in `apps/e2e`, scratch in-memory servers, see "UI rules"; first run needs `pnpm --filter @homer/e2e exec playwright install chromium`). Not set up yet: CI, lint.
+Household copy: `docker compose up -d --build` (see the README). Browser UI tests: `pnpm e2e` (Playwright in `apps/e2e`, scratch in-memory servers, see "UI rules"; first run needs `pnpm --filter @homer/e2e exec playwright install chromium webkit`). Not set up yet: CI, lint.
 
 - Requires Node 24+, pnpm (pinned to `pnpm@12.16.1` via `packageManager`), and Ollama at `127.0.0.1:11434` with `qwen3-vl:8b` (vision/OCR) and `qwen3.5:9b` (chat + tool calling) pulled.
 - TypeScript 7. Shared settings live in `tsconfig.base.json`; each package extends it. `packages/shared` loads no Node or DOM types on purpose, so domain code stays pure.

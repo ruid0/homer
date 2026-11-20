@@ -127,4 +127,18 @@ test.describe("on a touch screen", () => {
       await expect(dialog).toHaveCount(0);
     }
   });
+
+  test("Add event: the date and time fields stay inside the sheet and have no native look to push them out", async ({ page }) => {
+    await page.goto("/schedule");
+    await page.getByRole("button", { name: "Add event" }).click();
+    const dialog = page.getByRole("dialog");
+    const sheet = await dialog.boundingBox();
+    for (const type of ["date", "time"]) {
+      const field = dialog.locator(`input[type="${type}"]`);
+      const box = await field.boundingBox();
+      expect(box!.x + box!.width).toBeLessThanOrEqual(sheet!.x + sheet!.width);
+      expect(await field.evaluate((element) => getComputedStyle(element).appearance)).toBe("none");
+      expect(box!.height).toBeGreaterThanOrEqual(44);
+    }
+  });
 });

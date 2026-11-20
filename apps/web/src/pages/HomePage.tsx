@@ -101,7 +101,7 @@ export const HomePage = () => {
       <h1 className="text-page font-semibold">{dateName(today)}</h1>
 
       {/* One column up to lg, two equal columns from lg, 3 to 2 from xl. One to three late jobs jump to the top of the single column. */}
-      <div className="grid items-start gap-4 lg:grid-cols-2 xl:grid-cols-[3fr_2fr]">
+      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2 xl:grid-cols-[3fr_2fr]">
         <ScrollCard title={copy.home.today} className="lg:row-span-2 lg:max-h-[calc(100dvh-8rem)]">
           {view.isPending && <p role="status">{copy.home.loading}</p>}
           {view.error && <p role="alert">{copy.home.timelineFailed}</p>}
