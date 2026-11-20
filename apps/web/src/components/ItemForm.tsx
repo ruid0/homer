@@ -47,6 +47,7 @@ export const ItemForm = ({
   const [threshold, setThreshold] = useState(String(item?.lowThresholdDays ?? DEFAULT_LOW_THRESHOLD_DAYS));
   const [error, setError] = useState<string>();
 
+  const canRanOut = item !== undefined && onOut !== undefined && item.quantity > 0;
   // Ran out acts on the saved item, so it waits until nothing in the form has been changed.
   const untouched =
     item !== undefined &&
@@ -82,7 +83,7 @@ export const ItemForm = ({
         <Field label={copy.itemForm.quantity}>
           <NumberInput value={quantity} onChange={setQuantity} />
         </Field>
-        {item && untouched && (onBought || (onOut && item.quantity > 0)) && (
+        {item && untouched && (onBought || canRanOut) && (
           <div className="grid justify-items-start gap-1">
             <div className="flex flex-wrap gap-2">
               {onBought && (
@@ -97,7 +98,7 @@ export const ItemForm = ({
                   {copy.common.boughtIt}
                 </button>
               )}
-              {onOut && item.quantity > 0 && (
+              {canRanOut && onOut && (
                 <button
                   type="button"
                   className={secondaryButton}
@@ -111,9 +112,7 @@ export const ItemForm = ({
               )}
             </div>
             <p id="stock-hint" className="text-meta text-muted">
-              {[onBought && copy.itemForm.boughtHint, onOut && item.quantity > 0 && copy.itemForm.ranOutHint]
-                .filter(Boolean)
-                .join(" ")}
+              {[onBought && copy.itemForm.boughtHint, canRanOut && copy.itemForm.ranOutHint].filter(Boolean).join(" ")}
             </p>
           </div>
         )}

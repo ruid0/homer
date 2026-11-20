@@ -34,7 +34,7 @@ export const ItemRow = ({ item, onList, onAddToList, adding, onEdit }: Props) =>
       openLabel={copy.items.editLabel(item.name)}
       action={
         onList ? (
-          <span className="rounded-full border border-control px-3 py-1 text-meta font-semibold text-muted">
+          <span className="min-w-20 rounded-full border border-control px-3 py-1 text-center text-meta font-semibold text-muted">
             {copy.stockPage.onList}
           </span>
         ) : (

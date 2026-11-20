@@ -67,7 +67,7 @@ test.describe("Ran out in the Edit dialog", () => {
     const dialog = await openEdit(page, name);
     await expect(dialog.getByText("Sets the quantity to 0 and puts it on the grocery list.")).toBeVisible();
     await expect(dialog.getByRole("button", { name: `Ran out: ${name}` })).toHaveAccessibleDescription(
-      "Bought it adds what you bought, and takes it off the list. Sets the quantity to 0 and puts it on the grocery list.",
+      "Bought it adds what you bought, and clears it from the list if it is there. Sets the quantity to 0 and puts it on the grocery list.",
     );
     await dialog.getByRole("button", { name: `Ran out: ${name}` }).click();
     await expect(dialog).toHaveCount(0);
@@ -208,5 +208,37 @@ test.describe("a failed Remove item", () => {
     await expect(page.getByRole("alert")).toHaveCount(1);
     await dialog.getByRole("button", { name: "Cancel" }).click();
     await expect(row(page, name)).toBeVisible();
+  });
+});
+
+test.describe("Bought it from the Edit dialog", () => {
+  test("a failed restock shows its error in the restock dialog, and Cancel leaves the list as it was", async ({
+    page,
+    request,
+  }) => {
+    const name = await newItem(request);
+    await interceptCall(page, "inventory.restock", { answer: failure("Could not save. Try again.") });
+    const dialog = await openEdit(page, name);
+    await dialog.getByRole("button", { name: `Bought it: ${name}` }).click();
+    const restock = page.getByRole("dialog");
+    await restock.getByRole("button", { name: "Save" }).click();
+    await expect(restock).toContainText("Could not save. Try again.");
+    await restock.getByRole("button", { name: "Cancel" }).click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect(row(page, name)).toBeVisible();
+  });
+});
+
+test.describe("a long item name", () => {
+  test("wraps inside the row at 360px and keeps its action inside the card", async ({ page, request }) => {
+    const name = `Extra virgin cold pressed olive oil in the big tin ${randomUUID().slice(0, 8)}`;
+    await seedItem(request, name);
+    await page.setViewportSize({ width: 360, height: 800 });
+    await page.goto("/stock?view=everything");
+    const item = row(page, name);
+    const box = (await item.boundingBox())!;
+    const chip = (await item.getByText("On the list").boundingBox())!;
+    expect(chip.x + chip.width).toBeLessThanOrEqual(box.x + box.width);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   });
 });
