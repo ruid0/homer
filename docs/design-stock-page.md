@@ -30,7 +30,7 @@ Rows in Everything keep Edit and "Bought it" (restocking something that is not o
 
 UI pass: `homer-ui` (44px targets, `control` edges, tokens only, copy in `copy.ts`, errors as red toasts) and `frontend-design` (nothing new: the page is a list in the existing style, and the aim is fewer places, not a new look).
 
-## 3. Open questions
+## 3. Decided and open
 
-- The tab name. "Stock" fits the bar; "Pantry" would be warmer but is wrong for soap and filters.
-- A count on the tab, like Upkeep's, for how many things are to buy.
+- **Decided (2026-11-20):** the tab and page are called "Stock". "Pantry" was rejected: it is wrong for soap and filters.
+- **Open:** a count on the tab, like Upkeep's, for how many things are to buy.
