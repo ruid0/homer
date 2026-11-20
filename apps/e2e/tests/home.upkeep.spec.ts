@@ -204,13 +204,16 @@ test.describe("one look across screens", () => {
       task: await fontSize(inRow(`Late task ${tag}`).getByText("3 days overdue")),
       item: await fontSize(inRow(`Flour ${tag}`).getByText("Runs out in 2 days")),
     };
-    expect(new Set(Object.values(home)).size).toBe(1);
+    // Rows in the compact Row (tasks) share one status size, the older cards (jobs, items) another, until Upkeep and Stock
+    // move to Row too.
+    expect(new Set([home.job, home.soon, home.item]).size).toBe(1);
+    expect(home.task).toBeLessThanOrEqual(home.job);
     await page.goto("/upkeep");
     expect(await fontSize(row(page, `Late job ${tag}`).getByText("13 days overdue"))).toBe(home.job);
     expect(await weight(row(page, `Late job ${tag}`).getByText("13 days overdue"))).toBeGreaterThanOrEqual(600);
     expect(await weight(row(page, `Soon job ${tag}`).getByText("Due in 2 days"))).toBeLessThan(600);
     await page.goto("/schedule");
-    expect(await fontSize(inRow(`Late task ${tag}`).getByText("3 days overdue"))).toBe(home.job);
+    expect(await fontSize(inRow(`Late task ${tag}`).getByText("3 days overdue"))).toBe(home.task);
     await page.goto("/stock?view=everything");
     expect(await fontSize(inRow(`Flour ${tag}`).getByText("Runs out in 2 days"))).toBe(home.job);
   });

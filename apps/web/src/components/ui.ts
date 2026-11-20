@@ -32,6 +32,13 @@ export const statusClass = (level: "late" | "warn" | "plain") =>
     plain: "text-title font-medium",
   })[level];
 
+// The same answer inside a compact Row, where it shares the muted line with the details: colour and weight, no size.
+export const rowStatus = (level: "late" | "warn") =>
+  ({ late: "font-semibold text-late", warn: "font-semibold text-warn" })[level];
+
+// The action in a compact Row: one word in the right-hand column, narrow enough to leave the title room on a phone.
+export const rowAction = "min-w-20 px-4";
+
 // Done and Bought share one size, and a row without one (an event) keeps the space, so Edit lines up down a list.
 export const doneSize = "min-w-26 px-6";
 
