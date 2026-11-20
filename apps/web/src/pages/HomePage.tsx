@@ -72,6 +72,7 @@ export const HomePage = () => {
   const summary = loaded
     ? homeSummary({
         tasks: (view.data?.overdue.length ?? 0) + (day?.tasks.length ?? 0),
+        events: (day?.events ?? []).filter((event) => event.time === null || event.time >= nowTime).length,
         jobs: due.length,
         low: running.length,
       })
@@ -113,10 +114,12 @@ export const HomePage = () => {
     <div className="flex flex-col gap-4">
       <header>
         <h1>
+          {/* The space keeps the heading reading as one date, "Friday 20 Nov", to a screen reader. */}
           <span className="block text-day font-semibold">{heading.weekday}</span>{" "}
           <span className="block text-answer text-muted">{heading.date}</span>
         </h1>
-        {summary && <p className="mt-1 text-title">{summary}</p>}
+        {/* The line is always reserved, so the page below does not jump when the counts arrive. */}
+        <p className="mt-1 min-h-7 text-title">{summary}</p>
       </header>
 
       {/* One column up to lg, two equal columns from lg, 3 to 2 from xl.

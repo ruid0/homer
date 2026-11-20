@@ -18,8 +18,9 @@
   --late: var(--color-red-800);
   /* Done, and nothing else: a ticked routine day. Green is never a button colour. */
   --ok: #15803d;
-  /* The brand mark only (the dot in the wordmark). Never a state: state uses warn, late and ok. */
-  --spark: #f59e0b;
+  /* The brand mark only (the dot on the house in the wordmark). Never a state: state uses warn, late and ok.
+     The house is the on-primary colour, so the dot is dark amber on a white house and bright amber on a dark one. */
+  --spark: #b45309;
   --scrim: rgb(0 0 0 / 0.5);
 }
 
@@ -39,8 +40,7 @@
     --warn: #e6b04f;
     --late: #ef8c80;
     --ok: #6fcf8a;
-    /* The mark sits on the light primary in dark mode, so the dot goes dark. */
-    --spark: #b45309;
+    --spark: #f59e0b;
   }
 }
 

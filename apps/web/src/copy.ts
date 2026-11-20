@@ -39,6 +39,7 @@ export const copy = {
     now: (time: string) => `Now · ${time}`,
     summary: {
       tasks: (count: number) => `${count} ${count === 1 ? "task" : "tasks"} left`,
+      events: (count: number) => `${count} ${count === 1 ? "event" : "events"} to come`,
       jobs: (count: number) => `${count} ${count === 1 ? "job" : "jobs"} due`,
       low: (count: number) => `${count} running low`,
       nothing: "Nothing left today.",
@@ -79,7 +80,7 @@ export const copy = {
     dayName: (weekday: string, day: number, month: string) => `${weekday} ${day} ${month}`,
     dayMonth: (day: number, month: string) => `${day} ${month}`,
     relativeDay: (relative: string, name: string) => `${relative}, ${name}`,
-    anytime: "Anytime",
+    anytime: "Any time",
     empty: "Nothing planned. Add a task or an event.",
     nothingForPerson: (name: string) => `Nothing planned for ${name}.`,
     thisPerson: "this person",

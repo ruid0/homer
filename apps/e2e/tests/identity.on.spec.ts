@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { randomUUID } from "node:crypto";
 import { contrastOf } from "./contrast";
-import { seedTask, todayUtc } from "./scratch";
+import { seedEvent, seedTask, todayUtc } from "./scratch";
 
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -38,11 +38,38 @@ test.describe("Home heading and summary", () => {
     await expect(summary).toHaveText(/^\d+ tasks? left/);
   });
 
-  test("the summary fits one line at 360px and the heading does not overflow", async ({ page }) => {
+  test("the summary wraps inside the width at 360px and the heading does not overflow", async ({ page, request }) => {
+    await seedTask(request, { title: unique("Summary task"), dueDate: todayUtc() });
+    await seedEvent(request, { title: unique("Late event"), date: todayUtc(), time: "23:59" });
     await page.setViewportSize({ width: 360, height: 740 });
     await page.goto("/");
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+    const box = await page.locator("main header p").boundingBox();
+    expect(box!.x + box!.width).toBeLessThanOrEqual(360);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+  });
+
+  test("an event still to come is in the summary, so a day with only an event is not called empty", async ({
+    page,
+    request,
+  }) => {
+    await seedEvent(request, { title: unique("Late event"), date: todayUtc(), time: "23:59" });
+    await page.goto("/");
+    await expect(page.locator("main header p")).toContainText(/\d+ events? to come/);
+  });
+
+  test("the summary line keeps its height while the counts load", async ({ page }) => {
+    await page.route("**/trpc/schedule.view*", async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 600));
+      await route.continue();
+    });
+    await page.goto("/");
+    const line = page.locator("main header p");
+    await expect(line).toBeVisible();
+    const before = (await line.boundingBox())!.height;
+    await expect(line).toHaveText(/\S/);
+    expect((await line.boundingBox())!.height).toBeGreaterThanOrEqual(before);
+    expect(before).toBeGreaterThanOrEqual(28);
   });
 
   for (const scheme of ["light", "dark"] as const) {
@@ -109,6 +136,20 @@ test.describe("time numerals", () => {
     }
   });
 
+  test("a long title keeps room beside the time on Home at 360px, and Done sits under it", async ({
+    page,
+    request,
+  }) => {
+    const title = unique("Pick up the kids from school and then the dry cleaning");
+    await seedTask(request, { title, dueDate: todayUtc(), dueTime: "17:30" });
+    await page.setViewportSize({ width: 360, height: 740 });
+    await page.goto("/");
+    const name = (await page.getByText(title, { exact: true }).boundingBox())!;
+    expect(name.width).toBeGreaterThanOrEqual(180);
+    const done = (await page.getByRole("button", { name: `Mark ${title} done` }).boundingBox())!;
+    expect(done.y).toBeGreaterThan(name.y + name.height - 1);
+  });
+
   test("a time fits its column at 360px", async ({ page, request }) => {
     await seedTask(request, { title: unique("Timed task"), dueDate: todayUtc(), dueTime: "23:59" });
     await page.setViewportSize({ width: 360, height: 740 });
@@ -123,7 +164,7 @@ test.describe("time numerals", () => {
 
 test.describe("the wordmark", () => {
   for (const scheme of ["light", "dark"] as const) {
-    test(`has an amber dot that shows against the mark in ${scheme} mode`, async ({ page }) => {
+    test(`has a brand dot that shows against the house in ${scheme} mode`, async ({ page }) => {
       await page.emulateMedia({ colorScheme: scheme });
       await page.setViewportSize({ width: 375, height: 740 });
       await page.goto("/");
@@ -131,7 +172,7 @@ test.describe("the wordmark", () => {
       await expect(dot).toBeVisible();
       const [fill, ground] = await dot.evaluate((element) => [
         getComputedStyle(element).fill,
-        getComputedStyle(element.parentElement?.querySelector("rect") ?? element).fill,
+        getComputedStyle(element.parentElement?.querySelector("path") ?? element).fill,
       ]);
       expect(fill).not.toBe(ground);
       const ratio = await page.evaluate(
