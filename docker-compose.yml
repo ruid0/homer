@@ -16,6 +16,7 @@ services:
       BACKUP_TIME: ${BACKUP_TIME:-06:00}
       DEPLETION_TIME: ${DEPLETION_TIME:-05:30}
       END_OF_DAY_TIME: ${END_OF_DAY_TIME:-20:00}
+      MAINTENANCE_TIME: ${MAINTENANCE_TIME:-08:00}
       # A container runs in UTC. The assistant's "today" and "Friday" need the household's own time.
       TZ: ${TZ:-America/Edmonton}
     # Not published: only the web container talks to the api, and HOMER has no login.

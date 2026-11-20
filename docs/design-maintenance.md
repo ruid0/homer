@@ -1,6 +1,6 @@
 # Maintenance schedules: things that come round on a long cycle. Definition, technical plan and system design
 
-Status: In progress (the api, the Upkeep page and the Home card are built; the maintenance note job is not) · Owner: Igor Bondarenko · Last updated: 2026-11-19 · Source: `docs/v2-plan.md` theme B, the PRD §4 ("maintenance reminders: filters, softener salt, cleaning"), and the owner's answers of 2026-11-05. Builds on `docs/design-jobs-and-ntfy.md` and `docs/design-routines.md`.
+Status: Built (the api, the Upkeep page, the Home card and the maintenance note job) · Owner: Igor Bondarenko · Last updated: 2026-11-20 · Source: `docs/v2-plan.md` theme B, the PRD §4 ("maintenance reminders: filters, softener salt, cleaning"), and the owner's answers of 2026-11-05. Builds on `docs/design-jobs-and-ntfy.md` and `docs/design-routines.md`.
 
 ## 1. Problem
 
@@ -73,6 +73,8 @@ All text in `copy.ts`. Each screen goes through the `frontend-design` and `homer
 A daily job in `apps/api/src/jobs`, wired in `index.ts` with the household topic and notifier like the end-of-day note. It reuses that job's pattern: it runs at `MAINTENANCE_TIME` (default `08:00`, household time) and once at start-up, but only sends when the time has passed and it has not already run for the day (`readState` and `writeState`), so a start-up at 03:00 waits for 08:00 and a Mac that slept still catches up later that day. It has a `running` guard.
 
 It looks at each open item's due date and status. An item newly in **overdue or due today** with `notified_due_for` not equal to its due date, or newly **soon** (1 to 7 days) with `notified_soon_for` not equal to its due date, is counted once. If anything was counted, one generic note goes to the household topic, for example "Maintenance: 1 overdue, 1 due today, 2 due this week." The note is a delta (only what is new since the last note), counts only, never names. The flags are written only after a successful send, so a failed send is simply tried again at the next run. Notes off means the job does nothing. The note path opens `/upkeep`. The text is in `apps/api/src/messages.ts` (`notifyText`), not the web `copy.ts`.
+
+A snoozed job that is due or overdue counts as later until its snooze day, so it is left out of the note, and is announced on the day the snooze ends. A removed job is never announced.
 
 Because the key is the due date, a never-done item (fixed due date) is announced once, not every morning, and an item that stays overdue is not announced again until its due date changes.
 

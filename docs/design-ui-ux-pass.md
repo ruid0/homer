@@ -31,7 +31,7 @@ Status: In progress (PR A, B, B2, C, D1, D2a, D2b and D3 built, E1 and E2 built,
 - **Dialog fixes, round 2 (owner, 2026-11-19, a 6:11 PM phone screenshot).** On the real phone the Date and Time fields of Add event ran past the right edge of the sheet, and the first field had the keyboard up on open. Date and time fields now drop the native look (`appearance: none`, flex-centred, inner padding zeroed) so the width and height we set apply, like every other field; and after the dialog opens on a touch screen, focus is moved to the title if the browser put it on a field. Neither problem reproduced in Playwright's WebKit with an iPhone profile (the fields already fit and the title already had focus), so these are hardening, not a confirmed fix: a real iPhone has the last word. A new `iphone-webkit` e2e project (`*.webkit.spec.ts`, needs `playwright install webkit`) keeps the date and time fields the same size as the others in Safari's engine. An empty time field shows a grey "12:30 PM" in WebKit; that is its placeholder, not a value.
 - **Routine screen (owner, 2026-11-19).** Redesigned as cards from an approved mock, with a green `ok` token for done only; see `docs/design-routines.md` §7a. The reminder chip with a live countdown follows in its own PR.
 - **F. Identity.** The items under "Identity" above.
-- **Then** the maintenance note job (PR 6 of `design-maintenance.md`).
+- **Then** the maintenance note job (PR 6 of `design-maintenance.md`): built.
 
 Every PR has browser tests for each state it adds, runs `reviewer` and `ui-reviewer`, and records its `frontend-design` pass in the PR body.
 

@@ -6,6 +6,7 @@ import { backfillGrocery } from "./groceries/backfill";
 import { startBackups } from "./jobs/backups";
 import { startDepletion } from "./jobs/depletion";
 import { startEndOfDay } from "./jobs/endOfDay";
+import { startMaintenance } from "./jobs/maintenance";
 import { startRoutineReminders } from "./jobs/routineReminders";
 import { householdNotifications } from "./notify/household";
 
@@ -22,6 +23,11 @@ const household = householdNotifications(process.env);
 startDepletion(db, { time: process.env.DEPLETION_TIME || "05:30", onListed: household?.announceListed });
 if (household) {
   startEndOfDay(db, { time: process.env.END_OF_DAY_TIME || "20:00", topic: household.topic, notify: household.notify });
+  startMaintenance(db, {
+    time: process.env.MAINTENANCE_TIME || "08:00",
+    topic: household.topic,
+    notify: household.notify,
+  });
   startRoutineReminders(db, { notify: household.notify });
 }
 startBackups(db, { dir: process.env.BACKUP_DIR || "./backups", time: process.env.BACKUP_TIME || "06:00" });
