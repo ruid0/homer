@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { secondaryButton } from "./ui";
+import { cx, secondaryButton } from "./ui";
 import { copy } from "../copy";
 
 const SHOW_FOR_MS = 5000;
@@ -40,7 +40,11 @@ export const Toast = ({ message, onClose, action }: Props) => {
       onPointerLeave={() => setHeld(false)}
       onFocus={() => setHeld(true)}
       onBlur={() => setHeld(false)}
-      className="fixed bottom-24 left-1/2 z-20 flex w-[calc(100%-2rem)] max-w-xl -translate-x-1/2 items-center justify-between gap-3 rounded-xl bg-primary py-2 pl-4 pr-2 text-on-primary shadow-lg animate-toast-in md:bottom-6"
+      className={cx(
+        "fixed bottom-24 left-1/2 z-20 flex w-[calc(100%-2rem)] max-w-xl -translate-x-1/2",
+        "items-center justify-between gap-3 rounded-xl bg-primary py-2 pl-4 pr-2 text-on-primary",
+        "shadow-lg animate-toast-in md:bottom-6",
+      )}
     >
       <span className="font-medium">{message}</span>
       <div className="flex gap-2">
@@ -57,7 +61,10 @@ export const Toast = ({ message, onClose, action }: Props) => {
         {/* Quiet, so the one useful action (Undo) stands out. */}
         <button
           type="button"
-          className="min-h-11 rounded-lg px-3 text-base font-medium text-on-primary underline hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-primary"
+          className={cx(
+            "min-h-11 rounded-lg px-3 text-base font-medium text-on-primary underline hover:opacity-85",
+            "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-primary",
+          )}
           onClick={onClose}
         >
           {copy.home.dismiss}

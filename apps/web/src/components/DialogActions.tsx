@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { copy } from "../copy";
-import { primaryButton, secondaryButton } from "./ui";
+import { cx, primaryButton, secondaryButton } from "./ui";
 
 type Props = {
   pending?: boolean;
@@ -14,7 +14,14 @@ type Props = {
 // what lets it
 // stick there, since a sticky row otherwise stops at the padding's inner edge.
 export const DialogActions = ({ pending = false, error, onCancel, remove, children }: Props) => (
-  <div className="sticky -bottom-5 z-10 -mx-5 -mb-5 grid gap-2 border-t border-line bg-card px-5 pt-3 pb-3 max-md:-bottom-[max(1.25rem,env(safe-area-inset-bottom))] max-md:-mb-[max(1.25rem,env(safe-area-inset-bottom))] max-md:pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+  <div
+    className={cx(
+      "sticky -bottom-5 z-10 -mx-5 -mb-5 grid gap-2 border-t border-line bg-card px-5 pt-3 pb-3",
+      "max-md:-bottom-[max(1.25rem,env(safe-area-inset-bottom))]",
+      "max-md:-mb-[max(1.25rem,env(safe-area-inset-bottom))]",
+      "max-md:pb-[max(0.75rem,env(safe-area-inset-bottom))]",
+    )}
+  >
     {error && (
       <p role="alert" className="text-late">
         {error}

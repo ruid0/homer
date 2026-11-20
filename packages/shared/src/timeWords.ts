@@ -2,7 +2,11 @@
 const timePattern = /(?<![\d.:])(?:(\d{1,2}):(\d{2})\s*(?:(am|pm)\b)?(?![\d:])|(\d{1,2})\s*(am|pm)\b)/gi;
 
 // "9 to 10pm", "9-10pm", "between 5 and 6pm": only one end has am/pm, so the other end would be guessed.
-const range = /\b\d{1,2}(?::\d{2}|\s*(?:am|pm))?\s*(?:to|until|[-–])\s*\d{1,2}\s*(?:am|pm|:)|between\s+\d.*\band\s+\d/i;
+const range = new RegExp(
+  String.raw`\b\d{1,2}(?::\d{2}|\s*(?:am|pm))?\s*(?:to|until|[-–])\s*\d{1,2}\s*(?:am|pm|:)` +
+    String.raw`|between\s+\d.*\band\s+\d`,
+  "i",
+);
 
 const pad = (value: number) => String(value).padStart(2, "0");
 

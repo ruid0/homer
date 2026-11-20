@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { copy } from "../copy";
+import { cx } from "./ui";
 
 const SHOW_FOR_MS = 8000;
 
@@ -28,12 +29,20 @@ export const ErrorToast = ({ message }: { message?: string | null }) => {
       onPointerLeave={() => setHeld(false)}
       onFocus={() => setHeld(true)}
       onBlur={() => setHeld(false)}
-      className="fixed bottom-48 left-1/2 z-30 flex w-[calc(100%-2rem)] max-w-xl -translate-x-1/2 items-center justify-between gap-3 rounded-xl bg-late py-2 pl-4 pr-2 text-on-primary shadow-lg animate-toast-in md:bottom-24"
+      className={cx(
+        "fixed bottom-48 left-1/2 z-30 flex w-[calc(100%-2rem)] max-w-xl -translate-x-1/2",
+        "items-center justify-between gap-3 rounded-xl bg-late py-2 pl-4 pr-2 text-on-primary",
+        "shadow-lg animate-toast-in md:bottom-24",
+      )}
     >
       <span className="font-medium">{message}</span>
       <button
         type="button"
-        className="min-h-11 shrink-0 rounded-lg px-3 text-base font-medium text-on-primary underline hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-on-primary"
+        className={cx(
+          "min-h-11 shrink-0 rounded-lg px-3 text-base font-medium text-on-primary underline",
+          "hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2",
+          "focus-visible:outline-on-primary",
+        )}
         onClick={() => setDismissed(true)}
       >
         {copy.home.dismiss}

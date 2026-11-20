@@ -1,4 +1,5 @@
 import { useCallback, useId, useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { cx } from "./ui";
 
 // hideTitle keeps the heading for screen readers when the page already says what the card is.
 type Props = { title: string; children: ReactNode; className?: string; hideTitle?: boolean };
@@ -47,7 +48,10 @@ export const ScrollCard = ({ title, children, className = "", hideTitle = false 
         <div
           aria-hidden="true"
           data-testid="scroll-fade"
-          className="pointer-events-none absolute inset-x-0 bottom-0 h-8 rounded-b-2xl bg-linear-to-t from-card to-transparent"
+          className={cx(
+            "pointer-events-none absolute inset-x-0 bottom-0 h-8 rounded-b-2xl bg-linear-to-t from-card",
+            "to-transparent",
+          )}
         />
       )}
     </section>
