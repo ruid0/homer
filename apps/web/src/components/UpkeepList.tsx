@@ -23,7 +23,7 @@ export const UpkeepList = ({ items, busy, justDoneId = null, onDone, onSnooze }:
         overdue={item.status === "overdue"}
         flash={item.id === justDoneId}
         onOpen={item.status === "soon" ? undefined : () => onSnooze(item)}
-        openLabel={copy.maintenance.notTodayLabel(item.name)}
+        openLabel={item.status === "soon" ? undefined : copy.maintenance.notTodayLabel(item.name)}
         action={
           isDoneToday(item) ? undefined : (
             <button

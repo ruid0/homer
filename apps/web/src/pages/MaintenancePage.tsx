@@ -61,20 +61,19 @@ export const MaintenancePage = () => {
   const { justDoneId, busy } = markDone;
   // The choices open from the Edit dialog, which has closed by then, so there is no button for focus to return to: when
   // the choices close, put focus on that job's row. The timeout lets the dialog's own focus handling run first.
-  const askedName = useRef<string | null>(null);
+  const askedId = useRef<number | null>(null);
   useEffect(() => {
     if (snooze.asking) {
-      askedName.current = snooze.asking.name;
+      askedId.current = snooze.asking.id;
       return;
     }
-    const name = askedName.current;
-    askedName.current = null;
-    if (name === null) return;
-    const timer = window.setTimeout(() => {
-      [...document.querySelectorAll<HTMLButtonElement>("main li > button")]
-        .find((button) => button.getAttribute("aria-label")?.startsWith(copy.maintenance.editLabel(name)))
-        ?.focus();
-    }, 0);
+    const id = askedId.current;
+    askedId.current = null;
+    if (id === null) return;
+    const timer = window.setTimeout(
+      () => document.querySelector<HTMLElement>(`[data-open-id="job-${id}"]`)?.focus(),
+      0,
+    );
     return () => window.clearTimeout(timer);
   }, [snooze.asking]);
   const problem = markDone.problem ?? snooze.problem;

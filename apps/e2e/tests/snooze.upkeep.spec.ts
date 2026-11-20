@@ -55,6 +55,17 @@ test.describe("Not today on the Upkeep page", () => {
     await expect(page.getByRole("dialog").getByRole("button", { name: "Not today", exact: true })).toHaveCount(0);
   });
 
+  test("is hidden while the form has unsaved changes, so they are not thrown away", async ({ page, request }) => {
+    await seedUpkeep(request, overdue("Edited job"));
+    await page.goto("/upkeep");
+    await page.getByRole("button", { name: "Edit Edited job" }).click();
+    const dialog = page.getByRole("dialog");
+    await expect(dialog.getByRole("button", { name: "Not today", exact: true })).toBeVisible();
+    await expect(dialog.getByText("Puts this job off until a day you pick.")).toBeVisible();
+    await dialog.getByRole("textbox", { name: "Name" }).fill("Renamed job");
+    await expect(dialog.getByRole("button", { name: "Not today", exact: true })).toHaveCount(0);
+  });
+
   test("opens three choices, each with its day", async ({ page, request }) => {
     await seedUpkeep(request, overdue("Choice job"));
     await ask(page, "Choice job");

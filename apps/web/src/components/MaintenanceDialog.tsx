@@ -17,6 +17,7 @@ import { DialogActions } from "./DialogActions";
 import { SegmentedChoice } from "./SegmentedChoice";
 import { Stepper } from "./Stepper";
 import { inputClass, secondaryButton } from "./ui";
+import { isLate } from "../lib/maintenanceText";
 import { lastDoneChoiceValues, lastDoneOn as lastDoneFor, type LastDoneChoice } from "../lib/lastDone";
 
 export type MaintenanceForm = { name: string; every: number; unit: MaintenanceUnit; lastDoneOn: string | null };
@@ -62,6 +63,9 @@ export const MaintenanceDialog = ({
   const [lastDoneChoice, setLastDoneChoice] = useState<LastDoneChoice>("now");
   const [pickedDate, setPickedDate] = useState(today);
   const [error, setError] = useState<string>();
+  // Not today closes this dialog, so it waits until nothing in the form has been changed.
+  const changed =
+    item !== undefined && item !== null && (name !== item.name || Number(every) !== item.every || unit !== item.unit);
 
   const pick = (suggestion: Suggestion) => {
     const cycle = suggestionCycle(suggestion);
@@ -142,7 +146,7 @@ export const MaintenanceDialog = ({
             )}
           </>
         )}
-        {item && onSnooze && (item.status === "overdue" || item.status === "due") && (
+        {item && onSnooze && isLate(item.status) && !changed && (
           <div className="grid justify-items-start gap-1">
             <button type="button" className={secondaryButton} disabled={pending} onClick={onSnooze}>
               {copy.maintenance.notToday}
