@@ -602,6 +602,8 @@ test.describe("Home layout, naming and the nav", () => {
     await expect(nav.getByRole("link", { name: /^Upkeep$/ })).toBeVisible(RETRIES);
     await page.reload();
     await expect(nav.getByRole("link", { name: /^Upkeep$/ })).toBeVisible(RETRIES);
+    // The Home summary does not count it either.
+    await expect(page.locator("main header p")).not.toContainText("job");
   });
 
   test("the badge stops at 9+", async ({ page, request }) => {

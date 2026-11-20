@@ -16,7 +16,7 @@ import { dateParts, dayHeading } from "../lib/dayHeading";
 import { homeSummary } from "../lib/homeSummary";
 import { dayItems } from "../lib/dayItems";
 import { localDate } from "../lib/localDate";
-import { needsDoing } from "../lib/maintenanceText";
+import { isDoneToday, needsDoing } from "../lib/maintenanceText";
 import { runningOut } from "../lib/runningOut";
 import { timelineRows } from "../lib/timeline";
 import { useFocusNextDone } from "../lib/useFocusNextDone";
@@ -73,7 +73,7 @@ export const HomePage = () => {
     ? homeSummary({
         tasks: (view.data?.overdue.length ?? 0) + (day?.tasks.length ?? 0),
         events: (day?.events ?? []).filter((event) => event.time === null || event.time >= nowTime).length,
-        jobs: due.length,
+        jobs: due.filter((item) => !isDoneToday(item)).length,
         low: running.length,
       })
     : null;
