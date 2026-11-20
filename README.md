@@ -118,6 +118,10 @@ docker compose up -d --build
   docker compose up -d api
   ```
 - **Update** after pulling: `docker compose up -d --build`. Migrations run when the api starts.
+- **Upgrading from v1 to v2.** The database changes are additive (new tables, nothing removed), so your data is kept. Make
+  one copy of the database file before the first start of v2. Items and Groceries are now one page, Stock; the old
+  addresses (`/items`, `/groceries`) redirect to it, so shortcuts keep working. Notifications stay off until you set
+  `NTFY_HOUSEHOLD_TOPIC`. The first maintenance note after you turn them on counts every job that is already due.
 
 ## Stack
 

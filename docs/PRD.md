@@ -1,6 +1,6 @@
 # H.O.M.E.R. — Product Requirements
 
-Status: Built (v1 scope, released as v1.0.0; v2 is in `docs/v2-plan.md`) · Owner: Igor Bondarenko · Last updated: 2026-11-05
+Status: Built (v1 scope, released as v1.0.0; v2.0.0 added backups, routines, notes and maintenance; the rest of v2 is in `docs/v2-plan.md`) · Owner: Igor Bondarenko · Last updated: 2026-11-20
 
 ## 1. Problem
 
