@@ -54,7 +54,7 @@ Key design constraints:
 - **Subagents**: `reviewer` (`.claude/agents/reviewer.md`), read-only, fresh-context review of the uncommitted diff; `ui-reviewer` (`.claude/agents/ui-reviewer.md`), the strict UI expert for diffs under `apps/web` (runs `pnpm e2e`, blocks on missing tests or states).
 - **Hooks** (`.claude/settings.json`, `.claude/hooks/`):
   - `guard.sh` (before edits and shell commands) blocks touching `.env` files and the SQLite database directly. Change data through the app or a Drizzle migration.
-  - `check.sh` (after editing `.ts`/`.tsx`) runs `pnpm typecheck` and the related tests. If it reports a failure, fix it before moving on.
+  - `check.sh` (after editing `.ts`/`.tsx`) formats the file with Prettier, then runs `pnpm typecheck` and the related tests. If it reports a failure, fix it before moving on.
 
 ## How we work
 
