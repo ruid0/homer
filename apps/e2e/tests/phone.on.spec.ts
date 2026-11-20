@@ -39,14 +39,6 @@ test("on a phone, an event's Edit sits at the right edge like a task's", async (
   expect((row?.x ?? 0) + (row?.width ?? 0) - ((edit?.x ?? 0) + (edit?.width ?? 0))).toBeLessThanOrEqual(8);
 });
 
-test("on a phone, the routine grid opens with today's column fully visible beside the row names", async ({ page, request }) => {
-  const id = await seedPerson(request);
-  await page.goto(`/people/${id}/routine`);
-  const today = await page.locator('th[aria-current="date"]').boundingBox();
-  const names = await page.locator("tbody th").first().boundingBox();
-  expect(today?.x ?? 0).toBeGreaterThanOrEqual((names?.x ?? 0) + (names?.width ?? 0) - 1);
-});
-
 test("on a phone, with the keyboard up the sheet fits above it and the first field stays on screen", async ({ page }) => {
   // Chromium has no on-screen keyboard, so the visible area is faked the way iOS reports it.
   await page.addInitScript(() => {

@@ -15,8 +15,18 @@ export const seedPerson = async (request: APIRequestContext) => {
   return person.id;
 };
 
-export const addRow = async (request: APIRequestContext, personId: number, name: string) =>
-  call<{ id: number }>(request, "routines.addItem", { personId, name, targetPerDay: 1 });
+export const addRow = async (request: APIRequestContext, personId: number, name: string, targetPerDay = 1) =>
+  call<{ id: number }>(request, "routines.addItem", { personId, name, targetPerDay });
+
+// A person with no routine rows.
+export const seedEmptyPerson = async (request: APIRequestContext) =>
+  (await call<{ id: number }>(request, "people.add", { name: `Person ${randomUUID()}` })).id;
+
+// Today as the routine strip names it, for example "Thu 19".
+export const todayLabel = (): string => {
+  const now = new Date();
+  return `${["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][now.getUTCDay()]} ${now.getUTCDate()}`;
+};
 
 // Turns reminders on for a person and adds one at a clock time, all through the api.
 export const seedReminder = async (request: APIRequestContext, personId: number, itemId: number, text: string) => {

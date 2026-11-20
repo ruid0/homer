@@ -1,6 +1,6 @@
 import { weekDates } from "@homer/shared";
 import { describe, expect, it } from "vitest";
-import { canGoEarlier, canGoLater, dayLabel, isFuture, mondayOf, oldestWeek, takeOneOff, tapCount, weekRange } from "./routineWeek";
+import { canGoEarlier, canGoLater, cycleCount, dayLabel, dayState, isFuture, mondayOf, oldestWeek, tickCount, weekdayInitial, weekRange } from "./routineWeek";
 
 const today = "2026-11-05"; // Thursday
 
@@ -33,25 +33,44 @@ describe("day text", () => {
   });
 });
 
-describe("tapCount", () => {
-  it("fills a cell up to its target", () => {
-    expect(tapCount(0, 2)).toBe(1);
-    expect(tapCount(1, 2)).toBe(2);
+describe("cycleCount", () => {
+  it("adds one up to the target, then goes back to none", () => {
+    expect(cycleCount(0, 3)).toBe(1);
+    expect(cycleCount(2, 3)).toBe(3);
+    expect(cycleCount(3, 3)).toBe(0);
   });
 
-  it("stops at the target when it is more than one", () => expect(tapCount(2, 2)).toBe(2));
-
-  it("clears a done cell when the target is one", () => {
-    expect(tapCount(0, 1)).toBe(1);
-    expect(tapCount(1, 1)).toBe(0);
+  it("toggles a target of one", () => {
+    expect(cycleCount(0, 1)).toBe(1);
+    expect(cycleCount(1, 1)).toBe(0);
   });
 
-  it("leaves a count above the target alone", () => expect(tapCount(4, 3)).toBe(4));
+  it("clears a count above the target", () => expect(cycleCount(4, 3)).toBe(0));
 });
 
-describe("takeOneOff", () => {
-  it("lowers by one and stops at zero", () => {
-    expect(takeOneOff(2)).toBe(1);
-    expect(takeOneOff(0)).toBe(0);
+describe("tickCount", () => {
+  it("ticks up to the circle that was tapped", () => {
+    expect(tickCount(0, 0)).toBe(1);
+    expect(tickCount(0, 2)).toBe(3);
+    expect(tickCount(1, 1)).toBe(2);
   });
+
+  it("takes a ticked circle and the ones after it away", () => {
+    expect(tickCount(3, 0)).toBe(0);
+    expect(tickCount(3, 1)).toBe(1);
+    expect(tickCount(3, 2)).toBe(2);
+  });
+});
+
+describe("dayState", () => {
+  it("is done at the target or above, partial between, none at zero", () => {
+    expect(dayState(2, 2)).toBe("done");
+    expect(dayState(5, 2)).toBe("done");
+    expect(dayState(1, 2)).toBe("partial");
+    expect(dayState(0, 2)).toBe("none");
+  });
+});
+
+describe("weekdayInitial", () => {
+  it("is the first letter of the short name", () => expect(weekdayInitial("2026-11-02")).toBe("M"));
 });

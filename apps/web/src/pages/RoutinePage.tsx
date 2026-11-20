@@ -3,16 +3,27 @@ import { useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { addDays } from "@homer/shared";
 import { ReminderSetup } from "../components/ReminderSetup";
-import { RoutineGrid } from "../components/RoutineGrid";
+import { RoutineCards } from "../components/RoutineCards";
 import { RoutineRowDialog } from "../components/RoutineRowDialog";
 import { primaryButton, secondaryButton } from "../components/ui";
 import { copy } from "../copy";
 import { reminderState } from "../lib/reminderText";
-import { canGoEarlier, canGoLater, mondayOf, takeOneOff, tapCount, weekRange } from "../lib/routineWeek";
+import { canGoEarlier, canGoLater, mondayOf, weekRange } from "../lib/routineWeek";
 import { useToday } from "../lib/useToday";
 import { trpc } from "../trpc";
 
 type Editing = "new" | number | null;
+
+const legendBox = "inline-block size-4 rounded-md border";
+
+const Legend = () => (
+  <div role="group" aria-label={copy.routine.legendLabel} className="mb-6 mt-4 flex flex-wrap gap-x-4 gap-y-1 text-meta text-muted">
+    <span className="inline-flex items-center gap-2"><i className={`${legendBox} border-ok bg-ok`} aria-hidden="true" />{copy.routine.legend.done}</span>
+    <span className="inline-flex items-center gap-2"><i className={`${legendBox} border-ok`} aria-hidden="true" />{copy.routine.legend.partial}</span>
+    <span className="inline-flex items-center gap-2"><i className={`${legendBox} border-control`} aria-hidden="true" />{copy.routine.legend.notDone}</span>
+    <span className="inline-flex items-center gap-2"><i className={`${legendBox} border-dashed border-control opacity-40`} aria-hidden="true" />{copy.routine.legend.notYet}</span>
+  </div>
+);
 
 const RoutineView = ({ personId, name, remindersOn }: { personId: number; name: string; remindersOn: boolean }) => {
   const today = useToday();
@@ -28,10 +39,6 @@ const RoutineView = ({ personId, name, remindersOn }: { personId: number; name: 
   const week = trpc.routines.week.useQuery(input);
   const refresh = () => utils.routines.week.invalidate();
 
-  const fail = (error: { message: string }) => {
-    setProblem(error.message);
-    return refresh();
-  };
   const resetDialogErrors = () => [addItem, updateItem, removeItem, moveItem].forEach((mutation) => mutation.reset());
   const closed = () => {
     resetDialogErrors();
@@ -42,7 +49,8 @@ const RoutineView = ({ personId, name, remindersOn }: { personId: number; name: 
   // Counts taps still being saved. Refetching while one is in flight would put an older count back on screen.
   const saving = useRef(0);
   const setCount = trpc.routines.setCount.useMutation({
-    onError: fail,
+    // The refetch that puts the real count back waits for onSettled, so a failed tap cannot bring back an older count while another is saving.
+    onError: (error) => setProblem(error.message),
     onSettled: () => {
       saving.current -= 1;
       return saving.current === 0 ? refresh() : undefined;
@@ -58,14 +66,11 @@ const RoutineView = ({ personId, name, remindersOn }: { personId: number; name: 
   const rowIndex = editingRow ? items.findIndex((item) => item.id === editingRow.id) : -1;
   const mutationError = addItem.error ?? updateItem.error ?? removeItem.error ?? moveItem.error;
 
-  const change = (itemId: number, day: string, step: 1 | -1) => {
+  const change = (itemId: number, day: string, count: number) => {
     const data = utils.routines.week.getData(input);
     const item = data?.items.find((candidate) => candidate.id === itemId);
     const index = data?.days.indexOf(day) ?? -1;
-    if (!data || !item || index < 0) return;
-    const done = item.counts[index] ?? 0;
-    const count = step === 1 ? tapCount(done, item.targetPerDay) : takeOneOff(done);
-    if (count === done) return;
+    if (!data || !item || index < 0 || (item.counts[index] ?? 0) === count) return;
     setProblem(undefined);
     void utils.routines.week.cancel(input);
     utils.routines.week.setData(input, {
@@ -95,34 +100,41 @@ const RoutineView = ({ personId, name, remindersOn }: { personId: number; name: 
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <button
           type="button"
-          className={secondaryButton}
+          className={`${secondaryButton} min-w-11 px-0 text-title`}
+          aria-label={copy.routine.previousWeek}
           disabled={!canGoEarlier(start, today)}
           onClick={() => setWeekStart(addDays(start, -7))}
         >
-          {copy.routine.previousWeek}
+          {copy.routine.previousGlyph}
         </button>
-        <p className="min-w-32 text-center font-medium" role="status" aria-label={copy.routine.weekLabel}>
+        <p className="min-w-0 flex-1 whitespace-nowrap text-center font-semibold" role="status" aria-label={copy.routine.weekLabel}>
           {week.data ? weekRange(week.data.days) : ""}
         </p>
         <button
           type="button"
-          className={secondaryButton}
+          className={`${secondaryButton} min-w-11 px-0 text-title`}
+          aria-label={copy.routine.nextWeek}
           disabled={!canGoLater(start, today)}
           onClick={() => setWeekStart(addDays(start, 7))}
         >
-          {copy.routine.nextWeek}
+          {copy.routine.nextGlyph}
         </button>
+        <button type="button" className={primaryButton} onClick={() => setEditing("new")}>{copy.routine.addRow}</button>
         {start !== mondayOf(today) && (
-          <button type="button" className={secondaryButton} onClick={() => setWeekStart(null)}>{copy.routine.thisWeek}</button>
+          <button type="button" className={`${secondaryButton} basis-full sm:basis-auto`} onClick={() => setWeekStart(null)}>{copy.routine.thisWeek}</button>
         )}
-        <button type="button" className={`${primaryButton} ml-auto`} onClick={() => setEditing("new")}>{copy.routine.addRow}</button>
       </div>
 
       {week.isPending && <p>{copy.routine.loading}</p>}
       {week.error && <p role="alert" className="text-late">{copy.routine.loadFailed}</p>}
       <ErrorToast message={problem} />
       {week.data && items.length === 0 && <p>{copy.routine.empty}</p>}
-      {week.data && items.length > 0 && <RoutineGrid week={week.data} today={today} onChange={change} onEdit={setEditing} />}
+      {week.data && items.length > 0 && (
+        <>
+          <RoutineCards week={week.data} today={today} onSet={change} onEdit={setEditing} />
+          <Legend />
+        </>
+      )}
 
       <ReminderSetup personId={personId} state={state} onTurnedOn={() => utils.people.list.invalidate()} />
 
