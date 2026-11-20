@@ -84,7 +84,7 @@ describe("claimsChange", () => {
     "Flour isn't tracked yet. Do you want me to start tracking it?",
     "I haven't added anything. When should I remind you?",
     "You have 2 bags of salt.",
-    "I can't delete items. You can remove it from the Items page.",
+    "I can't delete items. You can remove it from the Stock page.",
     "Hi! What can I help with?",
     "You need bread and 12 eggs.",
     "Your dentist appointment is scheduled for Thursday at 9:30.",

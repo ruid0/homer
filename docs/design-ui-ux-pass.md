@@ -4,7 +4,7 @@ Status: In progress (PR A, B, B2, C, D1, D2a, D2b and D3 built, E1 and E2 built,
 
 ## Decisions (owner, defaults accepted)
 
-- Nav order becomes Home, Groceries, Schedule, Upkeep, Items, People, Assistant, and Upkeep gets a wrench or loop icon.
+- Nav order becomes Home, Groceries, Schedule, Upkeep, Items, People, Assistant, and Upkeep gets a wrench or loop icon. (Later, Items and Groceries became one Stock tab: `design-stock-page.md`.)
 - Renames: Home "Due soon" becomes "Upkeep", Home "Your day" becomes "Today", Upkeep "Needs doing" becomes "Due now", "Add an item" becomes "Add job", "Out of it" becomes "Ran out" (and moves under Edit).
 - Identity: the "Now" line carries through Schedule, a one-line summary sits under the Home date, a big weekday with a muted date, larger tabular time numerals, a small amber accent on the wordmark. No display font and no illustration unless asked.
 - Slashed zeros stay on times; checked at 2 metres.

@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { randomUUID } from "node:crypto";
 import { contrastOf } from "./contrast";
-import { failure, interceptCall } from "./intercept";
+import { failure, gate, interceptCall } from "./intercept";
 import { seedListEntry, seedStocked } from "./scratch";
 
 const unique = (label: string) => `${label} ${randomUUID().slice(0, 8)}`;
@@ -100,6 +100,28 @@ test.describe("Add to list", () => {
   });
 });
 
+test.describe("Add to list while saving", () => {
+  test("only the row being saved is disabled", async ({ page, request }) => {
+    const first = unique("Pasta");
+    const second = unique("Beans");
+    await seedStocked(request, first);
+    await seedStocked(request, second);
+    const held = gate();
+    await interceptCall(page, "groceries.add", { when: held.when });
+    await page.goto("/stock?view=everything");
+    try {
+      await row(page, first)
+        .getByRole("button", { name: `Add ${first} to the list` })
+        .click();
+      await expect(row(page, first).getByRole("button", { name: `Add ${first} to the list` })).toBeDisabled();
+      await expect(row(page, second).getByRole("button", { name: `Add ${second} to the list` })).toBeEnabled();
+    } finally {
+      held.release();
+    }
+    await expect(row(page, first)).toContainText("On the grocery list");
+  });
+});
+
 test.describe("loading and failing", () => {
   test("when the list cannot load, To buy says so and the button has no count", async ({ page }) => {
     await interceptCall(page, "groceries.list", { answer: failure("down") });
@@ -116,6 +138,17 @@ test.describe("loading and failing", () => {
     await expect(page.getByRole("alert").filter({ hasText: "Couldn't load items" })).toBeVisible({ timeout: 15_000 });
     await expect(everything(page)).toHaveText("Everything");
   });
+});
+
+test("the pressed button of the switch is filled, the other is not", async ({ page }) => {
+  await page.goto("/stock");
+  const fill = (button: ReturnType<typeof toBuy>) =>
+    button.evaluate((element) => getComputedStyle(element).backgroundColor);
+  const pressed = await fill(toBuy(page));
+  const other = await fill(everything(page));
+  expect(pressed).not.toBe(other);
+  await everything(page).click();
+  await expect.poll(() => fill(everything(page))).toBe(pressed);
 });
 
 test.describe("the bottom bar", () => {

@@ -25,10 +25,17 @@ export const ItemRow = ({ item, onList, onBought, onAddToList, adding, onEdit }:
   return (
     <ListRow
       title={item.name}
-      status={<span className={statusClass(urgent ? "warn" : "plain")}>{describeRunsOut(item)}</span>}
-      details={[`${quantityText(item.quantity)} ${item.unit}`, onList ? copy.items.onGroceryList : null, note].filter(
-        (part) => part !== null,
-      )}
+      status={
+        <>
+          <span className={statusClass(urgent ? "warn" : "plain")}>{describeRunsOut(item)}</span>
+          {onList && (
+            <span className="ml-2 inline-block rounded-full border border-control px-2 text-meta font-semibold text-muted">
+              {copy.items.onGroceryList}
+            </span>
+          )}
+        </>
+      }
+      details={[`${quantityText(item.quantity)} ${item.unit}`, note].filter((part) => part !== null)}
       actions={
         <>
           <button type="button" className={quietButton} onClick={onEdit} aria-label={copy.items.editLabel(item.name)}>
@@ -37,7 +44,7 @@ export const ItemRow = ({ item, onList, onBought, onAddToList, adding, onEdit }:
           {!onList && (
             <button
               type="button"
-              className={secondaryButton}
+              className={quietButton}
               onClick={onAddToList}
               disabled={adding}
               aria-label={copy.stockPage.addToListLabel(item.name)}
