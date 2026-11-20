@@ -184,3 +184,26 @@ test.describe("on a phone", () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   });
 });
+
+test.describe("the reminder on a row", () => {
+  for (const scheme of ["light", "dark"] as const) {
+    test(`says "Reminder" with its time, readable in ${scheme} mode, and only on the row that has one`, async ({
+      page,
+      request,
+    }) => {
+      const id = await seedPerson(request);
+      const second = await addRow(request, id, "Row B");
+      await seedReminder(request, id, second.id, "in 5 hours");
+      await page.emulateMedia({ colorScheme: scheme });
+      await page.goto(`/people/${id}/routine`);
+      const chip = page
+        .getByRole("listitem")
+        .filter({ has: page.getByRole("button", { name: "Edit Row B" }) })
+        .getByRole("list", { name: "Reminders" })
+        .getByRole("listitem");
+      await expect(chip).toHaveText(/^Reminder: (Today|Tomorrow) at \d\d:\d\d$/);
+      expect(await contrastOf(chip)).toBeGreaterThanOrEqual(4.5);
+      await expect(page.getByRole("list", { name: "Reminders" })).toHaveCount(1);
+    });
+  }
+});
