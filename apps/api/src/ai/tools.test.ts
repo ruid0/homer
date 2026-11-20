@@ -67,6 +67,16 @@ describe("read tools", () => {
     expect(titles).not.toContain("Later");
   });
 
+  it("list_tasks lists a repeating task on each later day it comes round to", async () => {
+    const { api, run } = setup();
+    await api.tasks.add({ ...task("Pills", today), repeat: "daily" });
+    const week = (await run("list_tasks", { from: today, to: "2026-11-12" })).result as {
+      days: { date: string; tasks: { title: string }[] }[];
+    };
+    expect(week.days.map((day) => day.tasks.map((t) => t.title))).toEqual(week.days.map(() => ["Pills"]));
+    expect(week.days.length).toBeGreaterThan(1);
+  });
+
   it("list_tasks counts overdue from today, whatever range is asked for", async () => {
     const { api, run } = setup();
     await api.tasks.add(task("Between", "2026-11-06"));
