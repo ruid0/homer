@@ -1,5 +1,5 @@
 import { and, eq, inArray, isNull } from "drizzle-orm";
-import { addDays, compareSchedule, daysBetween, isOverdue, scheduleViewInputSchema } from "@homer/shared";
+import { addDays, compareSchedule, daysBetween, isOverdue, repeatDates, scheduleViewInputSchema } from "@homer/shared";
 import { events, people, tasks } from "../db/schema";
 import { isShown } from "./events";
 import { publicProcedure, router } from "../trpc";
@@ -7,7 +7,8 @@ import { publicProcedure, router } from "../trpc";
 type TaskRow = typeof tasks.$inferSelect;
 type EventRow = typeof events.$inferSelect;
 type EventView = EventRow & { personName: string | null };
-type TaskView = TaskRow & { personName: string | null; daysOverdue: number };
+// `projected` marks a day a repeating task will come round to, not its real due date, so it cannot be ticked yet. It keeps the real due date, so Edit opens the real task.
+type TaskView = TaskRow & { personName: string | null; daysOverdue: number; projected: boolean };
 
 const byWhen = (today: string) => (a: TaskRow, b: TaskRow) => {
   const entry = (task: TaskRow) => ({
@@ -27,7 +28,20 @@ const toView = (today: string) => ({ task, personName }: { task: TaskRow; person
   ...task,
   personName,
   daysOverdue: isOverdue(task, today) && task.dueDate !== null ? daysBetween(task.dueDate, today) : 0,
+  projected: false,
 });
+
+const repeatsOn = (views: TaskView[], today: string, dates: string[]) => {
+  const last = dates[dates.length - 1] ?? today;
+  const byDate = new Map<string, TaskView[]>();
+  views.forEach((view) => {
+    if (view.repeat === null || view.dueDate === null) return;
+    repeatDates(view.dueDate, view.repeat, today, last).forEach((date) => {
+      byDate.set(date, [...(byDate.get(date) ?? []), { ...view, daysOverdue: 0, projected: true }]);
+    });
+  });
+  return byDate;
+};
 
 export const scheduleRouter = router({
   view: publicProcedure.input(scheduleViewInputSchema).query(({ ctx, input }) => {
@@ -60,11 +74,13 @@ export const scheduleRouter = router({
       .all()
       .map(({ event, personName }) => ({ ...event, personName }))
       .sort(eventOrder);
+    const repeats = repeatsOn(views, today, dates);
     return {
       overdue: views.filter((task) => task.daysOverdue > 0),
       days: dates.map((date) => ({
         date,
         tasks: views.filter((task) => task.dueDate === date),
+        repeats: repeats.get(date) ?? [],
         events: shownEvents.filter((event) => event.date === date),
       })),
       undated: views.filter((task) => task.dueDate === null),

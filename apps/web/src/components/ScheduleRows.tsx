@@ -7,13 +7,15 @@ type TaskRowProps = { task: ScheduleTask; busy: boolean; onDone: () => void; onE
 
 export const TaskRow = ({ task, busy, onDone, onEdit }: TaskRowProps) => {
   const overdue = task.daysOverdue > 0;
+  const repeatText = task.repeat ? copy.schedule.repeats[task.repeat] : null;
   return (
     <ListRow
       when={task.dueTime ?? copy.schedule.anyTime}
       title={task.title}
       overdue={overdue}
+      faded={task.projected}
       status={overdue ? <span className={statusClass("late")}>{copy.schedule.overdueBy(task.daysOverdue)}</span> : undefined}
-      details={[task.personName, task.repeat ? copy.schedule.repeats[task.repeat] : null].filter((part) => part !== null)}
+      details={[task.personName, repeatText].filter((part) => part !== null)}
       actions={
         <>
           <button
@@ -25,15 +27,19 @@ export const TaskRow = ({ task, busy, onDone, onEdit }: TaskRowProps) => {
           >
             {copy.schedule.edit}
           </button>
-          <button
-            type="button"
-            className={`${secondaryButton} ${doneSize}`}
-            onClick={onDone}
-            disabled={busy}
-            aria-label={copy.schedule.doneLabel(task.title)}
-          >
-            {copy.schedule.done}
-          </button>
+          {task.projected ? (
+            <span aria-hidden="true" className={`hidden sm:block ${doneSize}`} />
+          ) : (
+            <button
+              type="button"
+              className={`${secondaryButton} ${doneSize}`}
+              onClick={onDone}
+              disabled={busy}
+              aria-label={copy.schedule.doneLabel(task.title)}
+            >
+              {copy.schedule.done}
+            </button>
+          )}
         </>
       }
     />

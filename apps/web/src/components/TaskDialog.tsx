@@ -6,6 +6,8 @@ import { DialogActions } from "./DialogActions";
 import { Field } from "./Field";
 import { PersonField } from "./PersonField";
 import { inputClass } from "./ui";
+import { dueDateFor } from "../lib/taskDate";
+import { useToday } from "../lib/useToday";
 import { copy } from "../copy";
 
 type Props = {
@@ -28,12 +30,13 @@ export const TaskDialog = ({ task, people, defaultPersonId, pending, serverError
   const [repeat, setRepeat] = useState<string>(task?.repeat ?? "");
   const [personId, setPersonId] = useState(String(task ? (task.personId ?? "") : (defaultPersonId ?? "")));
   const [error, setError] = useState<string>();
+  const today = useToday();
 
   const submit = (event: SubmitEvent) => {
     event.preventDefault();
     const parsed = taskInputSchema.safeParse({
       title,
-      dueDate: orNull(dueDate),
+      dueDate: dueDateFor(dueDate, dueTime, repeat, today),
       dueTime: orNull(dueTime),
       repeat: orNull(repeat),
       personId: personId === "" ? null : Number(personId),

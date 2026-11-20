@@ -176,8 +176,8 @@ describe("schedule.view", () => {
     expect(await setup().schedule.view({ today, days: 2 })).toEqual({
       overdue: [],
       days: [
-        { date: "2026-11-03", tasks: [], events: [] },
-        { date: "2026-11-04", tasks: [], events: [] },
+        { date: "2026-11-03", tasks: [], repeats: [], events: [] },
+        { date: "2026-11-04", tasks: [], repeats: [], events: [] },
       ],
       undated: [],
     });
@@ -263,5 +263,56 @@ describe("schedule.view", () => {
     await expect(api.schedule.view({ today: "2026-02-30", days: 1 })).rejects.toMatchObject({ code: "BAD_REQUEST" });
     await expect(api.schedule.view({ today, days: 0 })).rejects.toMatchObject({ code: "BAD_REQUEST" });
     await expect(api.schedule.view({ today, days: 32 })).rejects.toMatchObject({ code: "BAD_REQUEST" });
+  });
+});
+
+describe("schedule.view repeats", () => {
+  const today = "2026-11-02";
+
+  it("lists a daily task on every later day of the week, marked as projected, and keeps the real one on its day", async () => {
+    const api = setup();
+    await api.tasks.add({ title: "Pills", dueDate: today, dueTime: "08:00", repeat: "daily" });
+    const view = await api.schedule.view({ today, days: 7 });
+    expect(view.days[0]?.tasks.map((task) => [task.title, task.projected])).toEqual([["Pills", false]]);
+    expect(view.days[0]?.repeats).toEqual([]);
+    for (const day of view.days.slice(1)) {
+      expect(day.repeats.map((task) => [task.title, task.projected, task.dueDate, task.dueTime])).toEqual([["Pills", true, today, "08:00"]]);
+      expect(day.tasks).toEqual([]);
+    }
+  });
+
+  it("lists a weekly task on its weekday only, and a monthly task not at all inside a week", async () => {
+    const api = setup();
+    await api.tasks.add({ title: "Bins", dueDate: "2026-11-03", repeat: "weekly" });
+    await api.tasks.add({ title: "Rent", dueDate: "2026-11-02", repeat: "monthly" });
+    const view = await api.schedule.view({ today, days: 14 });
+    const withBins = view.days.filter((day) => day.repeats.some((task) => task.title === "Bins")).map((day) => day.date);
+    expect(withBins).toEqual(["2026-11-10"]);
+    expect(view.days.some((day) => day.repeats.some((task) => task.title === "Rent"))).toBe(false);
+  });
+
+  it("an overdue repeating task is overdue once, and its next repeats follow today", async () => {
+    const api = setup();
+    await api.tasks.add({ title: "Old", dueDate: "2026-10-20", repeat: "daily" });
+    const view = await api.schedule.view({ today, days: 3 });
+    expect(view.overdue.map((task) => task.title)).toEqual(["Old"]);
+    expect(view.days[0]?.repeats).toEqual([]);
+    expect(view.days[1]?.repeats.map((task) => task.title)).toEqual(["Old"]);
+  });
+
+  it("leaves out tasks that do not repeat, are done or removed, and follows the person filter", async () => {
+    const api = setup();
+    const { id: personId } = await api.people.add({ name: "Sam" });
+    await api.tasks.add({ title: "Once", dueDate: today });
+    const done = await api.tasks.add({ title: "Done one", dueDate: "2026-11-09" });
+    const gone = await api.tasks.add({ title: "Gone one", dueDate: today, repeat: "daily" });
+    await api.tasks.add({ title: "Sam's", dueDate: today, repeat: "daily", personId });
+    await api.tasks.add({ title: "Nobody's", dueDate: today, repeat: "daily" });
+    await api.tasks.remove({ id: gone.id });
+    await api.tasks.complete({ id: done.id, today });
+    const all = await api.schedule.view({ today, days: 2 });
+    expect(all.days[1]?.repeats.map((task) => task.title).sort()).toEqual(["Nobody's", "Sam's"]);
+    const sams = await api.schedule.view({ today, days: 2, personId });
+    expect(sams.days[1]?.repeats.map((task) => task.title)).toEqual(["Sam's"]);
   });
 });

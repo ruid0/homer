@@ -31,6 +31,8 @@ export const todayUtc = (): string => new Date().toISOString().slice(0, 10);
 
 export const daysAgo = (days: number): string => new Date(Date.now() - days * 86_400_000).toISOString().slice(0, 10);
 
+export const daysAhead = (days: number): string => daysAgo(-days);
+
 const query = async <T>(request: APIRequestContext, procedure: string, input: unknown): Promise<T> => {
   const response = await request.get(`/trpc/${procedure}?input=${encodeURIComponent(JSON.stringify(input))}`);
   const body = (await response.json()) as { result?: { data: T } };
@@ -54,8 +56,16 @@ export const seedDone = (request: APIRequestContext, id: number, doneOn: string)
 export const doneDates = async (request: APIRequestContext, id: number) =>
   (await query<{ doneOn: string }[]>(request, "maintenance.history", { id })).map((row) => row.doneOn);
 
-export const seedTask = (request: APIRequestContext, task: { title: string; dueDate: string | null; dueTime?: string | null }) =>
-  call<{ id: number }>(request, "tasks.add", { title: task.title, dueDate: task.dueDate, dueTime: task.dueTime ?? null });
+export const seedTask = (
+  request: APIRequestContext,
+  task: { title: string; dueDate: string | null; dueTime?: string | null; repeat?: "daily" | "weekly" | "monthly" },
+) =>
+  call<{ id: number }>(request, "tasks.add", {
+    title: task.title,
+    dueDate: task.dueDate,
+    dueTime: task.dueTime ?? null,
+    repeat: task.repeat ?? null,
+  });
 
 export const seedEvent = (request: APIRequestContext, event: { title: string; date: string; time?: string | null }) =>
   call<{ id: number }>(request, "events.add", { title: event.title, date: event.date, time: event.time ?? null });

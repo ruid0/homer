@@ -91,7 +91,7 @@ export const copy = {
     addTitle: "Add task",
     editTitle: (title: string) => `Edit ${title}`,
     title: "What needs doing",
-    dueDate: "Due date (blank for anytime)",
+    dueDate: "Due date (blank: anytime, or today with a time or repeat)",
     dueTime: "Time (optional)",
     repeat: "Repeat",
     noRepeat: "Doesn't repeat",

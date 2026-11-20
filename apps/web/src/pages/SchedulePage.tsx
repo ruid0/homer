@@ -43,7 +43,7 @@ export const SchedulePage = () => {
   const anytime = view.data?.undated ?? [];
   const dayList = (view.data?.days ?? []).map((day) => ({
     date: day.date,
-    items: dayItems(day.tasks, day.events),
+    items: dayItems([...day.tasks, ...day.repeats], day.events),
   }));
   const empty = overdue.length === 0 && anytime.length === 0 && dayList.every((day) => day.items.length === 0);
   const actionError = editing ? undefined : complete.error?.message;

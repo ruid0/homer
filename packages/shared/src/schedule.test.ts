@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import fc from "fast-check";
-import { addDays, addMonths, compareSchedule, isOverdue, nextDueDate, weekdayOf } from "./schedule";
+import { addDays, addMonths, compareSchedule, isOverdue, nextDueDate, repeatDates, weekdayOf } from "./schedule";
 
 const monthIndex = (day: string) => Number(day.slice(0, 4)) * 12 + Number(day.slice(5, 7));
 const lastDayOfMonth = (day: string) => Number(addDays(addMonths(`${day.slice(0, 7)}-01`, 1), -1).slice(8));
@@ -201,5 +201,57 @@ describe("compareSchedule", () => {
     fc.assert(fc.property(entry, entry, (a, b) => {
       if (a.overdue && !b.overdue) expect(compareSchedule(a, b)).toBeLessThan(0);
     }));
+  });
+});
+
+describe("repeatDates", () => {
+  it("lists a daily task on every day after today, up to the last day", () => {
+    expect(repeatDates("2026-11-19", "daily", "2026-11-19", "2026-11-23")).toEqual(["2026-11-20", "2026-11-21", "2026-11-22", "2026-11-23"]);
+  });
+
+  it("starts after the due date when it is still ahead", () => {
+    expect(repeatDates("2026-11-21", "daily", "2026-11-19", "2026-11-23")).toEqual(["2026-11-22", "2026-11-23"]);
+  });
+
+  it("an overdue daily task is not listed again on today, where it already shows as overdue", () => {
+    expect(repeatDates("2026-11-10", "daily", "2026-11-19", "2026-11-21")).toEqual(["2026-11-20", "2026-11-21"]);
+  });
+
+  it("lists a weekly task on its weekday only", () => {
+    expect(repeatDates("2026-11-16", "weekly", "2026-11-19", "2026-12-06")).toEqual(["2026-11-23", "2026-11-30"]);
+  });
+
+  it("lists a monthly task on its day of the month, or the month end, each step as completing on time would make it", () => {
+    expect(repeatDates("2026-01-15", "monthly", "2026-01-15", "2026-04-30")).toEqual(["2026-02-15", "2026-03-15", "2026-04-15"]);
+    // A short month moves the day for the steps after it, the same as completing the task each month does.
+    expect(repeatDates("2026-01-31", "monthly", "2026-01-31", "2026-03-31")).toEqual(["2026-02-28", "2026-03-28"]);
+  });
+
+  it("is empty when the first repeat is past the last day", () => {
+    expect(repeatDates("2026-11-19", "weekly", "2026-11-19", "2026-11-25")).toEqual([]);
+  });
+
+  it("is after both dates, up to the last day, in order, and never repeats a day", () => {
+    fc.assert(
+      fc.property(date, repeat, fc.integer({ min: -400, max: 400 }), fc.integer({ min: 0, max: 60 }), (due, kind, offset, span) => {
+        const today = addDays(due, offset);
+        const last = addDays(today, span);
+        const dates = repeatDates(due, kind, today, last);
+        for (const [index, date] of dates.entries()) {
+          expect(date > due && date > today && date <= last).toBe(true);
+          if (index > 0) expect(date > dates[index - 1]!).toBe(true);
+        }
+      }),
+    );
+  });
+
+  it("starts exactly where completing the task would put it next", () => {
+    fc.assert(
+      fc.property(date, repeat, fc.integer({ min: -400, max: 400 }), (due, kind, offset) => {
+        const today = addDays(due, offset);
+        const next = nextDueDate(due, kind, today);
+        expect(repeatDates(due, kind, today, next)).toEqual([next]);
+      }),
+    );
   });
 });
