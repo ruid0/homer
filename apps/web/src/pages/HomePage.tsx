@@ -65,7 +65,7 @@ export const HomePage = () => {
   const nothingPlanned = view.data !== undefined && rows.length === 1;
   const listedIds = new Set((groceries.data ?? []).flatMap((entry) => (entry.itemId === null ? [] : [entry.itemId])));
   const running = runningOut(items.data ?? [], listedIds);
-  const due = (upkeep.data ?? []).filter((item) => needsDoing(item.status));
+  const due = (upkeep.data ?? []).filter(needsDoing);
 
   const heading = dateParts(today);
   const loaded = view.data !== undefined && items.data !== undefined && upkeep.data !== undefined;
@@ -147,7 +147,6 @@ export const HomePage = () => {
               <UpkeepList
                 items={due}
                 busy={upkeepDone.busy || snooze.busy}
-                justDoneId={upkeepDone.justDoneId}
                 onDone={finishUpkeep}
                 onSnooze={snooze.ask}
               />

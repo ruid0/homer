@@ -92,8 +92,8 @@ export const MaintenancePage = () => {
       ? update.mutate({ id: editingItem.id, name: form.name, every: form.every, unit: form.unit })
       : add.mutate({ ...form, today });
 
-  const urgent = items.filter((item) => needsDoing(item.status));
-  const later = items.filter((item) => !needsDoing(item.status));
+  const urgent = items.filter(needsDoing);
+  const later = items.filter((item) => !needsDoing(item));
   const folded = collapsesLater(later.length);
   const laterShown = !folded || laterOpen;
   // Once Later is short enough to stay open, forget the choice: if it grows long again it starts folded.

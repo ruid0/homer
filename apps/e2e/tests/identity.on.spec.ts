@@ -117,7 +117,13 @@ test.describe("the Now line on Schedule", () => {
     const home = await page.getByText(/^Now ·/).textContent();
     await page.goto("/schedule");
     const schedule = await page.getByText(/^Now ·/).textContent();
-    expect(schedule).toBe(home);
+    // The two reads are a page load apart, so a minute may turn between them.
+    const minutes = (text: string | null) => {
+      const [hours = 0, mins = 0] = (/(\d{2}):(\d{2})/.exec(text ?? "") ?? []).slice(1).map(Number);
+      return hours * 60 + mins;
+    };
+    expect(minutes(schedule) - minutes(home)).toBeGreaterThanOrEqual(0);
+    expect(minutes(schedule) - minutes(home)).toBeLessThanOrEqual(1);
   });
 });
 

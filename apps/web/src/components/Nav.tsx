@@ -48,7 +48,7 @@ const MOST_SHOWN = 9;
 const useDue = (): { count: number; late: boolean } => {
   const today = useToday();
   const list = trpc.maintenance.list.useQuery({ today }, { refetchInterval: REFRESH_MS });
-  const due = (list.data ?? []).filter((item) => needsDoing(item.status));
+  const due = (list.data ?? []).filter((item) => needsDoing(item));
   return { count: due.length, late: due.some((item) => item.status === "overdue" || item.status === "due") };
 };
 

@@ -21,7 +21,7 @@ export const MaintenanceRow = ({ item, busy, justDone = false, onDone, onEdit }:
   const words = dueWords(item);
   const status = statusOf(item.status, words);
   // Later rows are not asked for yet, so their Done is quiet; Due now rows keep the outlined one.
-  const doneStyle = needsDoing(item.status) ? secondaryButton : quietButton;
+  const doneStyle = needsDoing(item) ? secondaryButton : quietButton;
   return (
     <Row
       title={item.name}
