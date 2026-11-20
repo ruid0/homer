@@ -122,12 +122,20 @@ test.describe("on a touch screen", () => {
     await seedPerson(request);
     const cases: [string, string, string, string][] = [
       ["/schedule", "Add event", "Add event", "Save"],
-      ["/stock?view=everything", `Bought it: ${item}`, "", "Save"],
+      ["/stock?view=everything", `Edit ${item}`, "", "Save"],
       ["/people", "Rename", "", "Save"],
     ];
     for (const [path, opener, title] of cases.map(([a, b, c]) => [a, b, c] as const)) {
       await page.goto(path);
       await page.getByRole("button", { name: opener }).first().click();
+      // Bought it lives in the Edit dialog now, and opens the restock dialog in its place.
+      if (path.startsWith("/stock")) {
+        await page
+          .getByRole("dialog")
+          .getByRole("button", { name: `Bought it: ${item}` })
+          .click();
+        await expect(page.getByRole("dialog").getByRole("heading", { name: `Bought ${item}` })).toBeVisible();
+      }
       const dialog = page.getByRole("dialog");
       await expect(dialog).toBeVisible();
       if (title) await expect(dialog.getByRole("heading", { name: title })).toBeInViewport({ ratio: 1 });

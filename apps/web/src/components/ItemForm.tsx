@@ -15,6 +15,7 @@ type Props = {
   onSave: (values: ItemInput) => void;
   onRemove?: () => void;
   onOut?: () => void;
+  onBought?: () => void;
   outPending?: boolean;
   outError?: string;
   onClose: () => void;
@@ -34,6 +35,7 @@ export const ItemForm = ({
   onSave,
   onRemove,
   onOut,
+  onBought,
   outPending = false,
   outError,
   onClose,
@@ -80,20 +82,38 @@ export const ItemForm = ({
         <Field label={copy.itemForm.quantity}>
           <NumberInput value={quantity} onChange={setQuantity} />
         </Field>
-        {item && onOut && item.quantity > 0 && untouched && (
+        {item && untouched && (onBought || (onOut && item.quantity > 0)) && (
           <div className="grid justify-items-start gap-1">
-            <button
-              type="button"
-              className={secondaryButton}
-              disabled={pending || outPending}
-              onClick={onOut}
-              aria-label={copy.items.outLabel(item.name)}
-              aria-describedby="ran-out-hint"
-            >
-              {copy.stock.ranOut}
-            </button>
-            <p id="ran-out-hint" className="text-meta text-muted">
-              {copy.itemForm.ranOutHint}
+            <div className="flex flex-wrap gap-2">
+              {onBought && (
+                <button
+                  type="button"
+                  className={secondaryButton}
+                  disabled={pending || outPending}
+                  onClick={onBought}
+                  aria-label={copy.common.boughtLabel(item.name)}
+                  aria-describedby="stock-hint"
+                >
+                  {copy.common.boughtIt}
+                </button>
+              )}
+              {onOut && item.quantity > 0 && (
+                <button
+                  type="button"
+                  className={secondaryButton}
+                  disabled={pending || outPending}
+                  onClick={onOut}
+                  aria-label={copy.items.outLabel(item.name)}
+                  aria-describedby="stock-hint"
+                >
+                  {copy.stock.ranOut}
+                </button>
+              )}
+            </div>
+            <p id="stock-hint" className="text-meta text-muted">
+              {[onBought && copy.itemForm.boughtHint, onOut && item.quantity > 0 && copy.itemForm.ranOutHint]
+                .filter(Boolean)
+                .join(" ")}
             </p>
           </div>
         )}

@@ -204,9 +204,9 @@ test.describe("one look across screens", () => {
       task: await fontSize(inRow(`Late task ${tag}`).getByText("3 days overdue")),
       item: await fontSize(inRow(`Flour ${tag}`).getByText("Runs out in 2 days")),
     };
-    // Rows in the compact Row (tasks) share one status size, the older cards (jobs, items) another, until Upkeep and Stock
-    // move to Row too.
-    expect(new Set([home.job, home.soon, home.item]).size).toBe(1);
+    // Rows in the compact Row (tasks, items on Stock) share one status size, the older cards (jobs) another, until Upkeep
+    // moves to Row too.
+    expect(home.job).toBe(home.soon);
     expect(home.task).toBeLessThanOrEqual(home.job);
     await page.goto("/upkeep");
     expect(await fontSize(row(page, `Late job ${tag}`).getByText("13 days overdue"))).toBe(home.job);
@@ -215,7 +215,7 @@ test.describe("one look across screens", () => {
     await page.goto("/schedule");
     expect(await fontSize(inRow(`Late task ${tag}`).getByText("3 days overdue"))).toBe(home.task);
     await page.goto("/stock?view=everything");
-    expect(await fontSize(inRow(`Flour ${tag}`).getByText("Runs out in 2 days"))).toBe(home.job);
+    expect(await fontSize(inRow(`Flour ${tag}`).getByText("Runs out in 2 days"))).toBe(home.task);
   });
 
   test("overdue rows carry a bar at the left edge and other rows do not, and no title moves for it", async ({

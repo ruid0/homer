@@ -190,6 +190,7 @@ export const copy = {
     lowThresholdDays: "Low at (days left)",
     removeItem: "Remove item",
     ranOutHint: "Sets the quantity to 0 and puts it on the grocery list.",
+    boughtHint: "Bought it adds what you bought, and takes it off the list.",
     fixFields: (fields: string) => `Fix these fields, then save again: ${fields}.`,
     wholeForm: "Form",
     invalidFields: {
@@ -388,9 +389,11 @@ export const copy = {
     everything: "Everything",
     addToList: "Add to list",
     addToListLabel: (name: string) => `Add ${name} to the list`,
+    onList: "On the list",
   },
 
   groceries: {
+    removeMark: "✕",
     addLabel: "Add to the list",
     add: "Add",
     loading: "Loading.",

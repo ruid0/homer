@@ -23,12 +23,41 @@ const openEdit = async (page: Page, name: string) => {
 };
 
 test.describe("the row", () => {
-  test("has Edit and Bought it, and no Ran out", async ({ page, request }) => {
+  test("opens Edit by tapping it, has one action, and neither Bought it nor Ran out", async ({ page, request }) => {
     const name = await newItem(request);
     await page.goto("/stock?view=everything");
     await expect(row(page, name).getByRole("button", { name: `Edit ${name}` })).toBeVisible();
-    await expect(row(page, name).getByRole("button", { name: `Bought it: ${name}` })).toBeVisible();
+    await expect(row(page, name).getByRole("button", { name: `Bought it: ${name}` })).toHaveCount(0);
     await expect(row(page, name).getByRole("button", { name: /^Ran out/ })).toHaveCount(0);
+    // An item that is already on the list says so instead of offering Add to list.
+    await expect(row(page, name)).toContainText("On the list");
+    await expect(row(page, name).getByRole("button", { name: /^Add .* to the list$/ })).toHaveCount(0);
+  });
+
+  test("Done and the action share one right-hand column and sit level with the title", async ({ page, request }) => {
+    const first = await newItem(request);
+    const second = await newItem(request);
+    await page.setViewportSize({ width: 360, height: 800 });
+    await page.goto("/stock?view=everything");
+    const rights = [];
+    for (const name of [first, second]) {
+      const box = (await row(page, name).boundingBox())!;
+      const title = (await row(page, name).getByText(name, { exact: true }).boundingBox())!;
+      const chip = (await row(page, name).getByText("On the list").boundingBox())!;
+      expect(chip.y).toBeLessThan(title.y + title.height + 24);
+      expect(box.height).toBeLessThanOrEqual(96);
+      rights.push(Math.round(chip.x + chip.width));
+    }
+    expect(new Set(rights).size).toBe(1);
+  });
+
+  test("Bought it is in the Edit dialog beside Ran out, and opens the restock dialog", async ({ page, request }) => {
+    const name = await newItem(request);
+    const dialog = await openEdit(page, name);
+    await expect(dialog.getByRole("button", { name: `Ran out: ${name}` })).toBeVisible();
+    await dialog.getByRole("button", { name: `Bought it: ${name}` }).click();
+    await expect(page.getByRole("dialog")).toContainText(`Bought ${name}`);
+    await expect(page.getByRole("dialog").getByRole("button", { name: `Ran out: ${name}` })).toHaveCount(0);
   });
 });
 
@@ -38,12 +67,12 @@ test.describe("Ran out in the Edit dialog", () => {
     const dialog = await openEdit(page, name);
     await expect(dialog.getByText("Sets the quantity to 0 and puts it on the grocery list.")).toBeVisible();
     await expect(dialog.getByRole("button", { name: `Ran out: ${name}` })).toHaveAccessibleDescription(
-      "Sets the quantity to 0 and puts it on the grocery list.",
+      "Bought it adds what you bought, and takes it off the list. Sets the quantity to 0 and puts it on the grocery list.",
     );
     await dialog.getByRole("button", { name: `Ran out: ${name}` }).click();
     await expect(dialog).toHaveCount(0);
     await expect(row(page, name)).toContainText("Ran out");
-    await expect(row(page, name)).toContainText("On the grocery list");
+    await expect(row(page, name)).toContainText("On the list");
     await expect(row(page, name)).toContainText("0 bag");
   });
 

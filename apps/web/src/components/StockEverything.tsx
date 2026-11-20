@@ -89,7 +89,6 @@ export const StockEverything = () => {
               key={item.id}
               item={item}
               onList={listedIds.has(item.id)}
-              onBought={() => setRestocking(item)}
               onAddToList={() => addToList.mutate({ itemId: item.id })}
               adding={addToList.isPending && addingId(addToList.variables) === item.id}
               onEdit={() => setEditing(item)}
@@ -116,6 +115,10 @@ export const StockEverything = () => {
           }
           onSave={(values) => update.mutate({ id: editing.id, ...values })}
           onRemove={() => removeItem(editing)}
+          onBought={() => {
+            setRestocking(editing);
+            setEditing(null);
+          }}
           onOut={() => markOut.mutate({ id: editing.id })}
           outPending={markOut.isPending}
           outError={markOut.error?.message}
