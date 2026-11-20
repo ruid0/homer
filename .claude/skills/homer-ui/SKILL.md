@@ -25,10 +25,10 @@ what to do; no apologies.
 
 ## Tokens
 Colours and type sizes are named once in `apps/web/src/index.css`. Use the colour tokens
-(`surface`, `card`, `ink`, `primary`, `on-primary`, `muted`, `line`, `line-strong`, `hover`, `warn`, `late`, `ok`) and the type
+(`surface`, `card`, `ink`, `primary`, `on-primary`, `muted`, `line`, `line-strong`, `hover`, `warn`, `late`, `ok`, `spark`) and the type
 roles (`text-page`, `text-section`, `text-title`, `text-answer`, `text-meta`). They switch with dark mode,
 so there are no `dark:` colour pairs. A test fails on raw palette classes such as `text-stone-600`.
-Colour means state only: `warn` for running low, `late` for overdue and errors, `ok` for done (a ticked routine day) and nothing else. Design notes are in
+`spark` is the brand dot in the wordmark and nothing else (it is not a state colour). Colour means state only: `warn` for running low, `late` for overdue and errors, `ok` for done (a ticked routine day) and nothing else. Design notes are in
 `docs/design-ui-pass.md`.
 
 ## Stack

@@ -18,6 +18,9 @@
   --late: var(--color-red-800);
   /* Done, and nothing else: a ticked routine day. Green is never a button colour. */
   --ok: #15803d;
+  /* The brand mark only (the dot on the house in the wordmark). Never a state: state uses warn, late and ok.
+     The house is the on-primary colour, so the dot is dark amber on a white house and bright amber on a dark one. */
+  --spark: #b45309;
   --scrim: rgb(0 0 0 / 0.5);
 }
 
@@ -37,6 +40,7 @@
     --warn: #e6b04f;
     --late: #ef8c80;
     --ok: #6fcf8a;
+    --spark: #f59e0b;
   }
 }
 
@@ -54,6 +58,7 @@
   --color-warn: var(--warn);
   --color-late: var(--late);
   --color-ok: var(--ok);
+  --color-spark: var(--spark);
   --color-scrim: var(--scrim);
 
   /* 1920px at the default 16px root; the wall: variant is available for layout changes. */
@@ -68,6 +73,8 @@
   --text-section--line-height: 1.75rem;
   --text-title: 1.125rem;
   --text-title--line-height: 1.5rem;
+  --text-day: 2.5rem;
+  --text-day--line-height: 3rem;
   --text-answer: 1.25rem;
   --text-answer--line-height: 1.75rem;
   --text-nav: 0.6875rem;
