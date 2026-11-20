@@ -590,6 +590,20 @@ test.describe("Home layout, naming and the nav", () => {
     await expect(nav.getByRole("link", { name: "Upkeep 1 due" })).toBeVisible(RETRIES);
   });
 
+  test("a weekly job marked done stops counting, though its next turn is within the week", async ({
+    page,
+    request,
+  }) => {
+    await seedUpkeep(request, weekly("Weekly badge", 20));
+    await page.goto("/");
+    const nav = page.getByRole("navigation", { name: "Main" });
+    await expect(nav.getByRole("link", { name: "Upkeep 1 due" })).toBeVisible();
+    await page.getByRole("button", { name: "Done: Weekly badge" }).click();
+    await expect(nav.getByRole("link", { name: /^Upkeep$/ })).toBeVisible(RETRIES);
+    await page.reload();
+    await expect(nav.getByRole("link", { name: /^Upkeep$/ })).toBeVisible(RETRIES);
+  });
+
   test("the badge stops at 9+", async ({ page, request }) => {
     for (let index = 0; index < 11; index += 1) await seedUpkeep(request, weekly(`Badge ${index}`, 20));
     await page.goto("/");

@@ -1,6 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { copy } from "../copy";
-import { needsDoing } from "../lib/maintenanceText";
+import { isDoneToday, needsDoing } from "../lib/maintenanceText";
 import { useToday } from "../lib/useToday";
 import { trpc } from "../trpc";
 import { cx } from "./ui";
@@ -48,7 +48,8 @@ const MOST_SHOWN = 9;
 const useDue = (): { count: number; late: boolean } => {
   const today = useToday();
   const list = trpc.maintenance.list.useQuery({ today }, { refetchInterval: REFRESH_MS });
-  const due = (list.data ?? []).filter((item) => needsDoing(item.status));
+  // A job done today is not asked for again, even when its next turn is within the week (a weekly job).
+  const due = (list.data ?? []).filter((item) => needsDoing(item.status) && !isDoneToday(item));
   return { count: due.length, late: due.some((item) => item.status === "overdue" || item.status === "due") };
 };
 
