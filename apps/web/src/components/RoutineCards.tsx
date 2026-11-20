@@ -3,6 +3,7 @@ import { useClock } from "../lib/clock";
 import { reminderChip } from "../lib/reminderText";
 import { cycleCount, dayLabel, dayState, isFuture, tickCount, weekdayInitial } from "../lib/routineWeek";
 import type { RoutineWeek } from "../trpc";
+import { Bell } from "./Bell";
 import { Tick } from "./Tick";
 import { cx } from "./ui";
 
@@ -50,10 +51,11 @@ const ReminderChips = ({ reminders, now }: { reminders: Reminder[]; now: Date })
           <li
             key={reminder.id}
             className={cx(
-              "rounded-full border px-3 py-1 text-meta",
-              chip.soon ? "border-warn font-semibold text-warn" : "border-line text-muted",
+              "flex items-center gap-1.5 rounded-full border px-3 py-1 text-meta",
+              chip.soon ? "border-warn font-semibold text-warn" : "border-ok text-ink",
             )}
           >
+            <Bell className={cx("size-4 shrink-0", !chip.soon && "text-ok")} />
             {chip.text}
           </li>
         );

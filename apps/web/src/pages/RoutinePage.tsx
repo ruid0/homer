@@ -3,6 +3,7 @@ import { useRef, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { addDays } from "@homer/shared";
 import { ReminderSetup } from "../components/ReminderSetup";
+import { ReminderStatus } from "../components/ReminderStatus";
 import { RoutineCards } from "../components/RoutineCards";
 import { RoutineRowDialog } from "../components/RoutineRowDialog";
 import { primaryButton, secondaryButton } from "../components/ui";
@@ -120,7 +121,8 @@ const RoutineView = ({ personId, name, remindersOn }: { personId: number; name: 
         {copy.routine.back}
       </Link>
       <h1 className="mb-1 text-page font-semibold">{copy.routine.title(name)}</h1>
-      <p className="mb-4 text-muted">{copy.routine.visibleToAll}</p>
+      <p className="mb-2 text-muted">{copy.routine.visibleToAll}</p>
+      <ReminderStatus state={state} name={name} count={reminders.data?.length} />
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <button

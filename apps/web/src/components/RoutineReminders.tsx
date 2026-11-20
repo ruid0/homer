@@ -18,8 +18,9 @@ export const RoutineReminders = ({ personId, itemId, state }: Props) => {
   const utils = trpc.useUtils();
   const now = useClock();
   const [kind, setKind] = useState<Kind>("in");
-  const [hours, setHours] = useState(1);
-  const [minutes, setMinutes] = useState(0);
+  // Blank until picked, so nothing looks chosen that was not.
+  const [hours, setHours] = useState<number | null>(null);
+  const [minutes, setMinutes] = useState<number | null>(null);
   const [time, setTime] = useState("");
   const [everyDay, setEveryDay] = useState(false);
   const [error, setError] = useState<string>();
@@ -36,10 +37,15 @@ export const RoutineReminders = ({ personId, itemId, state }: Props) => {
   });
 
   // A day is the longest wait, so 24 hours leaves no minutes.
-  const pickHours = (next: number) => {
+  const pickHours = (next: number | null) => {
     setHours(next);
     setError(undefined);
     if (next === MAX_HOURS) setMinutes(0);
+  };
+
+  const pickMinutes = (next: number | null) => {
+    setMinutes(next);
+    setError(undefined);
   };
 
   const ready = state === "ready";
@@ -47,12 +53,13 @@ export const RoutineReminders = ({ personId, itemId, state }: Props) => {
   const mine = (list.data ?? []).filter((reminder) => reminder.itemId === itemId);
 
   const submit = () => {
-    if (kind === "in" && !isValidDuration(hours, minutes)) return setError(copy.reminders.badDuration);
+    if (kind === "in" && hours === null && minutes === null) return setError(copy.reminders.pickWait);
+    if (kind === "in" && !isValidDuration(hours ?? 0, minutes ?? 0)) return setError(copy.reminders.badDuration);
     if (kind === "at" && time === "") return setError(copy.reminders.blankTime);
     setError(undefined);
     add.mutate({
       itemId,
-      text: kind === "in" ? durationAsText(hours, minutes) : time,
+      text: kind === "in" ? durationAsText(hours ?? 0, minutes ?? 0) : time,
       repeatDaily: kind === "at" && everyDay,
     });
   };
@@ -134,9 +141,10 @@ export const RoutineReminders = ({ personId, itemId, state }: Props) => {
               <select
                 className={inputClass}
                 disabled={!ready}
-                value={hours}
-                onChange={(event) => pickHours(Number(event.target.value))}
+                value={hours ?? ""}
+                onChange={(event) => pickHours(event.target.value === "" ? null : Number(event.target.value))}
               >
+                <option value="">{copy.reminders.pick}</option>
                 {HOURS.map((hour) => (
                   <option key={hour} value={hour}>
                     {copy.reminders.hoursOption(hour)}
@@ -147,10 +155,11 @@ export const RoutineReminders = ({ personId, itemId, state }: Props) => {
             <Field label={copy.reminders.minutes}>
               <select
                 className={inputClass}
-                value={minutes}
+                value={minutes ?? ""}
                 disabled={!ready || hours === MAX_HOURS}
-                onChange={(event) => setMinutes(Number(event.target.value))}
+                onChange={(event) => pickMinutes(event.target.value === "" ? null : Number(event.target.value))}
               >
+                <option value="">{copy.reminders.pick}</option>
                 {MINUTES.map((minute) => (
                   <option key={minute} value={minute}>
                     {copy.reminders.minutesOption(minute)}

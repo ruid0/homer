@@ -60,12 +60,12 @@ describe("reminderChip", () => {
   });
 
   it("past the hour it is the clock time, and not soon", () => {
-    expect(reminderChip(at(61), null, now)).toEqual({ text: "Today at 13:01", soon: false });
-    expect(reminderChip(at(24 * 60 - 1), null, now).text).toMatch(/^Tomorrow at /);
+    expect(reminderChip(at(61), null, now)).toEqual({ text: "Reminder: Today at 13:01", soon: false });
+    expect(reminderChip(at(24 * 60 - 1), null, now).text).toMatch(/^Reminder: Tomorrow at /);
   });
 
   it("a daily reminder keeps its words and adds the wait only inside the hour", () => {
-    expect(reminderChip(at(5), "12:05", now)).toEqual({ text: "Every day at 12:05, in 5 min", soon: true });
-    expect(reminderChip(at(300), "17:00", now)).toEqual({ text: "Every day at 17:00", soon: false });
+    expect(reminderChip(at(5), "12:05", now)).toEqual({ text: "Reminder every day at 12:05, in 5 min", soon: true });
+    expect(reminderChip(at(300), "17:00", now)).toEqual({ text: "Reminder: Every day at 17:00", soon: false });
   });
 });
