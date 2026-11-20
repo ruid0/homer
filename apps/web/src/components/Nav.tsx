@@ -3,6 +3,7 @@ import { copy } from "../copy";
 import { needsDoing } from "../lib/maintenanceText";
 import { useToday } from "../lib/useToday";
 import { trpc } from "../trpc";
+import { cx } from "./ui";
 
 const iconPaths = {
   home: "M3 11 12 3l9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z",
@@ -66,7 +67,10 @@ const NavContent = ({ item, size }: { item: Item; size: string }) => {
           <span
             aria-hidden="true"
             data-level={due.late ? "late" : "soon"}
-            className={`absolute -right-3 -top-1 min-w-5 rounded-full px-1 text-center text-nav font-bold leading-5 text-card ${due.late ? "bg-late" : "bg-warn"}`}
+            className={cx(
+              "absolute -right-3 -top-1 min-w-5 rounded-full px-1 text-center text-nav font-bold leading-5 text-card",
+              due.late ? "bg-late" : "bg-warn",
+            )}
           >
             {count > MOST_SHOWN ? `${MOST_SHOWN}+` : count}
           </span>
@@ -81,9 +85,12 @@ const NavContent = ({ item, size }: { item: Item; size: string }) => {
 const linkClass =
   (layout: string) =>
   ({ isActive }: { isActive: boolean }) =>
-    `flex flex-col items-center justify-center font-bold transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink ${layout} ${
-      isActive ? "bg-primary text-on-primary" : "hover:bg-hover"
-    }`;
+    cx(
+      "flex flex-col items-center justify-center font-bold transition-colors duration-150",
+      "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink",
+      layout,
+      isActive ? "bg-primary text-on-primary" : "hover:bg-hover",
+    );
 
 // The rail is w-32, which fits "Groceries" at text-base; a longer label needs a wider rail.
 const railLink = linkClass("gap-1 rounded-2xl py-2 text-base");
@@ -108,7 +115,10 @@ export const RailNav = ({ header }: { header: React.ReactNode }) => (
 export const BottomNav = () => (
   <nav
     aria-label={copy.nav.label}
-    className="fixed inset-x-0 bottom-0 z-10 grid grid-cols-7 gap-0.5 border-t border-line bg-card px-1 pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 md:hidden"
+    className={cx(
+      "fixed inset-x-0 bottom-0 z-10 grid grid-cols-7 gap-0.5 border-t border-line bg-card px-1",
+      "pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 md:hidden",
+    )}
   >
     {navItems.map((item) => (
       <NavLink key={item.to} to={item.to} end={item.end} className={barLink}>

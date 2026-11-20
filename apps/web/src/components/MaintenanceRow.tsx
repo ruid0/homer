@@ -3,7 +3,7 @@ import { copy } from "../copy";
 import { dueWords, isDoneToday, needsDoing, rowChips } from "../lib/maintenanceText";
 import type { MaintenanceItem } from "../trpc";
 import { UpkeepChips } from "./UpkeepChips";
-import { doneSize, lateBar, quietButton, secondaryButton, statusClass } from "./ui";
+import { cx, doneSize, lateBar, quietButton, secondaryButton, statusClass } from "./ui";
 
 type Props = {
   item: MaintenanceItem;
@@ -37,9 +37,12 @@ export const MaintenanceRow = ({ item, busy, justDone = false, onDone, onEdit, o
   return (
     <li
       onClick={openFromRow}
-      className={`grid min-h-20 cursor-pointer grid-cols-[1fr_auto] items-center gap-x-3 border-t border-line py-3 sm:grid-cols-[1fr_auto_auto] ${
-        item.status === "overdue" ? `${lateBar} ` : ""
-      }${justDone ? "animate-row-flash" : ""}`}
+      className={cx(
+        "grid min-h-20 cursor-pointer grid-cols-[1fr_auto] items-center gap-x-3 border-t border-line py-3",
+        "sm:grid-cols-[1fr_auto_auto]",
+        item.status === "overdue" && lateBar,
+        justDone && "animate-row-flash",
+      )}
     >
       <p className="col-start-1 row-start-1 min-w-0 text-title font-semibold">{item.name}</p>
       <p className="col-span-2 row-start-2 sm:col-span-1 sm:col-start-1">

@@ -55,7 +55,8 @@ const main = async () => {
 
   const summary = summarize(results);
   console.log(
-    `\n${summary.passed}/${summary.total} passed (${Math.round(summary.rate * 100)}%), median ${seconds(summary.medianMs)}, p90 ${seconds(summary.p90Ms)}`,
+    `\n${summary.passed}/${summary.total} passed (${Math.round(summary.rate * 100)}%),`,
+    `median ${seconds(summary.medianMs)}, p90 ${seconds(summary.p90Ms)}`,
   );
   process.exit(summary.rate >= 0.9 ? 0 : 1);
 };

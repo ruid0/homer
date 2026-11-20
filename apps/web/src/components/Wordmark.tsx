@@ -1,11 +1,15 @@
 import { Link } from "react-router-dom";
 import { copy } from "../copy";
+import { cx } from "./ui";
 
 export const Wordmark = ({ markOnly = false }: { markOnly?: boolean }) => (
   <Link
     to="/"
     aria-label={markOnly ? copy.brand.name : undefined}
-    className="inline-flex min-h-11 items-center gap-2.5 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink"
+    className={cx(
+      "inline-flex min-h-11 items-center gap-2.5 rounded-lg focus-visible:outline-2",
+      "focus-visible:outline-offset-2 focus-visible:outline-ink",
+    )}
   >
     <svg viewBox="0 0 64 64" className={markOnly ? "size-12" : "size-8"} aria-hidden="true">
       <rect width="64" height="64" rx="14" className="fill-primary" />

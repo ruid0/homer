@@ -36,8 +36,9 @@ limit is only the signal that the split is due. Check with `wc -l` before adding
 
 `.prettierrc.json` sets `printWidth: 120` and Prettier formats all `.ts` and `.tsx` files. Run `pnpm format`
 after editing, and `pnpm format:check` to see what is off. Prettier does not wrap comments or strings, so
-break a comment past 120 yourself. A string that cannot be broken (a copy string, a class list, a path) is
-the one exception.
+break a comment past 120 yourself. Split a long list of Tailwind classes into pieces with `cx(...)` from
+`components/ui.ts`, which also takes conditions (`overdue && lateBar`). A string that cannot be broken (a copy
+string, an SVG path, a test name) is the one exception.
 
 ## 3. Functions should be small and focused
 

@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, type MouseEvent, type ReactNode } from "react";
 import { keyboardFit } from "../lib/keyboardFit";
+import { cx } from "./ui";
 
 type Props = { title: string; onClose: () => void; children: ReactNode };
 
@@ -108,7 +109,13 @@ export const Dialog = ({ title, onClose, children }: Props) => {
         if (event.detail > 0 && pressedOutside.current && isOutside(event)) event.currentTarget.close();
         pressedOutside.current = false;
       }}
-      className="m-auto max-h-[calc(100dvh-2rem)] w-[min(28rem,calc(100vw-2rem))] overflow-y-auto overscroll-contain rounded-xl bg-card p-5 text-inherit backdrop:animate-backdrop-in backdrop:bg-scrim max-md:mb-0 max-md:w-full max-md:max-w-none max-md:animate-sheet-up max-md:rounded-b-none max-md:rounded-t-2xl max-md:pb-[max(1.25rem,env(safe-area-inset-bottom))] md:animate-dialog-in"
+      className={cx(
+        "m-auto max-h-[calc(100dvh-2rem)] w-[min(28rem,calc(100vw-2rem))] overflow-y-auto",
+        "overscroll-contain rounded-xl bg-card p-5 text-inherit backdrop:animate-backdrop-in",
+        "backdrop:bg-scrim max-md:mb-0 max-md:w-full max-md:max-w-none max-md:animate-sheet-up",
+        "max-md:rounded-b-none max-md:rounded-t-2xl",
+        "max-md:pb-[max(1.25rem,env(safe-area-inset-bottom))] md:animate-dialog-in",
+      )}
     >
       <h2 ref={heading} className="mb-4 text-section font-semibold outline-none">
         {title}
