@@ -1,20 +1,24 @@
 import { useState } from "react";
-import { PageHeader } from "../components/PageHeader";
+import { ErrorToast } from "./ErrorToast";
 import type { ItemInput } from "@homer/shared";
-import { ItemRow } from "../components/ItemRow";
-import { ItemForm } from "../components/ItemForm";
-import { ListCard } from "../components/ListCard";
-import { RestockDialog } from "../components/RestockDialog";
-import { RestoreChoiceDialog } from "../components/RestoreChoiceDialog";
-import { primaryButton } from "../components/ui";
+import { ItemRow } from "./ItemRow";
+import { ItemForm } from "./ItemForm";
+import { ListCard } from "./ListCard";
+import { RestockDialog } from "./RestockDialog";
+import { RestoreChoiceDialog } from "./RestoreChoiceDialog";
+import { primaryButton } from "./ui";
 import { sortByUrgency } from "../lib/itemText";
 import { trpc, type ArchivedItem, type ListItem } from "../trpc";
 import { copy } from "../copy";
 
+// The item an Add to list call is for. A call by name (from the To buy form) is not for a row.
+const addingId = (variables: { itemId: number } | { text: string } | undefined) =>
+  variables && "itemId" in variables ? variables.itemId : null;
+
 type Editing = ListItem | "new" | null;
 type Choice = { values: ItemInput; archived: ArchivedItem };
 
-export const ItemsPage = () => {
+export const StockEverything = () => {
   const utils = trpc.useUtils();
   const items = trpc.inventory.list.useQuery();
   const groceries = trpc.groceries.list.useQuery();
@@ -36,6 +40,7 @@ export const ItemsPage = () => {
   const restock = trpc.inventory.restock.useMutation({ onSuccess: done });
   const markOut = trpc.inventory.markOut.useMutation({ onSuccess: done });
   const restore = trpc.inventory.restore.useMutation({ onSuccess: done });
+  const addToList = trpc.groceries.add.useMutation({ onSuccess: done });
 
   const submitNew = async (values: ItemInput) => {
     const archived = await utils.inventory.findArchived.fetch({ name: values.name }).catch(() => null);
@@ -65,18 +70,16 @@ export const ItemsPage = () => {
   };
 
   return (
-    <div className="mx-auto max-w-3xl">
-      <PageHeader
-        title={copy.items.title}
-        action={
-          <button type="button" className={primaryButton} onClick={() => setEditing("new")}>
-            {copy.items.addItem}
-          </button>
-        }
-      />
+    <>
+      <div className="mb-4 flex justify-end">
+        <button type="button" className={primaryButton} onClick={() => setEditing("new")}>
+          {copy.items.addItem}
+        </button>
+      </div>
 
       {items.isPending && <p>{copy.items.loading}</p>}
       {items.error && <p role="alert">{copy.items.loadFailed}</p>}
+      <ErrorToast message={addToList.error?.message} />
       {items.data?.length === 0 && <p>{copy.items.empty}</p>}
 
       {items.data && items.data.length > 0 && (
@@ -87,6 +90,8 @@ export const ItemsPage = () => {
               item={item}
               onList={listedIds.has(item.id)}
               onBought={() => setRestocking(item)}
+              onAddToList={() => addToList.mutate({ itemId: item.id })}
+              adding={addToList.isPending && addingId(addToList.variables) === item.id}
               onEdit={() => setEditing(item)}
             />
           ))}
@@ -141,6 +146,6 @@ export const ItemsPage = () => {
           onClose={closeRestock}
         />
       )}
-    </div>
+    </>
   );
 };

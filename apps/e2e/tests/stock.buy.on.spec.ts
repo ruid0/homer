@@ -3,7 +3,7 @@ import { failure, interceptCall } from "./intercept";
 
 test("a failed Add is a red toast that does not move the page, and what was typed stays", async ({ page }) => {
   await interceptCall(page, "groceries.add", { answer: failure("Could not save. Try again.") });
-  await page.goto("/groceries");
+  await page.goto("/stock");
   await page.getByLabel("Add to the list").fill("Toast bread");
   await page.getByRole("button", { name: "Add", exact: true }).click();
   const toast = page.getByRole("alert").filter({ hasText: "Could not save. Try again." });

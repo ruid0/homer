@@ -24,8 +24,7 @@ export const copy = {
   nav: {
     label: "Main",
     home: "Home",
-    items: "Items",
-    groceries: "Groceries",
+    stock: "Stock",
     schedule: "Schedule",
     people: "People",
     assistant: "Assistant",
@@ -162,7 +161,6 @@ export const copy = {
   },
 
   items: {
-    title: "Items",
     addItem,
     loading: "Loading.",
     loadFailed: "Couldn't load items. Check that the api is running, then refresh.",
@@ -378,8 +376,16 @@ export const copy = {
     privacyNote: "Reminders only say how many rows are not done. They never name a row.",
   },
 
+  stockPage: {
+    title: "Stock",
+    viewLabel: "View",
+    toBuy: "To buy",
+    everything: "Everything",
+    addToList: "Add to list",
+    addToListLabel: (name: string) => `Add ${name} to the list`,
+  },
+
   groceries: {
-    title: "Groceries",
     addLabel: "Add to the list",
     add: "Add",
     loading: "Loading.",

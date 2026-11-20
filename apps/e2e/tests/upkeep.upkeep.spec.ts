@@ -600,7 +600,7 @@ test.describe("fit, targets and themes", () => {
   test.describe("on a landscape tablet", () => {
     test.use({ viewport: { width: 1024, height: 768 } });
 
-    test("all seven nav links fit the screen height, and the page does not grow past it", async ({ page }) => {
+    test("all six nav links fit the screen height, and the page does not grow past it", async ({ page }) => {
       await page.goto("/upkeep");
       const rail = page.getByRole("navigation", { name: "Main" });
       const last = await rail.getByRole("link", { name: "Assistant" }).boundingBox();
@@ -637,14 +637,14 @@ test.describe("fit, targets and themes", () => {
       ).toBeLessThanOrEqual(0);
     });
 
-    test("the page, the seven nav labels and the dialog fit the width", async ({ page, request }) => {
+    test("the page, the six nav labels and the dialog fit the width", async ({ page, request }) => {
       await seedUpkeep(request, weekly("Gutters", 20));
       await page.goto("/upkeep");
       const overflow = () =>
         page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
       expect(await overflow()).toBeLessThanOrEqual(0);
       const links = page.getByRole("navigation", { name: "Main" }).getByRole("link");
-      await expect(links).toHaveCount(7);
+      await expect(links).toHaveCount(6);
       for (const link of await links.all()) {
         const fits = await link.evaluate((element) => element.scrollWidth <= element.clientWidth + 1);
         expect(fits).toBe(true);

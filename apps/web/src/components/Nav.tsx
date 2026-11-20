@@ -7,8 +7,7 @@ import { cx } from "./ui";
 
 const iconPaths = {
   home: "M3 11 12 3l9 8v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z",
-  items: "M21 8 12 3 3 8v8l9 5 9-5zM3 8l9 5 9-5M12 13v8",
-  groceries: "M3 4h2l2.4 11h10.2l2-8H6.2M9 19.5a.5.5 0 1 0 0 1 .5.5 0 0 0 0-1M17 19.5a.5.5 0 1 0 0 1 .5.5 0 0 0 0-1",
+  stock: "M3 4h2l2.4 11h10.2l2-8H6.2M9 19.5a.5.5 0 1 0 0 1 .5.5 0 0 0 0-1M17 19.5a.5.5 0 1 0 0 1 .5.5 0 0 0 0-1",
   schedule: "M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zM4 10h16M8 3v4M16 3v4",
   assistant: "M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12zM8.5 11.5h.01M12 11.5h.01M15.5 11.5h.01",
   upkeep:
@@ -19,10 +18,9 @@ const iconPaths = {
 
 const navItems: { to: string; label: string; icon: string; end?: boolean; badge?: boolean }[] = [
   { to: "/", label: copy.nav.home, icon: iconPaths.home, end: true },
-  { to: "/groceries", label: copy.nav.groceries, icon: iconPaths.groceries },
+  { to: "/stock", label: copy.nav.stock, icon: iconPaths.stock },
   { to: "/schedule", label: copy.nav.schedule, icon: iconPaths.schedule },
   { to: "/upkeep", label: copy.nav.upkeep, icon: iconPaths.upkeep, badge: true },
-  { to: "/items", label: copy.nav.items, icon: iconPaths.items },
   { to: "/people", label: copy.nav.people, icon: iconPaths.people },
   { to: "/assistant", label: copy.nav.assistant, icon: iconPaths.assistant },
 ];
@@ -92,10 +90,10 @@ const linkClass =
       isActive ? "bg-primary text-on-primary" : "hover:bg-hover",
     );
 
-// The rail is w-32, which fits "Groceries" at text-base; a longer label needs a wider rail.
+// The rail is w-32, which fits "Assistant" at text-base; a longer label needs a wider rail.
 const railLink = linkClass("gap-1 rounded-2xl py-2 text-base");
-// Seven labels share the width of a phone, so the bar uses a small size and a tight track. the nav token keeps
-// "Groceries" inside its cell at 360px.
+// Six labels share the width of a phone, so the bar uses a small size and a tight track. the nav token keeps
+// "Assistant" inside its cell at 360px.
 const barLink = linkClass("min-h-14 min-w-0 gap-0.5 rounded-xl text-nav tracking-tight");
 
 export const RailNav = ({ header }: { header: React.ReactNode }) => (
@@ -116,7 +114,7 @@ export const BottomNav = () => (
   <nav
     aria-label={copy.nav.label}
     className={cx(
-      "fixed inset-x-0 bottom-0 z-10 grid grid-cols-7 gap-0.5 border-t border-line bg-card px-1",
+      "fixed inset-x-0 bottom-0 z-10 grid grid-cols-6 gap-0.5 border-t border-line bg-card px-1",
       "pb-[max(0.5rem,env(safe-area-inset-bottom))] pt-2 md:hidden",
     )}
   >

@@ -361,7 +361,7 @@ export const goldenCases: GoldenCase[] = [
     prompt: "Delete the milk from the system",
     seed: async (api) => void (await api.inventory.create(item("Milk", 1, "litre", 2))),
     check: all(changesNothing, mentions("items")),
-    ideal: [say("I can't delete items. You can remove it from the Items page.")],
+    ideal: [say("I can't delete items. You can remove it from the Stock page.")],
     needsAction: false,
   },
   {
