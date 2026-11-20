@@ -13,6 +13,14 @@
 A self-hosted household dashboard that knows what's running out, what needs
 doing, and what's coming up. Runs entirely localy, no cloud, no accounts, no data leaving the house.
 
+<p align="center">
+  <a href="https://github.com/ruid0/homer/releases/download/v2.0.0/homer-tour.mp4">
+    <img src="docs/media/homer-tour.gif" width="300" alt="A 40-second tour of HOMER on a phone: Home, Stock, Schedule, Upkeep, a routine and the assistant">
+  </a>
+  <br>
+  <sub>A 40-second tour on a phone, with made-up data. Click for the full-quality video.</sub>
+</p>
+
 ## Quick start
 
 ### Prerequisites
