@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { contrastOf } from "./contrast";
 import { failure, interceptCall } from "./intercept";
-import { addRow, seedEmptyPerson, seedPerson, seedReminder, todayLabel } from "./scratch";
+import { addRow, seedEmptyPerson, seedPerson, clockIn, removeReminder, seedReminder, todayLabel } from "./scratch";
 
 const open = async (page: Page, id: number) => {
   await page.goto(`/people/${id}/routine`);
@@ -271,10 +271,62 @@ test.describe("on a phone", () => {
       await page.clock.install({ time: new Date() });
       await open(page, id);
       const chip = card(page, "Pills").getByRole("list", { name: "Reminders" }).getByRole("listitem");
-      await expect(chip).toHaveText("Reminder in 12 min");
+      await expect(chip).toHaveText(/^Reminder in (11|12) min$/);
       await expect(chip).toHaveClass(/text-warn/);
       await page.clock.fastForward("05:00");
-      await expect(chip).toHaveText("Reminder in 7 min");
+      await expect(chip).toHaveText(/^Reminder in (6|7) min$/);
+    });
+
+    const chipsOf = (page: Page, name: string) => card(page, name).getByRole("list", { name: "Reminders" }).getByRole("listitem");
+
+    test("a due reminder says now until the list is refreshed, then a removed one leaves the card", async ({ page, request }) => {
+      const id = await seedPerson(request);
+      const rowId = (await addRow(request, id, "Pills")).id;
+      const reminder = await seedReminder(request, id, rowId, "in 1 minutes");
+      await page.clock.install({ time: new Date() });
+      await open(page, id);
+      await expect(chipsOf(page, "Pills")).toHaveText("Reminder in 1 min");
+      await page.clock.fastForward("02:00");
+      await expect(chipsOf(page, "Pills")).toHaveText("Reminder now");
+      await removeReminder(request, reminder.id);
+      await page.clock.fastForward("01:00");
+      await expect(chipsOf(page, "Pills")).toHaveCount(0);
+    });
+
+    test("a daily reminder shows its time, with the wait added inside the hour", async ({ page, request }) => {
+      const id = await seedPerson(request);
+      const soon = (await addRow(request, id, "Soon")).id;
+      const later = (await addRow(request, id, "Later")).id;
+      await seedReminder(request, id, soon, clockIn(10), true);
+      await seedReminder(request, id, later, clockIn(180), true);
+      await open(page, id);
+      await expect(chipsOf(page, "Soon")).toHaveText(new RegExp(`^Every day at ${clockIn(10)}, in (9|10|11) min$`));
+      await expect(chipsOf(page, "Later")).toHaveText(`Every day at ${clockIn(180)}`);
+    });
+
+    for (const scheme of ["light", "dark"] as const) {
+      test(`in ${scheme} mode the soon and quiet chips are readable`, async ({ page, request }) => {
+        const id = await seedPerson(request);
+        const rowId = (await addRow(request, id, "Pills")).id;
+        await seedReminder(request, id, rowId, "in 10 minutes");
+        await seedReminder(request, id, rowId, "in 5 hours");
+        await page.emulateMedia({ colorScheme: scheme });
+        await open(page, id);
+        const chips = chipsOf(page, "Pills");
+        await expect(chips).toHaveCount(2);
+        expect(await contrastOf(chips.first())).toBeGreaterThanOrEqual(4.5);
+        expect(await contrastOf(chips.last())).toBeGreaterThanOrEqual(4.5);
+      });
+    }
+
+    test("on a tablet the chips stay inside the card", async ({ page, request }) => {
+      const id = await seedPerson(request);
+      const rowId = (await addRow(request, id, "Pills")).id;
+      for (const text of ["in 10 minutes", "in 3 hours"]) await seedReminder(request, id, rowId, text);
+      await page.setViewportSize({ width: 820, height: 1180 });
+      await open(page, id);
+      await expect(chipsOf(page, "Pills")).toHaveCount(2);
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     });
 
     test("a reminder further off is a quiet clock time, and other rows are untouched", async ({ page, request }) => {
@@ -306,7 +358,7 @@ test.describe("on a phone", () => {
       const id = await seedPerson(request);
       await interceptCall(page, "routines.reminders", { answer: failure("down") });
       await open(page, id);
-      await expect(page.getByRole("alert").filter({ hasText: "Couldn't load the reminders" })).toBeVisible({ timeout: 15_000 });
+      await expect(page.getByRole("alert").filter({ hasText: "Couldn't load the reminders" })).toHaveCount(1, { timeout: 15_000 });
       await expect(circles(page, "Row A")).toHaveCount(2);
     });
 

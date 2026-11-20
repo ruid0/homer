@@ -336,7 +336,6 @@ export const copy = {
     dueNow: "now",
     countdown: (wait: string) => `Reminder ${wait}`,
     dailyCountdown: (time: string, wait: string) => `Every day at ${time}, ${wait}`,
-    chipsFailed: "Couldn't load the reminders. Check that the api is running, then refresh.",
     none: "No reminders on this row.",
     loadFailed: "Couldn't load the reminders. Check that the api is running, then refresh.",
     statusFailed: "Couldn't check whether notifications are on. Check that the api is running, then refresh.",

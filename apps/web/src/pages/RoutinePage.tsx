@@ -14,6 +14,9 @@ import { trpc } from "../trpc";
 
 type Editing = "new" | number | null;
 
+// A reminder that has gone out leaves the list (or moves to tomorrow), so a screen left on must ask again.
+const REMINDERS_REFRESH_MS = 60_000;
+
 const legendBox = "inline-block size-4 rounded-md border";
 
 const Legend = () => (
@@ -37,7 +40,7 @@ const RoutineView = ({ personId, name, remindersOn }: { personId: number; name: 
   const start = weekStart ?? mondayOf(today);
   const input = { personId, today, weekOf: start };
   const week = trpc.routines.week.useQuery(input);
-  const reminders = trpc.routines.reminders.useQuery({ personId });
+  const reminders = trpc.routines.reminders.useQuery({ personId }, { refetchInterval: REMINDERS_REFRESH_MS });
   const refresh = () => utils.routines.week.invalidate();
 
   const resetDialogErrors = () => [addItem, updateItem, removeItem, moveItem].forEach((mutation) => mutation.reset());
@@ -129,7 +132,7 @@ const RoutineView = ({ personId, name, remindersOn }: { personId: number; name: 
       {week.isPending && <p>{copy.routine.loading}</p>}
       {week.error && <p role="alert" className="text-late">{copy.routine.loadFailed}</p>}
       <ErrorToast message={problem} />
-      {reminders.error && <p role="alert" className="text-late">{copy.reminders.chipsFailed}</p>}
+      {reminders.error && <p role="alert" className="text-late">{copy.reminders.loadFailed}</p>}
       {week.data && items.length === 0 && <p>{copy.routine.empty}</p>}
       {week.data && items.length > 0 && (
         <>
