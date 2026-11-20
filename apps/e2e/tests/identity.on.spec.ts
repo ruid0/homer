@@ -94,8 +94,9 @@ test.describe("the Now line on Schedule", () => {
     await seedTask(request, { title: early, dueDate: todayUtc(), dueTime: "00:00" });
     await seedTask(request, { title: late, dueDate: todayUtc(), dueTime: "23:59" });
     await page.goto("/schedule");
-    const rows = page.getByRole("listitem");
-    const texts = await rows.allTextContents();
+    await expect(page.getByText(late, { exact: true })).toBeVisible();
+    await expect(page.getByText(/^Now ·/)).toBeVisible();
+    const texts = await page.getByRole("listitem").allTextContents();
     const at = (needle: string) => texts.findIndex((text) => text.includes(needle));
     const now = texts.findIndex((text) => text.startsWith("Now ·"));
     expect(now).toBeGreaterThan(-1);
@@ -145,9 +146,19 @@ test.describe("time numerals", () => {
     await page.setViewportSize({ width: 360, height: 740 });
     await page.goto("/");
     const name = (await page.getByText(title, { exact: true }).boundingBox())!;
-    expect(name.width).toBeGreaterThanOrEqual(180);
+    expect(name.width).toBeGreaterThanOrEqual(160);
     const done = (await page.getByRole("button", { name: `Mark ${title} done` }).boundingBox())!;
     expect(done.y).toBeGreaterThan(name.y + name.height - 1);
+  });
+
+  test("the Any time label stays on one line at 360px on Home", async ({ page, request }) => {
+    await seedTask(request, { title: unique("Untimed task"), dueDate: todayUtc() });
+    await page.setViewportSize({ width: 360, height: 740 });
+    await page.goto("/");
+    const label = page.getByText("Any time", { exact: true }).first();
+    const box = (await label.boundingBox())!;
+    expect(box.height).toBeLessThan(30);
+    expect(await label.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);
   });
 
   test("a time fits its column at 360px", async ({ page, request }) => {

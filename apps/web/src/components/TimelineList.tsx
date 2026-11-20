@@ -12,8 +12,8 @@ type Props = {
 };
 
 const rowClass =
-  "grid min-h-20 grid-cols-[5rem_1fr] items-center gap-x-4 gap-y-2 border-t border-line py-3 sm:grid-cols-[6rem_1fr_auto]";
-const timeClass = "text-answer font-semibold tabular-nums";
+  "grid min-h-20 grid-cols-[6rem_1fr] items-center gap-x-4 gap-y-2 border-t border-line py-3 sm:grid-cols-[6rem_1fr_auto]";
+const timeClass = "whitespace-nowrap text-answer font-semibold tabular-nums";
 const subline = (parts: (string | null)[]) => parts.filter(Boolean).join(copy.common.separator);
 
 const DoneButton = ({
