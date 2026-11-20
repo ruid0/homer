@@ -1,6 +1,6 @@
 import { expect, test, type Locator } from "@playwright/test";
 import { randomUUID } from "node:crypto";
-import { daysAgo, seedEvent, seedPerson, seedUpkeep, todayUtc } from "./scratch";
+import { daysAgo, seedPerson, seedUpkeep, todayUtc } from "./scratch";
 
 test.use({ viewport: { width: 390, height: 844 } });
 
@@ -35,18 +35,6 @@ test("on a phone, the stepper and the unit buttons share one row and are 44px ta
     .filter({ hasText: /^years$/i })
     .boundingBox();
   expect((years?.x ?? 0) + (years?.width ?? 0)).toBeLessThanOrEqual(edge);
-});
-
-test("on a phone, an event's Edit sits at the right edge like a task's", async ({ page, request }) => {
-  const tag = randomUUID().slice(0, 8);
-  await seedEvent(request, { title: `Edge event ${tag}`, date: todayUtc(), time: "09:00" });
-  await page.goto("/schedule");
-  const edit = await page.getByRole("button", { name: `Edit Edge event ${tag}` }).boundingBox();
-  const row = await page
-    .getByRole("listitem")
-    .filter({ hasText: `Edge event ${tag}` })
-    .boundingBox();
-  expect((row?.x ?? 0) + (row?.width ?? 0) - ((edit?.x ?? 0) + (edit?.width ?? 0))).toBeLessThanOrEqual(8);
 });
 
 test("on a phone, with the keyboard up the sheet fits above it and the first field stays on screen", async ({

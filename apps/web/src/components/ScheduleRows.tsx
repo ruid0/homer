@@ -1,6 +1,6 @@
 import type { ScheduleEvent, ScheduleTask } from "../trpc";
-import { ListRow } from "./ListRow";
-import { doneSize, quietButton, secondaryButton, statusClass } from "./ui";
+import { Row } from "./Row";
+import { rowAction, secondaryButton } from "./ui";
 import { copy } from "../copy";
 
 type TaskRowProps = { task: ScheduleTask; busy: boolean; onDone: () => void; onEdit: () => void };
@@ -9,40 +9,27 @@ export const TaskRow = ({ task, busy, onDone, onEdit }: TaskRowProps) => {
   const overdue = task.daysOverdue > 0;
   const repeatText = task.repeat ? copy.schedule.repeats[task.repeat] : null;
   return (
-    <ListRow
-      when={task.dueTime ?? copy.schedule.anyTime}
+    <Row
+      when={task.dueTime}
       title={task.title}
       overdue={overdue}
       faded={task.projected}
-      status={
-        overdue ? <span className={statusClass("late")}>{copy.schedule.overdueBy(task.daysOverdue)}</span> : undefined
-      }
-      details={[task.personName, repeatText].filter((part) => part !== null)}
-      actions={
-        <>
+      status={overdue ? { text: copy.schedule.overdueBy(task.daysOverdue), level: "late" } : undefined}
+      meta={[task.personName, repeatText].filter((part) => part !== null).join(copy.common.separator)}
+      onOpen={onEdit}
+      openLabel={copy.schedule.editLabel(task.title)}
+      action={
+        task.projected ? undefined : (
           <button
             type="button"
-            className={quietButton}
-            onClick={onEdit}
+            className={`${secondaryButton} ${rowAction}`}
+            onClick={onDone}
             disabled={busy}
-            aria-label={copy.schedule.editLabel(task.title)}
+            aria-label={copy.schedule.doneLabel(task.title)}
           >
-            {copy.schedule.edit}
+            {copy.schedule.done}
           </button>
-          {task.projected ? (
-            <span aria-hidden="true" className={`hidden sm:block ${doneSize}`} />
-          ) : (
-            <button
-              type="button"
-              className={`${secondaryButton} ${doneSize}`}
-              onClick={onDone}
-              disabled={busy}
-              aria-label={copy.schedule.doneLabel(task.title)}
-            >
-              {copy.schedule.done}
-            </button>
-          )}
-        </>
+        )
       }
     />
   );
@@ -51,23 +38,11 @@ export const TaskRow = ({ task, busy, onDone, onEdit }: TaskRowProps) => {
 type EventRowProps = { event: ScheduleEvent; onEdit: () => void };
 
 export const EventRow = ({ event, onEdit }: EventRowProps) => (
-  <ListRow
-    when={event.time ?? copy.schedule.anyTime}
+  <Row
+    when={event.time}
     title={event.title}
-    details={[copy.schedule.eventLabel, event.personName].filter((part) => part !== null)}
-    actions={
-      <>
-        <button
-          type="button"
-          className={quietButton}
-          onClick={onEdit}
-          aria-label={copy.schedule.editLabel(event.title)}
-        >
-          {copy.schedule.edit}
-        </button>
-        {/* The space a Done button takes on a task row, so Edit lines up down the list. */}
-        <span aria-hidden="true" className={`hidden sm:block ${doneSize}`} />
-      </>
-    }
+    meta={[copy.schedule.eventLabel, event.personName].filter((part) => part !== null).join(copy.common.separator)}
+    onOpen={onEdit}
+    openLabel={copy.schedule.editLabel(event.title)}
   />
 );
