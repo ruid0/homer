@@ -59,6 +59,23 @@ export const MaintenancePage = () => {
     focusNextDone();
   });
   const { justDoneId, busy } = markDone;
+  // The choices open from the Edit dialog, which has closed by then, so there is no button for focus to return to: when
+  // the choices close, put focus on that job's row. The timeout lets the dialog's own focus handling run first.
+  const askedId = useRef<number | null>(null);
+  useEffect(() => {
+    if (snooze.asking) {
+      askedId.current = snooze.asking.id;
+      return;
+    }
+    const id = askedId.current;
+    askedId.current = null;
+    if (id === null) return;
+    const timer = window.setTimeout(
+      () => document.querySelector<HTMLElement>(`[data-open-id="job-${id}"]`)?.focus(),
+      0,
+    );
+    return () => window.clearTimeout(timer);
+  }, [snooze.asking]);
   const problem = markDone.problem ?? snooze.problem;
   const finish = (item: MaintenanceItem) => {
     snooze.closeToast();
@@ -75,8 +92,8 @@ export const MaintenancePage = () => {
       ? update.mutate({ id: editingItem.id, name: form.name, every: form.every, unit: form.unit })
       : add.mutate({ ...form, today });
 
-  const urgent = items.filter((item) => needsDoing(item.status));
-  const later = items.filter((item) => !needsDoing(item.status));
+  const urgent = items.filter(needsDoing);
+  const later = items.filter((item) => !needsDoing(item));
   const folded = collapsesLater(later.length);
   const laterShown = !folded || laterOpen;
   // Once Later is short enough to stay open, forget the choice: if it grows long again it starts folded.
@@ -93,7 +110,6 @@ export const MaintenancePage = () => {
           justDone={item.id === justDoneId}
           onDone={() => finish(item)}
           onEdit={() => open(item.id)}
-          onSnooze={() => snooze.ask(item)}
         />
       ))}
     </ListCard>
@@ -171,6 +187,14 @@ export const MaintenancePage = () => {
           onSave={save}
           onRemove={() => editingItem && remove.mutate({ id: editingItem.id })}
           onChanged={refresh}
+          onSnooze={
+            editingItem
+              ? () => {
+                  open(null);
+                  snooze.ask(editingItem);
+                }
+              : undefined
+          }
           onClose={() => open(null)}
         />
       )}

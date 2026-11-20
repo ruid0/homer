@@ -55,7 +55,13 @@ export const isDoneToday = ({
 }: Pick<Words, "lastDoneOn" | "dueOn" | "daysUntil">): boolean =>
   lastDoneOn !== null && lastDoneOn === addDays(dueOn, -daysUntil);
 
-export const needsDoing = (status: Words["status"]): boolean => status !== "later";
+// Due or overdue: the two that can be put off with Not today.
+export const isLate = (status: Words["status"]): boolean => status === "overdue" || status === "due";
+
+// Due now: due, overdue or due this week. A job done today is not asked for again, even when its next turn is within
+// the week (a weekly job), so it waits under Later.
+export const needsDoing = (item: Pick<Words, "status" | "lastDoneOn" | "dueOn" | "daysUntil">): boolean =>
+  item.status !== "later" && !isDoneToday(item);
 
 type Details = {
   every: number;

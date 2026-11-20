@@ -65,7 +65,7 @@ test.describe("the Upkeep card on Home", () => {
     await page.goto("/");
     const names = await card(page)
       .getByRole("listitem")
-      .evaluateAll((rows) => rows.map((row) => row.querySelector("p")?.textContent));
+      .evaluateAll((rows) => rows.map((row) => row.querySelector("span.text-title")?.textContent));
     expect(names).toEqual(["Overdue job", "Today job", "Soon job"]);
     await expect(card(page)).toContainText("13 days overdue");
     await expect(card(page)).toContainText("Due today");
@@ -169,7 +169,7 @@ const barWidth = (locator: ReturnType<Page["locator"]>) =>
       : parseFloat(getComputedStyle(element, "::before").width),
   );
 const titleLeft = (locator: ReturnType<Page["locator"]>) =>
-  locator.evaluate((element) => element.querySelector("p")?.getBoundingClientRect().left ?? -1);
+  locator.evaluate((element) => element.querySelector("span.text-title")?.getBoundingClientRect().left ?? -1);
 
 // WCAG contrast of one rgb() string against another, for borders.
 const ratio = (page: Page, edge: string, ground: string) =>
@@ -299,7 +299,7 @@ test.describe("one look across screens", () => {
     await expect(page.getByText(/Everyone in the household/)).toHaveCount(0);
   });
 
-  test("Edit sits in the same place on an event row and a task row", async ({ page, request }) => {
+  test("the row to open sits in the same place on an event row and a task row", async ({ page, request }) => {
     const tag = randomUUID().slice(0, 8);
     await seedTask(request, { title: `Plain task ${tag}`, dueDate: todayUtc(), dueTime: "10:00" });
     await seedEvent(request, { title: `Plain event ${tag}`, date: todayUtc(), time: "11:00" });
@@ -409,14 +409,6 @@ test.describe("motion", () => {
     await page.getByRole("button", { name: "Done: Brief job" }).click();
     await expect.poll(() => animationName(row(page, "Brief job"))).toBe("row-flash");
     await expect.poll(() => animationName(row(page, "Brief job")), { timeout: 5_000 }).toBe("none");
-  });
-
-  test("a done on Home flashes the row that stays on the card", async ({ page, request }) => {
-    await seedUpkeep(request, weekly("Stays job", 7));
-    await page.goto("/");
-    await card(page).getByRole("button", { name: "Done: Stays job" }).click();
-    await expect(page.getByRole("status").filter({ hasText: "Stays job done today." })).toBeVisible();
-    expect(await animationName(card(page).getByRole("listitem").filter({ hasText: "Stays job" }))).toBe("row-flash");
   });
 
   test("a toast settles in the middle of the screen once it has slid in", async ({ page, request }) => {
@@ -588,6 +580,27 @@ test.describe("Home layout, naming and the nav", () => {
     await expect(nav.getByRole("link", { name: "Upkeep 2 due" })).toBeVisible();
     await page.getByRole("button", { name: "Done: Badge done" }).click();
     await expect(nav.getByRole("link", { name: "Upkeep 1 due" })).toBeVisible(RETRIES);
+  });
+
+  test("a weekly job marked done stops counting, though its next turn is within the week", async ({
+    page,
+    request,
+  }) => {
+    await seedUpkeep(request, weekly("Weekly badge", 20));
+    await page.goto("/");
+    const nav = page.getByRole("navigation", { name: "Main" });
+    await expect(nav.getByRole("link", { name: "Upkeep 1 due" })).toBeVisible();
+    await page.getByRole("button", { name: "Done: Weekly badge" }).click();
+    await expect(nav.getByRole("link", { name: /^Upkeep$/ })).toBeVisible(RETRIES);
+    await page.reload();
+    await expect(nav.getByRole("link", { name: /^Upkeep$/ })).toBeVisible(RETRIES);
+    // The Home summary does not count it either, and the card no longer lists it.
+    await expect(page.locator("main header p")).not.toContainText("job");
+    await expect(card(page).getByText("Weekly badge", { exact: true })).toHaveCount(0);
+    // On the Upkeep page it waits under Later, not under Due now.
+    await page.goto("/upkeep");
+    await expect(page.getByRole("region", { name: "Later" }).getByText("Weekly badge", { exact: true })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Due now" }).getByText("Weekly badge")).toHaveCount(0);
   });
 
   test("the badge stops at 9+", async ({ page, request }) => {

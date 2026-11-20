@@ -73,7 +73,7 @@ test.describe("the list", () => {
     const needs = page.getByRole("region", { name: "Due now" });
     // Overdue first (oldest due date first), then the never-done one (due the day it was added, today), then by due
     // date.
-    const names = await needs.getByRole("listitem").locator("p.text-title").allTextContents();
+    const names = await needs.getByRole("listitem").locator("span.text-title").allTextContents();
     expect(names).toEqual(["Overdue job", "Never job", "Today job", "Tomorrow job", "Soon job"]);
 
     await expect(row(page, "Overdue job")).toContainText("13 days overdue");
@@ -691,7 +691,7 @@ test.describe("fit, targets and themes", () => {
       row(page, "Overdue job").getByText("13 days overdue"),
       row(page, "Soon job").getByText("Due in 2 days"),
       row(page, "Far job").getByText(/^Due in \d+ months/),
-      row(page, "Far job").getByText(/^Every 6 months/),
+      row(page, "Far job").getByText(/Every 6 months/),
       page.getByRole("heading", { name: "Due now" }),
     ]) {
       expect(await contrastOf(text)).toBeGreaterThanOrEqual(4.5);
