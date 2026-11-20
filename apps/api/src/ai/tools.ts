@@ -154,8 +154,12 @@ const handlers: Handlers = {
         .filter((day) => day.date >= start && day.date <= end)
         .map((day) => ({
           date: day.date,
-          // A repeating task also comes round on the days after its due date, which the view lists apart from real tasks.
-          tasks: [...day.tasks, ...day.repeats].map(show),
+          // A repeating task also comes round on the days after its due date; the view lists those apart. They are shown
+          // on the day they come round to, marked `comesRound`, so they are not mistaken for a task due or overdue.
+          tasks: [
+            ...day.tasks.map(show),
+            ...day.repeats.map((task) => ({ ...show(task), dueDate: day.date, comesRound: true })),
+          ],
           events: day.events.map(({ title, time, personName }) => ({ title, time, person: personName })),
         })),
       undated: view.undated.map(show),
