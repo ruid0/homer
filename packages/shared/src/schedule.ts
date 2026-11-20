@@ -46,6 +46,14 @@ export const nextDueDate = (due: string, repeat: Repeat, today: string): string 
   return from(Math.max(1, monthsBetween(due, bar)));
 };
 
+// The days a repeating task will next come round, from the first repeat after both its due date and today up to `last`. Each step is the
+// one completing it on time would make, so the week view shows what the task will really do. The due day itself is not listed (the task
+// shows there, or as overdue), and neither is today when it is overdue.
+export const repeatDates = (due: string, repeat: Repeat, today: string, last: string): string[] => {
+  const walk = (date: string): string[] => (date > last ? [] : [date, ...walk(nextDueDate(date, repeat, date))]);
+  return walk(nextDueDate(due, repeat, today));
+};
+
 type TaskState = { dueDate: string | null; doneAt: string | null; removedAt: string | null };
 
 export const isOverdue = ({ dueDate, doneAt, removedAt }: TaskState, today: string): boolean =>
