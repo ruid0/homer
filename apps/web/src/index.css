@@ -16,6 +16,8 @@
   --hover: var(--color-stone-100);
   --warn: var(--color-amber-700);
   --late: var(--color-red-800);
+  /* Done, and nothing else: a ticked routine day. Green is never a button colour. */
+  --ok: #15803d;
   --scrim: rgb(0 0 0 / 0.5);
 }
 
@@ -34,6 +36,7 @@
     --hover: #332f2c;
     --warn: #e6b04f;
     --late: #ef8c80;
+    --ok: #6fcf8a;
   }
 }
 
@@ -50,6 +53,7 @@
   --color-hover: var(--hover);
   --color-warn: var(--warn);
   --color-late: var(--late);
+  --color-ok: var(--ok);
   --color-scrim: var(--scrim);
 
   /* 1920px at the default 16px root; the wall: variant is available for layout changes. */

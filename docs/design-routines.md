@@ -1,6 +1,6 @@
 # Routines: a daily checklist on a person's page. Definition, technical plan and system design
 
-Status: Built (PRs 1 to 4) · Owner: Igor Bondarenko · Last updated: 2026-11-05 · Source: `docs/v2-plan.md` theme B and the owner's decisions of 2026-11-05. Builds on `docs/design-slice-3-schedule.md`.
+Status: Built (PRs 1 to 4) · Owner: Igor Bondarenko · Last updated: 2026-11-19 · Source: `docs/v2-plan.md` theme B and the owner's decisions of 2026-11-05. Builds on `docs/design-slice-3-schedule.md`.
 
 The repo is public. This document and the tests describe routines in general terms and use made-up rows ("Row A"). The household's real routines never go into the repo.
 
@@ -76,10 +76,23 @@ Reading any week is allowed; the limits below apply to writes. Updating a row ne
 - A "Routine" link on each person on the People page, and a `RoutinePage` at `/people/:id/routine`.
 - A grid following `homer-ui`: 44px cells, dark mode, keyboard reachable, an `aria-label` per cell that starts with its visible text, like "1 of 2: Row A, Tue 3". Today's column is marked, and days that have not happened are greyed out and cannot be tapped.
 - Counts change on screen at once. The screen refetches only when the last pending save finishes, so a run of fast taps cannot show an older count.
-- On a phone the seven columns do not fit: the grid scrolls sideways, with the row names fixed, and opens on today.
+- On a phone the seven columns do not fit: the grid scrolls sideways, with the row names fixed, and opens on today. (Replaced by cards, see 7a.)
 - Row editing in a dialog: name, target, move up and down, and remove with a confirmation. Removing keeps the row's past days saved.
 - A line on the screen saying the routine is visible to everyone in the household.
 - All text in `copy.ts`.
+
+### 7a. Redesign: cards instead of a grid (owner, 2026-11-19)
+
+The grid read as confusing on a phone (a sideways-scrolling table, "0 of 2" in every box). It is now one card per routine row, from a mock the owner approved:
+
+- **Card:** the row name (a button that opens Edit), then, for the current week only, one big 56px circle for each time today (a grey check when not done, a filled green check when done) with the words "Done today", "Not done" or "1 of 2" and "Today, Thu 19" under them. Tapping a circle ticks up to it; tapping a ticked one takes it and the ones after it away.
+- **Week strip:** seven 44px-high squares, one per day: a solid green square with a white check when done (a shape as well as a colour), "1/3" in a green outline when part done, a grey check in a grey outline when not done, dashed and not tappable for days to come, today outlined. Tapping a day adds one, and from done goes back to none (one control for every target, so the old "−" button is gone). An earlier week shows the strip only.
+- **Week bar:** arrow buttons (still named "Earlier week" and "Later week"), the date range between them, then Add a row; "This week" appears off the current week.
+- **Key** under the cards (done, not done, not yet) and the reminders box at the bottom, as before.
+- **Colour:** a new `ok` token in `index.css`, for done and nothing else (light `#15803d`, dark `#6fcf8a`). Done is a filled shape, not done an outline, and the words say it too. Not-done edges use the `control` token (3:1), not the divider colour. The owner asked for a grey check on not done, so it stays.
+- **Not in this PR:** a chip on each card showing the row's reminder (with a live countdown when it fires within the hour). It needs the reminders list on the page and is the next PR.
+- On a 360px phone the strip squares are 41px wide (44px high), because seven fit in the card; a 2-row strip would be the only way to 44 and was judged not worth it. Focus uses a wider offset than the ring that marks today.
+- Counts and the api are unchanged; `setCount` takes a count, so a tap works out the new count (`cycleCount`, `tickCount` in `apps/web/src/lib/routineWeek.ts`).
 
 ## 8. Pull requests
 
