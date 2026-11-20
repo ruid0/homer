@@ -35,7 +35,7 @@ export const ListRow = ({
         : "grid-cols-[5.5rem_1fr] sm:grid-cols-[5.5rem_1fr_auto]",
     )}
   >
-    {when !== undefined && <div className="text-title font-semibold tabular-nums">{when}</div>}
+    {when !== undefined && <div className="text-answer font-semibold tabular-nums">{when}</div>}
     <div className="min-w-0">
       <p className="text-title font-semibold">{title}</p>
       {status && <p>{status}</p>}

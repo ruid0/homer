@@ -1,5 +1,6 @@
 import type { TimelineRow } from "../lib/timeline";
 import type { ScheduleEvent, ScheduleTask } from "../trpc";
+import { NowLine } from "./NowLine";
 import { doneSize, lateBar, secondaryButton, statusClass } from "./ui";
 import { copy } from "../copy";
 
@@ -11,7 +12,7 @@ type Props = {
 };
 
 const rowClass = "flex min-h-20 items-center gap-4 border-t border-line py-3";
-const timeClass = "w-24 shrink-0 text-title font-semibold tabular-nums";
+const timeClass = "w-24 shrink-0 text-answer font-semibold tabular-nums";
 const subline = (parts: (string | null)[]) => parts.filter(Boolean).join(copy.common.separator);
 
 const DoneButton = ({
@@ -38,12 +39,7 @@ export const TimelineList = ({ rows, nowTime, busy, onDone }: Props) => (
   <ul>
     {rows.map((row) => {
       if (row.kind === "now") {
-        return (
-          <li key="now" className="sticky bottom-0 top-0 z-10 flex items-center gap-3 bg-card py-2">
-            <span className="text-title font-bold tabular-nums">{copy.home.now(nowTime)}</span>
-            <span aria-hidden="true" className="h-0.5 flex-1 rounded bg-ink" />
-          </li>
-        );
+        return <NowLine key="now" time={nowTime} />;
       }
       if (row.kind === "event") {
         return (
