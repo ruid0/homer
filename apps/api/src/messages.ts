@@ -44,11 +44,19 @@ const taskPart = (tasks: number) => (tasks > 0 ? `${tasks} ${tasks === 1 ? "task
 
 const lowPart = (low: number) => (low > 0 ? `${low} ${low === 1 ? "item" : "items"} running low` : null);
 
+const overduePart = (count: number) => (count > 0 ? `${count} overdue` : null);
+
+const duePart = (count: number) => (count > 0 ? `${count} due today` : null);
+
+const soonPart = (count: number) => (count > 0 ? `${count} due this week` : null);
+
 // Shown on a phone's lock screen, so it says counts and never names.
 export const notifyText = {
   title: "HOMER",
   routine: (rows: number) => `Routine: ${rows} ${rows === 1 ? "row" : "rows"} not done.`,
   addedToList: (count: number) => `${count} ${count === 1 ? "item" : "items"} added to the grocery list.`,
+  maintenance: (overdue: number, due: number, soon: number) =>
+    `Maintenance: ${[overduePart(overdue), duePart(due), soonPart(soon)].filter(Boolean).join(", ")}.`,
   endOfDay: (tasks: number, low: number) => `Today: ${[taskPart(tasks), lowPart(low)].filter(Boolean).join(", ")}.`,
 };
 
@@ -67,8 +75,14 @@ export const notifyLog = {
     quiet: "end-of-day note: nothing to say",
     failed: "end-of-day note could not be sent, it will be tried again when the api next starts",
   },
+  maintenance: {
+    sent: "maintenance note sent",
+    quiet: "maintenance note: nothing new to say",
+    failed: "maintenance note could not be sent, it will be tried again when the api next starts",
+  },
   insecureServer: "NTFY_SERVER is plain http with a token set: the token and text cross the network unencrypted",
   reminderError: (reason: string) => `routine reminders failed: ${reason}`,
+  maintenanceError: (reason: string) => `maintenance note failed: ${reason}`,
   endOfDayError: (reason: string) => `end-of-day note failed: ${reason}`,
 };
 

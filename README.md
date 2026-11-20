@@ -88,12 +88,13 @@ docker compose up -d --build
   with a usage estimate loses what the days since the last run used up, and items that become low are added to the grocery
   list. A Mac that slept catches up when the api next starts. Like `TZ`, set `DEPLETION_TIME` in your shell or a root `.env`.
 - **Notifications (optional, off by default).** HOMER can send short notes to your phone through [ntfy](https://ntfy.sh): an
-  end-of-day note at 20:00 ("Today: 1 task left, 2 items running low.") and a note when the daily job puts items on the grocery
+  end-of-day note at 20:00 ("Today: 1 task left, 2 items running low."), a maintenance note at 08:00 ("Maintenance: 1 overdue,
+  1 due this week." once per job and due date, and not for a job you snoozed until its day) and a note when the daily job puts items on the grocery
   list. They say counts only, never names. To turn them on, make a long random topic name (`openssl rand -hex 16`), put
   `NTFY_HOUSEHOLD_TOPIC=<that name>` in `.env.local` (and optionally `HOMER_PUBLIC_URL` so a tap opens HOMER), run
   `docker compose up -d --build`, and subscribe to the same topic in the ntfy app on each phone. On the public ntfy.sh server the
   topic name is the only secret, so keep it private. Set `NTFY_SERVER` to use your own ntfy server instead. Change the time with
-  `END_OF_DAY_TIME` in your shell or a root `.env`.
+  `END_OF_DAY_TIME` and `MAINTENANCE_TIME` in your shell or a root `.env`.
 - **Routine reminders.** With notifications on, open People, then a person's Routine, and tap "Turn on reminders". The card shows
   the ntfy server and that person's own secret topic: subscribe to it in the ntfy app on their phone. Then click a row name and
   add a reminder with the pickers: after a wait (hours and minutes) or at a time of day, optionally every day. The note says only
