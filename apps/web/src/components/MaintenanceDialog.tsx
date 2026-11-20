@@ -16,7 +16,8 @@ import { MaintenanceSuggestions, suggestionCycle, type Suggestion } from "./Main
 import { DialogActions } from "./DialogActions";
 import { SegmentedChoice } from "./SegmentedChoice";
 import { Stepper } from "./Stepper";
-import { inputClass } from "./ui";
+import { inputClass, secondaryButton } from "./ui";
+import { isLate } from "../lib/maintenanceText";
 import { lastDoneChoiceValues, lastDoneOn as lastDoneFor, type LastDoneChoice } from "../lib/lastDone";
 
 export type MaintenanceForm = { name: string; every: number; unit: MaintenanceUnit; lastDoneOn: string | null };
@@ -34,6 +35,8 @@ type Props = {
   onSave: (form: MaintenanceForm) => void;
   onRemove: () => void;
   onChanged: () => void;
+  // Put the job off. Only a job that is due or overdue can be put off, so only those get the button.
+  onSnooze?: () => void;
   onClose: () => void;
 };
 
@@ -50,6 +53,7 @@ export const MaintenanceDialog = ({
   onSave,
   onRemove,
   onChanged,
+  onSnooze,
   onClose,
 }: Props) => {
   const started = start ? suggestionCycle(start) : null;
@@ -59,6 +63,9 @@ export const MaintenanceDialog = ({
   const [lastDoneChoice, setLastDoneChoice] = useState<LastDoneChoice>("now");
   const [pickedDate, setPickedDate] = useState(today);
   const [error, setError] = useState<string>();
+  // Not today closes this dialog, so it waits until nothing in the form has been changed.
+  const changed =
+    item !== undefined && item !== null && (name !== item.name || Number(every) !== item.every || unit !== item.unit);
 
   const pick = (suggestion: Suggestion) => {
     const cycle = suggestionCycle(suggestion);
@@ -138,6 +145,14 @@ export const MaintenanceDialog = ({
               </Field>
             )}
           </>
+        )}
+        {item && onSnooze && isLate(item.status) && !changed && (
+          <div className="grid justify-items-start gap-1">
+            <button type="button" className={secondaryButton} disabled={pending} onClick={onSnooze}>
+              {copy.maintenance.notToday}
+            </button>
+            <p className="text-meta text-muted">{copy.maintenance.notTodayHint}</p>
+          </div>
         )}
         {item && <MaintenanceHistory itemId={item.id} today={today} onChanged={onChanged} />}
         {item && <ConfirmRemove pending={pending} onRemove={onRemove} />}

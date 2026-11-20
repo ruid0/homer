@@ -65,7 +65,7 @@ test.describe("the Upkeep card on Home", () => {
     await page.goto("/");
     const names = await card(page)
       .getByRole("listitem")
-      .evaluateAll((rows) => rows.map((row) => row.querySelector("p")?.textContent));
+      .evaluateAll((rows) => rows.map((row) => row.querySelector("span.text-title")?.textContent));
     expect(names).toEqual(["Overdue job", "Today job", "Soon job"]);
     await expect(card(page)).toContainText("13 days overdue");
     await expect(card(page)).toContainText("Due today");
@@ -169,7 +169,7 @@ const barWidth = (locator: ReturnType<Page["locator"]>) =>
       : parseFloat(getComputedStyle(element, "::before").width),
   );
 const titleLeft = (locator: ReturnType<Page["locator"]>) =>
-  locator.evaluate((element) => element.querySelector("p")?.getBoundingClientRect().left ?? -1);
+  locator.evaluate((element) => element.querySelector("span.text-title")?.getBoundingClientRect().left ?? -1);
 
 // WCAG contrast of one rgb() string against another, for borders.
 const ratio = (page: Page, edge: string, ground: string) =>
@@ -204,18 +204,15 @@ test.describe("one look across screens", () => {
       task: await fontSize(inRow(`Late task ${tag}`).getByText("3 days overdue")),
       item: await fontSize(inRow(`Flour ${tag}`).getByText("Runs out in 2 days")),
     };
-    // Rows in the compact Row (tasks, items on Stock) share one status size, the older cards (jobs) another, until Upkeep
-    // moves to Row too.
-    expect(home.job).toBe(home.soon);
-    expect(home.task).toBeLessThanOrEqual(home.job);
+    expect(new Set(Object.values(home)).size).toBe(1);
     await page.goto("/upkeep");
     expect(await fontSize(row(page, `Late job ${tag}`).getByText("13 days overdue"))).toBe(home.job);
     expect(await weight(row(page, `Late job ${tag}`).getByText("13 days overdue"))).toBeGreaterThanOrEqual(600);
     expect(await weight(row(page, `Soon job ${tag}`).getByText("Due in 2 days"))).toBeLessThan(600);
     await page.goto("/schedule");
-    expect(await fontSize(inRow(`Late task ${tag}`).getByText("3 days overdue"))).toBe(home.task);
+    expect(await fontSize(inRow(`Late task ${tag}`).getByText("3 days overdue"))).toBe(home.job);
     await page.goto("/stock?view=everything");
-    expect(await fontSize(inRow(`Flour ${tag}`).getByText("Runs out in 2 days"))).toBe(home.task);
+    expect(await fontSize(inRow(`Flour ${tag}`).getByText("Runs out in 2 days"))).toBe(home.job);
   });
 
   test("overdue rows carry a bar at the left edge and other rows do not, and no title moves for it", async ({
@@ -302,7 +299,7 @@ test.describe("one look across screens", () => {
     await expect(page.getByText(/Everyone in the household/)).toHaveCount(0);
   });
 
-  test("Edit sits in the same place on an event row and a task row", async ({ page, request }) => {
+  test("the row to open sits in the same place on an event row and a task row", async ({ page, request }) => {
     const tag = randomUUID().slice(0, 8);
     await seedTask(request, { title: `Plain task ${tag}`, dueDate: todayUtc(), dueTime: "10:00" });
     await seedEvent(request, { title: `Plain event ${tag}`, date: todayUtc(), time: "11:00" });

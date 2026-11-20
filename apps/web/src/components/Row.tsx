@@ -12,13 +12,16 @@ type Props = {
   // Tapping the title and its details opens the editor. Without it the body is plain text.
   onOpen?: () => void;
   openLabel?: string;
+  openId?: string;
   action?: ReactNode;
   overdue?: boolean;
+  flash?: boolean;
   faded?: boolean;
 };
 
-// The compact row (Home, Schedule, Stock): an optional time, the body, and one action in a column on the right, all on one line.
-export const Row = ({ when, title, status, meta, onOpen, openLabel, action, overdue, faded }: Props) => {
+// The compact row (Home, Schedule, Stock, Upkeep, People): an optional time, the body, and one action in a column on
+// the right, all on one line. `openId` marks the body button so a page can return focus to it.
+export const Row = ({ when, title, status, meta, onOpen, openLabel, openId, action, overdue, flash, faded }: Props) => {
   const body = (
     <>
       <span className="block text-title font-semibold">{title}</span>
@@ -37,6 +40,7 @@ export const Row = ({ when, title, status, meta, onOpen, openLabel, action, over
         "grid min-h-16 items-center gap-x-3 border-t border-line py-2",
         when ? "grid-cols-[4rem_minmax(0,1fr)_auto]" : "grid-cols-[minmax(0,1fr)_auto]",
         overdue && lateBar,
+        flash && "animate-row-flash",
         faded && "text-muted",
       )}
     >
@@ -49,6 +53,7 @@ export const Row = ({ when, title, status, meta, onOpen, openLabel, action, over
             "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ink",
           )}
           onClick={onOpen}
+          data-open-id={openId}
           aria-label={[openLabel, status?.text, meta].filter(Boolean).join(copy.common.separator)}
         >
           {body}

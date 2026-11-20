@@ -3,9 +3,9 @@ import { useState, type SubmitEvent } from "react";
 import { PageHeader } from "../components/PageHeader";
 import { Link } from "react-router-dom";
 import { ListCard } from "../components/ListCard";
-import { ListRow } from "../components/ListRow";
+import { Row } from "../components/Row";
 import { RenamePersonDialog } from "../components/RenamePersonDialog";
-import { inputClass, primaryButton, secondaryButton } from "../components/ui";
+import { cx, inputClass, primaryButton, rowAction, secondaryButton } from "../components/ui";
 import { copy } from "../copy";
 import { trpc, type ListPerson } from "../trpc";
 
@@ -79,28 +79,19 @@ export const PeoplePage = () => {
       {people.data && people.data.length > 0 && (
         <ListCard>
           {people.data.map((person) => (
-            <ListRow
+            <Row
               key={person.id}
               title={person.name}
-              details={[]}
-              actions={
-                <>
-                  <Link
-                    to={`/people/${person.id}/routine`}
-                    className={`${secondaryButton} inline-flex items-center`}
-                    aria-label={copy.people.routineLabel(person.name)}
-                  >
-                    {copy.people.routine}
-                  </Link>
-                  <button
-                    type="button"
-                    className={secondaryButton}
-                    onClick={() => setRenaming(person)}
-                    aria-label={copy.people.renameLabel(person.name)}
-                  >
-                    {copy.people.rename}
-                  </button>
-                </>
+              onOpen={() => setRenaming(person)}
+              openLabel={copy.people.renameLabel(person.name)}
+              action={
+                <Link
+                  to={`/people/${person.id}/routine`}
+                  className={cx(secondaryButton, rowAction, "inline-flex items-center justify-center")}
+                  aria-label={copy.people.routineLabel(person.name)}
+                >
+                  {copy.people.routine}
+                </Link>
               }
             />
           ))}

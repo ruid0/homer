@@ -55,6 +55,9 @@ export const isDoneToday = ({
 }: Pick<Words, "lastDoneOn" | "dueOn" | "daysUntil">): boolean =>
   lastDoneOn !== null && lastDoneOn === addDays(dueOn, -daysUntil);
 
+// Due or overdue: the two that can be put off with Not today.
+export const isLate = (status: Words["status"]): boolean => status === "overdue" || status === "due";
+
 export const needsDoing = (status: Words["status"]): boolean => status !== "later";
 
 type Details = {

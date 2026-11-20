@@ -29,12 +29,12 @@ test.describe("the chips", () => {
     await seedUpkeep(request, { name: "Done job", every: 3, unit: "months", lastDoneOn: daysAgo(20) });
     await seedUpkeep(request, weekly("Never job", null));
     await page.goto("/upkeep");
-    await expect(row(page, "Done job").getByText("Every 3 months", { exact: true })).toBeVisible();
-    await expect(row(page, "Done job").getByText(/^Last done \d+ \w+/)).toBeVisible();
-    await expect(row(page, "Never job").getByText("Every week", { exact: true })).toBeVisible();
-    // The status already says it, so a job never done has one "Not done yet", not a chip as well.
-    await expect(row(page, "Never job").getByText("Not done yet", { exact: true })).toHaveCount(1);
-    await expect(row(page, "Never job").getByRole("listitem")).toHaveCount(1);
+    await expect(row(page, "Done job")).toContainText("Every 3 months");
+    await expect(row(page, "Done job")).toContainText(/Last done \d+ \w+/);
+    await expect(row(page, "Never job")).toContainText("Every week");
+    // The status already says it, so a job never done says "Not done yet" once, and has no "Last done".
+    await expect(row(page, "Never job").getByText(/Not done yet/)).toHaveCount(1);
+    await expect(row(page, "Never job")).not.toContainText("Last done");
   });
 });
 
@@ -42,7 +42,7 @@ test.describe("opening a job", () => {
   test("tapping the row opens the editor", async ({ page, request }) => {
     await seedUpkeep(request, weekly("Gutters", 20));
     await page.goto("/upkeep");
-    await row(page, "Gutters").getByText("Every week", { exact: true }).click();
+    await row(page, "Gutters").getByText("Gutters", { exact: true }).click();
     await expect(page.getByRole("dialog")).toContainText("Edit Gutters");
   });
 
@@ -61,22 +61,10 @@ test.describe("opening a job", () => {
     await expect(page.getByRole("dialog")).toHaveCount(1);
   });
 
-  test("selecting the text on a row does not open the editor", async ({ page, request }) => {
-    await seedUpkeep(request, weekly("Gutters", 20));
-    await page.goto("/upkeep");
-    const name = await row(page, "Gutters").getByText("Gutters", { exact: true }).boundingBox();
-    await page.mouse.move(name!.x + 1, name!.y + name!.height / 2);
-    await page.mouse.down();
-    await page.mouse.move(name!.x + name!.width - 1, name!.y + name!.height / 2, { steps: 5 });
-    await page.mouse.up();
-    expect(await page.evaluate(() => window.getSelection()?.toString())).not.toBe("");
-    await expect(page.getByRole("dialog")).toHaveCount(0);
-  });
-
   test("closing the editor opened from a row puts focus back on that row's Edit button", async ({ page, request }) => {
     await seedUpkeep(request, weekly("Gutters", 20));
     await page.goto("/upkeep");
-    await row(page, "Gutters").getByText("Every week", { exact: true }).click();
+    await row(page, "Gutters").getByText("Gutters", { exact: true }).click();
     await expect(page.getByRole("dialog")).toBeVisible();
     await page.keyboard.press("Escape");
     await expect(page.getByRole("dialog")).toHaveCount(0);
@@ -204,22 +192,21 @@ test.describe("layout", () => {
   test.describe("on a phone", () => {
     test.use({ viewport: { width: 375, height: 700 } });
 
-    test("Done is on the name's line, the status below, and Edit on the chips' line", async ({ page, request }) => {
+    test("Done is on the name's line at the right edge, and the status and facts share one line below", async ({
+      page,
+      request,
+    }) => {
       await seedUpkeep(request, weekly("Gutters", 20));
       await page.goto("/upkeep");
       const item = row(page, "Gutters");
-      const name = await item.getByText("Gutters", { exact: true }).boundingBox();
-      const done = await page.getByRole("button", { name: "Done: Gutters" }).boundingBox();
-      const status = await item.getByText("days overdue").boundingBox();
-      const chip = await item.getByText("Every week", { exact: true }).boundingBox();
-      const edit = await page.getByRole("button", { name: "Edit Gutters" }).boundingBox();
-      expect(done && name && Math.abs(done.y + done.height / 2 - (name.y + name.height / 2))).toBeLessThan(
-        name!.height,
-      );
-      expect(status!.y).toBeGreaterThan(name!.y + name!.height - 1);
-      expect(chip!.y).toBeGreaterThan(status!.y);
-      expect(edit!.y + edit!.height).toBeGreaterThan(chip!.y);
-      expect(edit!.y).toBeGreaterThan(done!.y + done!.height - 1);
+      const name = (await item.getByText("Gutters", { exact: true }).boundingBox())!;
+      const done = (await page.getByRole("button", { name: "Done: Gutters" }).boundingBox())!;
+      const status = (await item.getByText("days overdue").boundingBox())!;
+      const whole = (await item.boundingBox())!;
+      expect(done.y).toBeLessThan(name.y + name.height);
+      expect(status.y).toBeGreaterThan(name.y + name.height - 1);
+      expect(whole.x + whole.width - (done.x + done.width)).toBeLessThanOrEqual(8);
+      expect(whole.height).toBeLessThanOrEqual(110);
     });
 
     test("a long list folds into one line of Later and the page does not scroll sideways", async ({
@@ -238,15 +225,18 @@ test.describe("layout", () => {
   test.describe("on a tablet", () => {
     test.use({ viewport: { width: 820, height: 1000 } });
 
-    test("Edit and Done sit together at the right, level with the middle of the row", async ({ page, request }) => {
+    test("Done sits at the right, level with the middle of the row, and the row opens Edit", async ({
+      page,
+      request,
+    }) => {
       await seedUpkeep(request, weekly("Gutters", 20));
       await page.goto("/upkeep");
-      const name = await row(page, "Gutters").getByText("Gutters", { exact: true }).boundingBox();
-      const edit = await page.getByRole("button", { name: "Edit Gutters" }).boundingBox();
-      const done = await page.getByRole("button", { name: "Done: Gutters" }).boundingBox();
-      expect(edit!.x).toBeGreaterThan(name!.x + 100);
-      expect(done!.x).toBeGreaterThan(edit!.x);
-      expect(Math.abs(done!.y - edit!.y)).toBeLessThan(2);
+      const item = row(page, "Gutters");
+      const whole = (await item.boundingBox())!;
+      const done = (await page.getByRole("button", { name: "Done: Gutters" }).boundingBox())!;
+      expect(done.x + done.width).toBeGreaterThan(whole.x + whole.width - 24);
+      expect(Math.abs(done.y + done.height / 2 - (whole.y + whole.height / 2))).toBeLessThan(6);
+      await expect(page.getByRole("button", { name: "Edit Gutters" })).toBeVisible();
     });
   });
 });

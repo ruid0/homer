@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { APIRequestContext } from "@playwright/test";
 
-const call = async <T>(request: APIRequestContext, procedure: string, data: unknown): Promise<T> => {
+export const call = async <T>(request: APIRequestContext, procedure: string, data: unknown): Promise<T> => {
   const response = await request.post(`/trpc/${procedure}`, { data });
   const body = (await response.json()) as { result?: { data: T } };
   if (!body.result) throw new Error(`${procedure} failed: ${JSON.stringify(body)}`);
