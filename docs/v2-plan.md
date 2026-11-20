@@ -1,6 +1,6 @@
 # H.O.M.E.R. v2: plan
 
-Status: In progress (owner decisions recorded 2026-11-05; steps 1 to 4, backups, routines, jobs with ntfy and maintenance schedules with their note, are built) · Owner: Igor Bondarenko · Last updated: 2026-11-20 · Source: v1.0.0 release, PRD §3 and §9, and the owner's own earlier project `~/PetProjects/Assistant` (same household, different stack), which has working versions of several of these ideas.
+Status: In progress (released as v2.0.0 with steps 1 to 4: backups, routines, jobs with ntfy and maintenance schedules with their note; receipts, voice, two languages and assistant speed are next) · Owner: Igor Bondarenko · Last updated: 2026-11-20 · Source: v1.0.0 release, PRD §3 and §9, and the owner's own earlier project `~/PetProjects/Assistant` (same household, different stack), which has working versions of several of these ideas.
 
 v1 is pull-only: HOMER shows what is due when someone opens it. v2 makes it push, keeps its data safe, and widens what it can read and hear, without breaking the rule that household data stays in the house.
 
