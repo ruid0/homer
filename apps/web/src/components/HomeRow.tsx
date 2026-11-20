@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { lateBar, statusClass } from "./ui";
+import { cx, lateBar, statusClass } from "./ui";
 
 type Props = {
   title: string;
@@ -15,7 +15,11 @@ type Props = {
 // cannot drift.
 export const HomeRow = ({ title, status, level, note, overdue = false, flash = false, action }: Props) => (
   <li
-    className={`flex min-h-20 items-center gap-4 border-t border-line py-3 ${overdue ? lateBar : ""} ${flash ? "animate-row-flash" : ""}`}
+    className={cx(
+      "flex min-h-20 items-center gap-4 border-t border-line py-3",
+      overdue && lateBar,
+      flash && "animate-row-flash",
+    )}
   >
     <div className="min-w-0 flex-1">
       <p className="text-title font-semibold">{title}</p>

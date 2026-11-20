@@ -1,3 +1,5 @@
+import { cx } from "./ui";
+
 type Props = {
   label: string;
   name: string;
@@ -14,13 +16,17 @@ export const SegmentedChoice = ({ label, name, value, options, onChange }: Props
       {options.map((option, index) => (
         <label
           key={option.value}
-          className={`relative -ml-px flex h-11 min-w-0 flex-auto cursor-pointer items-center justify-center border border-control px-2 capitalize text-base font-medium first:ml-0 has-[:focus-visible]:z-10 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ink ${
-            index === 0 ? "rounded-l-lg" : ""
-          } ${index === options.length - 1 ? "rounded-r-lg" : ""} ${
+          className={cx(
+            "relative -ml-px flex h-11 min-w-0 flex-auto cursor-pointer items-center justify-center",
+            "border border-control",
+            "px-2 capitalize text-base font-medium first:ml-0 has-[:focus-visible]:z-10",
+            "has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ink",
+            index === 0 && "rounded-l-lg",
+            index === options.length - 1 && "rounded-r-lg",
             option.value === value
               ? "z-[1] border-primary bg-primary font-semibold text-on-primary"
-              : "bg-card hover:bg-hover"
-          }`}
+              : "bg-card hover:bg-hover",
+          )}
         >
           <input
             type="radio"

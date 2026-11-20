@@ -4,6 +4,7 @@ import { reminderChip } from "../lib/reminderText";
 import { cycleCount, dayLabel, dayState, isFuture, tickCount, weekdayInitial } from "../lib/routineWeek";
 import type { RoutineWeek } from "../trpc";
 import { Tick } from "./Tick";
+import { cx } from "./ui";
 
 type Props = {
   week: RoutineWeek;
@@ -20,7 +21,11 @@ type Reminder = { id: number; itemId: number; fireAt: string; dailyTime: string 
 const focusRing = "focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-ink";
 
 const circle = (ticked: boolean) =>
-  `grid size-14 shrink-0 place-items-center rounded-full border-2 ${focusRing} ${ticked ? "border-ok bg-ok text-card" : "border-control text-control hover:bg-hover"}`;
+  cx(
+    "grid size-14 shrink-0 place-items-center rounded-full border-2",
+    focusRing,
+    ticked ? "border-ok bg-ok text-card" : "border-control text-control hover:bg-hover",
+  );
 
 const square = (state: ReturnType<typeof dayState>, isToday: boolean) => {
   const look = {
@@ -28,7 +33,12 @@ const square = (state: ReturnType<typeof dayState>, isToday: boolean) => {
     partial: "border-ok text-ok",
     none: "border-control text-control hover:bg-hover",
   }[state];
-  return `grid h-11 w-full max-w-12 place-items-center rounded-xl border ${isToday ? "ring-2 ring-ink" : ""} ${look} ${focusRing}`;
+  return cx(
+    "grid h-11 w-full max-w-12 place-items-center rounded-xl border",
+    isToday && "ring-2 ring-ink",
+    look,
+    focusRing,
+  );
 };
 
 const ReminderChips = ({ reminders, now }: { reminders: Reminder[]; now: Date }) =>
@@ -39,7 +49,10 @@ const ReminderChips = ({ reminders, now }: { reminders: Reminder[]; now: Date })
         return (
           <li
             key={reminder.id}
-            className={`rounded-full border px-3 py-1 text-meta ${chip.soon ? "border-warn font-semibold text-warn" : "border-line text-muted"}`}
+            className={cx(
+              "rounded-full border px-3 py-1 text-meta",
+              chip.soon ? "border-warn font-semibold text-warn" : "border-line text-muted",
+            )}
           >
             {chip.text}
           </li>
