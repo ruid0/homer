@@ -34,7 +34,12 @@ describe("refuseWrite", () => {
   });
 
   it("counts what was said earlier on the screen", () => {
-    expect(refuseWrite({ name: "restock_item", args: { name: "Milk", quantity: 3 } }, say("3", "bought milk"), ["Milk", "Oat milk"])).toBeNull();
+    expect(
+      refuseWrite({ name: "restock_item", args: { name: "Milk", quantity: 3 } }, say("3", "bought milk"), [
+        "Milk",
+        "Oat milk",
+      ]),
+    ).toBeNull();
   });
 
   it("refuses to mark an item out when asked to delete it", () => {
@@ -47,6 +52,8 @@ describe("refuseWrite", () => {
   });
 
   it("does not check tools that take no item name", () => {
-    expect(refuseWrite({ name: "add_task", args: { title: "Water plants" } } as never, say("remind Ben"), ["Salt"])).toBeNull();
+    expect(
+      refuseWrite({ name: "add_task", args: { title: "Water plants" } } as never, say("remind Ben"), ["Salt"]),
+    ).toBeNull();
   });
 });

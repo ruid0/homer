@@ -27,7 +27,17 @@ const toNumberOrNull = (text: string) => (text.trim() === "" ? null : Number(tex
 const invalidFields = (issues: readonly { path: readonly PropertyKey[] }[]) =>
   [...new Set(issues.map((issue) => fieldLabels[String(issue.path[0])] ?? copy.itemForm.wholeForm))].join(", ");
 
-export const ItemForm = ({ item, pending, serverError, onSave, onRemove, onOut, outPending = false, outError, onClose }: Props) => {
+export const ItemForm = ({
+  item,
+  pending,
+  serverError,
+  onSave,
+  onRemove,
+  onOut,
+  outPending = false,
+  outError,
+  onClose,
+}: Props) => {
   const [name, setName] = useState(item?.name ?? "");
   const [unit, setUnit] = useState(item?.unit ?? "");
   const [quantity, setQuantity] = useState(quantityText(item?.quantity ?? 0));
@@ -72,10 +82,19 @@ export const ItemForm = ({ item, pending, serverError, onSave, onRemove, onOut, 
         </Field>
         {item && onOut && item.quantity > 0 && untouched && (
           <div className="grid justify-items-start gap-1">
-            <button type="button" className={secondaryButton} disabled={pending || outPending} onClick={onOut} aria-label={copy.items.outLabel(item.name)} aria-describedby="ran-out-hint">
+            <button
+              type="button"
+              className={secondaryButton}
+              disabled={pending || outPending}
+              onClick={onOut}
+              aria-label={copy.items.outLabel(item.name)}
+              aria-describedby="ran-out-hint"
+            >
               {copy.stock.ranOut}
             </button>
-            <p id="ran-out-hint" className="text-meta text-muted">{copy.itemForm.ranOutHint}</p>
+            <p id="ran-out-hint" className="text-meta text-muted">
+              {copy.itemForm.ranOutHint}
+            </p>
           </div>
         )}
         <Field label={copy.itemForm.daysPerUnit}>

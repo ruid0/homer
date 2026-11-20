@@ -1,7 +1,13 @@
 import { addDays } from "@homer/shared";
 import { copy } from "../copy";
 
-type Words = { lastDoneOn: string | null; status: "overdue" | "due" | "soon" | "later"; daysUntil: number; dueOn: string; snoozedUntil?: string | null };
+type Words = {
+  lastDoneOn: string | null;
+  status: "overdue" | "due" | "soon" | "later";
+  daysUntil: number;
+  dueOn: string;
+  snoozedUntil?: string | null;
+};
 
 // Past this many days a date is told in months, so "Due 17 Oct" is never mistaken for last month's.
 const DATE_UNTIL_DAYS = 60;
@@ -18,7 +24,8 @@ export const shortDate = (date: string): string => `${asDate(date).getUTCDate()}
 export const longDate = (date: string): string => `${shortDate(date)} ${asDate(date).getUTCFullYear()}`;
 
 // The year shows only when it is not this year.
-export const pastDate = (date: string, today: string): string => (date.slice(0, 4) === today.slice(0, 4) ? shortDate(date) : longDate(date));
+export const pastDate = (date: string, today: string): string =>
+  date.slice(0, 4) === today.slice(0, 4) ? shortDate(date) : longDate(date);
 
 const laterWords = ({ daysUntil, dueOn }: Pick<Words, "daysUntil" | "dueOn">): string => {
   if (daysUntil <= DATE_UNTIL_DAYS) return copy.maintenance.dueOn(shortDate(dueOn));
@@ -27,9 +34,11 @@ const laterWords = ({ daysUntil, dueOn }: Pick<Words, "daysUntil" | "dueOn">): s
 };
 
 // The one-line answer on a row: in words, so colour is never the only signal.
-// A snoozed job only reads as "later" while it is due or overdue (daysUntil of 0 or less); a job not yet due keeps its own words.
+// A snoozed job only reads as "later" while it is due or overdue (daysUntil of 0 or less); a job not yet due keeps its
+// own words.
 export const dueWords = ({ lastDoneOn, status, daysUntil, dueOn, snoozedUntil = null }: Words): string => {
-  if (status === "later" && daysUntil <= 0 && snoozedUntil !== null) return copy.maintenance.snoozedTo(shortDate(snoozedUntil));
+  if (status === "later" && daysUntil <= 0 && snoozedUntil !== null)
+    return copy.maintenance.snoozedTo(shortDate(snoozedUntil));
   if (lastDoneOn === null && (status === "due" || status === "overdue")) return copy.maintenance.neverDone;
   if (status === "overdue") return copy.maintenance.overdueDays(-daysUntil);
   if (status === "due") return copy.maintenance.dueToday;
@@ -37,15 +46,27 @@ export const dueWords = ({ lastDoneOn, status, daysUntil, dueOn, snoozedUntil = 
   return laterWords({ daysUntil, dueOn });
 };
 
-// Today is not passed in: it is the due date minus the days until it. A second done on the same day is refused, so there is no button for it.
-export const isDoneToday = ({ lastDoneOn, dueOn, daysUntil }: Pick<Words, "lastDoneOn" | "dueOn" | "daysUntil">): boolean =>
+// Today is not passed in: it is the due date minus the days until it. A second done on the same day is refused, so
+// there is no button for it.
+export const isDoneToday = ({
+  lastDoneOn,
+  dueOn,
+  daysUntil,
+}: Pick<Words, "lastDoneOn" | "dueOn" | "daysUntil">): boolean =>
   lastDoneOn !== null && lastDoneOn === addDays(dueOn, -daysUntil);
 
 export const needsDoing = (status: Words["status"]): boolean => status !== "later";
 
-type Details = { every: number; unit: "weeks" | "months" | "years"; lastDoneOn: string | null; dueOn: string; daysUntil: number };
+type Details = {
+  every: number;
+  unit: "weeks" | "months" | "years";
+  lastDoneOn: string | null;
+  dueOn: string;
+  daysUntil: number;
+};
 
-// The chips on a row: how often, and when it was last done. A job never done has no second chip: its status line already says so.
+// The chips on a row: how often, and when it was last done. A job never done has no second chip: its status line
+// already says so.
 export const rowChips = ({ every, unit, lastDoneOn, dueOn, daysUntil }: Details): string[] => [
   copy.maintenance.cycle(every, unit),
   // Today is not passed in: it is the due date minus the days until it.
@@ -59,5 +80,7 @@ export const collapsesLater = (count: number): boolean => count > LATER_OPEN_MAX
 
 const lowerFirst = (text: string): string => text.charAt(0).toLowerCase() + text.slice(1);
 
-// What a folded Later still tells you: the next job to come round. The list arrives sorted by due date, so the first one is it.
-export const laterNote = (item: Words & { name: string }): string => copy.maintenance.laterNext(item.name, lowerFirst(dueWords(item)));
+// What a folded Later still tells you: the next job to come round. The list arrives sorted by due date, so the first
+// one is it.
+export const laterNote = (item: Words & { name: string }): string =>
+  copy.maintenance.laterNext(item.name, lowerFirst(dueWords(item)));

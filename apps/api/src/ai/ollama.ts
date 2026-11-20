@@ -51,7 +51,13 @@ const toolSpec = ({ name, description, parameters }: ToolDefinition) => ({
 
 type WireReply = { message?: { content?: string; tool_calls?: { function: { name: string; arguments: unknown } }[] } };
 
-export const createOllamaClient = ({ host, model, think, timeoutMs, fetch: fetchImpl = fetch }: Options): ChatClient => {
+export const createOllamaClient = ({
+  host,
+  model,
+  think,
+  timeoutMs,
+  fetch: fetchImpl = fetch,
+}: Options): ChatClient => {
   // The body is read inside the same limit, so a reply that stalls or is not JSON is also "unreachable".
   const request = async <T>(path: string, init: RequestInit, limitMs: number): Promise<T> => {
     try {
@@ -73,13 +79,20 @@ export const createOllamaClient = ({ host, model, think, timeoutMs, fetch: fetch
       );
       return {
         content: message?.content ?? "",
-        toolCalls: (message?.tool_calls ?? []).map((call) => ({ name: call.function.name, args: call.function.arguments })),
+        toolCalls: (message?.tool_calls ?? []).map((call) => ({
+          name: call.function.name,
+          args: call.function.arguments,
+        })),
       };
     },
 
     status: async () => {
       try {
-        const { models = [] } = await request<{ models?: { name?: string }[] }>("/api/tags", {}, Math.min(timeoutMs, 3000));
+        const { models = [] } = await request<{ models?: { name?: string }[] }>(
+          "/api/tags",
+          {},
+          Math.min(timeoutMs, 3000),
+        );
         const known = models.map((entry) => entry.name ?? "");
         return known.some((name) => name === model || name === `${model}:latest`) ? "ready" : "no_model";
       } catch {

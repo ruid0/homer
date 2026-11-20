@@ -4,7 +4,8 @@ import { copy } from "../copy";
 import { pastDate } from "./maintenanceText";
 import { trpc, type MaintenanceItem } from "../trpc";
 
-// The flash lasts 1.4 s; the row stops being marked a little after, so it cannot replay if it moves between lists later.
+// The flash lasts 1.4 s; the row stops being marked a little after, so it cannot replay if it moves between lists
+// later.
 const FLASH_FOR_MS = 1600;
 
 type Undoable = { doneId: number; item: MaintenanceItem; lastDoneOn: string };
@@ -16,7 +17,10 @@ const markedDone = (item: MaintenanceItem, today: string): MaintenanceItem => {
 };
 
 const toastMessage = ({ item, lastDoneOn }: Undoable, today: string): string =>
-  copy.maintenance.doneToast(item.name, pastDate(dueOn({ lastDoneOn, createdOn: item.createdOn }, item.every, item.unit), today));
+  copy.maintenance.doneToast(
+    item.name,
+    pastDate(dueOn({ lastDoneOn, createdOn: item.createdOn }, item.every, item.unit), today),
+  );
 
 // Done today and Undo for an upkeep item, shared by the Upkeep page and the Home card.
 export const useMarkDone = (today: string, onDone?: () => void) => {
@@ -31,7 +35,8 @@ export const useMarkDone = (today: string, onDone?: () => void) => {
     return () => window.clearTimeout(timer);
   }, [flashId]);
   const refresh = () => utils.maintenance.list.invalidate();
-  // Saves still on their way. The list is fetched again only when the last one is back, so an early answer cannot undo a later row's move.
+  // Saves still on their way. The list is fetched again only when the last one is back, so an early answer cannot undo
+  // a later row's move.
   const saving = useRef(0);
   const markDone = trpc.maintenance.markDone.useMutation({
     // The row moves to Later at once.
@@ -52,7 +57,10 @@ export const useMarkDone = (today: string, onDone?: () => void) => {
     // A failure puts back that row only, and says why.
     onError: (error, { id }, context) => {
       const original = context?.item;
-      if (original) utils.maintenance.list.setData({ today }, (rows) => rows?.map((row) => (row.id === id ? original : row)).sort(compareMaintenance));
+      if (original)
+        utils.maintenance.list.setData({ today }, (rows) =>
+          rows?.map((row) => (row.id === id ? original : row)).sort(compareMaintenance),
+        );
       setFlashId((was) => (was === id ? null : was));
       setProblem(error.message);
     },
@@ -61,7 +69,10 @@ export const useMarkDone = (today: string, onDone?: () => void) => {
       if (saving.current === 0) void refresh();
     },
   });
-  const undo = trpc.maintenance.undoDone.useMutation({ onError: (error) => setProblem(error.message), onSettled: refresh });
+  const undo = trpc.maintenance.undoDone.useMutation({
+    onError: (error) => setProblem(error.message),
+    onSettled: refresh,
+  });
 
   const finish = (item: MaintenanceItem) => {
     setProblem(undefined);
@@ -82,5 +93,13 @@ export const useMarkDone = (today: string, onDone?: () => void) => {
   };
 
   // justDoneId: the row to flash, so a person sees where a done item went.
-  return { finish, takeBack, toast, justDoneId: flashId, problem, busy: markDone.isPending, closeToast: () => setUndoable(null) };
+  return {
+    finish,
+    takeBack,
+    toast,
+    justDoneId: flashId,
+    problem,
+    busy: markDone.isPending,
+    closeToast: () => setUndoable(null),
+  };
 };

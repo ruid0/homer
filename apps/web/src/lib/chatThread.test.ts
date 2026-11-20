@@ -36,7 +36,9 @@ describe("withoutFailedSend", () => {
   const message = (key: string, role: ChatMessage["role"]): ChatMessage => ({ key, role, text: key, actions: [] });
 
   it("drops the last message when it is the person's, so it can be sent again", () => {
-    expect(withoutFailedSend([message("a", "user"), message("b", "assistant"), message("c", "user")]).map((m) => m.key)).toEqual(["a", "b"]);
+    expect(
+      withoutFailedSend([message("a", "user"), message("b", "assistant"), message("c", "user")]).map((m) => m.key),
+    ).toEqual(["a", "b"]);
   });
 
   it("leaves a thread that ends with a reply alone", () => {

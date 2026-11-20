@@ -12,12 +12,16 @@ test.beforeEach(async ({ request }) => {
   await clearUpkeep(request);
 });
 
-const row = (page: Page, name: string) => page.getByRole("listitem").filter({ has: page.getByText(name, { exact: true }) });
+const row = (page: Page, name: string) =>
+  page.getByRole("listitem").filter({ has: page.getByText(name, { exact: true }) });
 
 const openHistory = (dialog: Locator) => dialog.getByRole("button", { name: /^Done on/ }).click();
 
 const removeDate = async (dialog: Locator) => {
-  await dialog.getByRole("button", { name: /^Remove the done date/ }).first().click();
+  await dialog
+    .getByRole("button", { name: /^Remove the done date/ })
+    .first()
+    .click();
   await dialog.getByRole("button", { name: "Yes, remove it" }).click();
 };
 
@@ -67,7 +71,8 @@ test.describe("the list", () => {
     await page.goto("/upkeep");
 
     const needs = page.getByRole("region", { name: "Due now" });
-    // Overdue first (oldest due date first), then the never-done one (due the day it was added, today), then by due date.
+    // Overdue first (oldest due date first), then the never-done one (due the day it was added, today), then by due
+    // date.
     const names = await needs.getByRole("listitem").locator("p.text-title").allTextContents();
     expect(names).toEqual(["Overdue job", "Never job", "Today job", "Tomorrow job", "Soon job"]);
 
@@ -113,7 +118,10 @@ test.describe("marking done", () => {
     await expect(row(page, "Today job")).toContainText("Last done");
   });
 
-  test("the Undo toast goes away after a few seconds, and a second done keeps its own Undo", async ({ page, request }) => {
+  test("the Undo toast goes away after a few seconds, and a second done keeps its own Undo", async ({
+    page,
+    request,
+  }) => {
     await seedUpkeep(request, weekly("First job", 7));
     await seedUpkeep(request, weekly("Second job", 7));
     await page.clock.install({ time: new Date(`${todayUtc()}T12:00:00Z`) });
@@ -160,8 +168,10 @@ test.describe("marking done", () => {
     await expect(page.getByRole("button", { name: "Undo" })).toHaveCount(0);
   });
 
-
-  test("marking done on a day that already has a done date says so in the dialog and keeps one entry", async ({ page, request }) => {
+  test("marking done on a day that already has a done date says so in the dialog and keeps one entry", async ({
+    page,
+    request,
+  }) => {
     await seedUpkeep(request, weekly("Gutters", 0));
     await page.goto("/upkeep");
     await page.getByRole("button", { name: "Edit Gutters" }).click();
@@ -172,7 +182,10 @@ test.describe("marking done", () => {
     await expect(dialog.getByRole("listitem")).toHaveCount(1);
   });
 
-  test("after a done, focus moves on to the next Done button instead of the top of the page", async ({ page, request }) => {
+  test("after a done, focus moves on to the next Done button instead of the top of the page", async ({
+    page,
+    request,
+  }) => {
     await seedUpkeep(request, weekly("Overdue job", 20));
     await seedUpkeep(request, weekly("Second job", 10));
     await page.goto("/upkeep");
@@ -193,7 +206,9 @@ test.describe("marking done", () => {
 });
 
 test.describe("adding", () => {
-  test("a suggestion fills the form, a last done date sets the due date, and the suggestion is then gone", async ({ page }) => {
+  test("a suggestion fills the form, a last done date sets the due date, and the suggestion is then gone", async ({
+    page,
+  }) => {
     await page.goto("/upkeep");
     await page.getByRole("button", { name: "Add job" }).click();
     const dialog = page.getByRole("dialog");
@@ -297,7 +312,10 @@ test.describe("editing, history and removing", () => {
     expect(await page.getByRole("dialog").getByLabel("Mark done on").getAttribute("max")).toBe(todayUtc());
   });
 
-  test("a failed remove keeps the dialog open with the error, and the error is gone in the next dialog", async ({ page, request }) => {
+  test("a failed remove keeps the dialog open with the error, and the error is gone in the next dialog", async ({
+    page,
+    request,
+  }) => {
     await seedUpkeep(request, weekly("Gutters", 1));
     await interceptCall(page, "maintenance.remove", { answer: failure("Could not remove it.") });
     await page.goto("/upkeep");
@@ -357,7 +375,11 @@ test.describe("failures and waiting", () => {
     await interceptCall(page, "maintenance.undoDone", { answer: failure("Could not undo it.") });
     await page.goto("/upkeep");
     await page.getByRole("button", { name: "Done: Today job" }).click();
-    await page.getByRole("status").filter({ hasText: "Today job done today." }).getByRole("button", { name: "Undo" }).click();
+    await page
+      .getByRole("status")
+      .filter({ hasText: "Today job done today." })
+      .getByRole("button", { name: "Undo" })
+      .click();
     await expect(page.getByRole("alert")).toContainText("Could not undo it.");
     await expect(row(page, "Today job")).toContainText("Due in 7 days");
     await expect(page.getByRole("status").filter({ hasText: "Today job done today." })).toBeVisible();
@@ -517,7 +539,10 @@ test.describe("dates, limits and focus", () => {
     await expect(add).toBeFocused();
   });
 
-  test("adding, marking done and opening Edit while the toast shows raises no console error", async ({ page, request }) => {
+  test("adding, marking done and opening Edit while the toast shows raises no console error", async ({
+    page,
+    request,
+  }) => {
     const problems: string[] = [];
     page.on("console", (message) => message.type() === "error" && problems.push(message.text()));
     page.on("pageerror", (error) => problems.push(error.message));
@@ -580,7 +605,9 @@ test.describe("fit, targets and themes", () => {
       const rail = page.getByRole("navigation", { name: "Main" });
       const last = await rail.getByRole("link", { name: "Assistant" }).boundingBox();
       expect((last?.y ?? 0) + (last?.height ?? 0)).toBeLessThanOrEqual(768);
-      expect(await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight)).toBeLessThanOrEqual(0);
+      expect(await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight)).toBeLessThanOrEqual(
+        0,
+      );
     });
   });
 
@@ -605,13 +632,16 @@ test.describe("fit, targets and themes", () => {
       await page.goto("/upkeep");
       await expect(page.getByRole("button", { name: `Done: ${name}` })).toBeInViewport();
       await expect(page.getByRole("button", { name: `Edit ${name}` })).toBeInViewport();
-      expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth),
+      ).toBeLessThanOrEqual(0);
     });
 
     test("the page, the seven nav labels and the dialog fit the width", async ({ page, request }) => {
       await seedUpkeep(request, weekly("Gutters", 20));
       await page.goto("/upkeep");
-      const overflow = () => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
+      const overflow = () =>
+        page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
       expect(await overflow()).toBeLessThanOrEqual(0);
       const links = page.getByRole("navigation", { name: "Main" }).getByRole("link");
       await expect(links).toHaveCount(7);
@@ -632,7 +662,9 @@ test.describe("fit, targets and themes", () => {
       await seedUpkeep(request, weekly("Gutters", 20));
       await page.goto("/upkeep");
       await expect(page.getByRole("button", { name: "Done: Gutters" })).toBeInViewport();
-      expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth),
+      ).toBeLessThanOrEqual(0);
     });
   });
 
@@ -641,7 +673,10 @@ test.describe("fit, targets and themes", () => {
     await seedUpkeep(request, weekly("Soon job", 5));
     await page.emulateMedia({ colorScheme: "light" });
     await page.goto("/upkeep");
-    for (const text of [row(page, "Overdue job").getByText("13 days overdue"), row(page, "Soon job").getByText("Due in 2 days")]) {
+    for (const text of [
+      row(page, "Overdue job").getByText("13 days overdue"),
+      row(page, "Soon job").getByText("Due in 2 days"),
+    ]) {
       expect(await contrastOf(text)).toBeGreaterThanOrEqual(4.5);
     }
   });
@@ -664,7 +699,11 @@ test.describe("fit, targets and themes", () => {
     await page.getByRole("button", { name: "Edit Far job" }).click();
     const dialog = page.getByRole("dialog");
     await openHistory(dialog);
-    for (const text of [dialog.getByRole("heading", { name: "Edit Far job" }), dialog.getByText(/^Done on/).first(), dialog.getByText(/^Not done yet\.$|^\d+ \w+ \d{4}$/).first()]) {
+    for (const text of [
+      dialog.getByRole("heading", { name: "Edit Far job" }),
+      dialog.getByText(/^Done on/).first(),
+      dialog.getByText(/^Not done yet\.$|^\d+ \w+ \d{4}$/).first(),
+    ]) {
       expect(await contrastOf(text)).toBeGreaterThanOrEqual(4.5);
     }
   });
@@ -673,11 +712,12 @@ test.describe("fit, targets and themes", () => {
     await seedUpkeep(request, weekly("Gutters", 1));
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/upkeep");
-    const running = await page.evaluate(() =>
-      [...document.querySelectorAll("main, main *")].filter((element) => {
-        const style = getComputedStyle(element);
-        return parseFloat(style.transitionDuration) > 0 || parseFloat(style.animationDuration) > 0;
-      }).length,
+    const running = await page.evaluate(
+      () =>
+        [...document.querySelectorAll("main, main *")].filter((element) => {
+          const style = getComputedStyle(element);
+          return parseFloat(style.transitionDuration) > 0 || parseFloat(style.animationDuration) > 0;
+        }).length,
     );
     expect(running).toBe(0);
   });

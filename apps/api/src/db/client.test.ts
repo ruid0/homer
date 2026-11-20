@@ -16,7 +16,12 @@ describe("database schema", () => {
   it("rejects an active item whose name differs only by case", () => {
     const db = createDb(":memory:");
     db.insert(items).values(salt).run();
-    expect(() => db.insert(items).values({ ...salt, name: "salt" }).run()).toThrow();
+    expect(() =>
+      db
+        .insert(items)
+        .values({ ...salt, name: "salt" })
+        .run(),
+    ).toThrow();
   });
 
   it("allows reusing the name of an archived item", () => {
@@ -65,7 +70,10 @@ describe("grocery_entries", () => {
     const [first] = db.insert(groceryEntries).values({ itemId, text: "Salt", addedBy: "auto" }).returning().all();
     db.update(groceryEntries).set({ boughtAt: new Date().toISOString() }).where(eq(groceryEntries.id, first!.id)).run();
     const [second] = db.insert(groceryEntries).values({ itemId, text: "Salt", addedBy: "auto" }).returning().all();
-    db.update(groceryEntries).set({ removedAt: new Date().toISOString() }).where(eq(groceryEntries.id, second!.id)).run();
+    db.update(groceryEntries)
+      .set({ removedAt: new Date().toISOString() })
+      .where(eq(groceryEntries.id, second!.id))
+      .run();
     expect(() => db.insert(groceryEntries).values({ itemId, text: "Salt", addedBy: "auto" }).run()).not.toThrow();
   });
 
@@ -98,7 +106,11 @@ describe("routine tables", () => {
   const withRow = () => {
     const db = createDb(":memory:");
     const [person] = db.insert(people).values({ name: "Person A" }).returning().all();
-    const [row] = db.insert(routineItems).values({ personId: person!.id, name: "Row A", position: 0 }).returning().all();
+    const [row] = db
+      .insert(routineItems)
+      .values({ personId: person!.id, name: "Row A", position: 0 })
+      .returning()
+      .all();
     return { db, row: row! };
   };
 
@@ -109,8 +121,12 @@ describe("routine tables", () => {
   it("allows one tick row per routine row and day", () => {
     const { db, row } = withRow();
     db.insert(routineTicks).values({ routineItemId: row.id, date: "2026-11-05", count: 1 }).run();
-    expect(() => db.insert(routineTicks).values({ routineItemId: row.id, date: "2026-11-05", count: 2 }).run()).toThrow();
-    expect(() => db.insert(routineTicks).values({ routineItemId: row.id, date: "2026-11-06", count: 2 }).run()).not.toThrow();
+    expect(() =>
+      db.insert(routineTicks).values({ routineItemId: row.id, date: "2026-11-05", count: 2 }).run(),
+    ).toThrow();
+    expect(() =>
+      db.insert(routineTicks).values({ routineItemId: row.id, date: "2026-11-06", count: 2 }).run(),
+    ).not.toThrow();
   });
 
   it("rejects a routine row for a person who does not exist, and a tick for a row that does not exist", () => {

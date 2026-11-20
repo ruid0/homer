@@ -11,9 +11,12 @@ type Props = {
   action: ReactNode;
 };
 
-// One row of a Home card: the name, one line of status, and the one button. Running out and Upkeep share it, so they cannot drift.
+// One row of a Home card: the name, one line of status, and the one button. Running out and Upkeep share it, so they
+// cannot drift.
 export const HomeRow = ({ title, status, level, note, overdue = false, flash = false, action }: Props) => (
-  <li className={`flex min-h-20 items-center gap-4 border-t border-line py-3 ${overdue ? lateBar : ""} ${flash ? "animate-row-flash" : ""}`}>
+  <li
+    className={`flex min-h-20 items-center gap-4 border-t border-line py-3 ${overdue ? lateBar : ""} ${flash ? "animate-row-flash" : ""}`}
+  >
     <div className="min-w-0 flex-1">
       <p className="text-title font-semibold">{title}</p>
       <p className={statusClass(level)}>{status}</p>

@@ -6,10 +6,7 @@ export type ChatMessage = { key: string; role: "user" | "assistant"; text: strin
 export type LocalUndo = Record<number, string>;
 
 export type ActionState =
-  | { kind: "none" }
-  | { kind: "undo"; ids: number[] }
-  | { kind: "undone" }
-  | { kind: "refused"; message: string };
+  { kind: "none" } | { kind: "undo"; ids: number[] } | { kind: "undone" } | { kind: "refused"; message: string };
 
 const DONE = "done";
 

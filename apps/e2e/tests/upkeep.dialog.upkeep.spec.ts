@@ -7,8 +7,10 @@ test.beforeEach(async ({ request }) => {
   await clearUpkeep(request);
 });
 
-const row = (page: Page, name: string) => page.getByRole("listitem").filter({ has: page.getByText(name, { exact: true }) });
-const unitButton = (dialog: Locator, name: string) => dialog.locator("label").filter({ hasText: new RegExp(`^${name}$`, "i") });
+const row = (page: Page, name: string) =>
+  page.getByRole("listitem").filter({ has: page.getByText(name, { exact: true }) });
+const unitButton = (dialog: Locator, name: string) =>
+  dialog.locator("label").filter({ hasText: new RegExp(`^${name}$`, "i") });
 const toggle = (dialog: Locator) => dialog.getByRole("button", { name: /^Done on/ });
 const everyBox = (dialog: Locator) => dialog.getByRole("spinbutton", { name: "Every" });
 
@@ -81,7 +83,9 @@ test.describe("the stepper", () => {
 });
 
 test.describe("the unit buttons", () => {
-  test("show all three at once with the current one selected, and the arrow keys move between them", async ({ page }) => {
+  test("show all three at once with the current one selected, and the arrow keys move between them", async ({
+    page,
+  }) => {
     const dialog = await openAdd(page);
     const group = dialog.getByRole("group", { name: "Unit" });
     await expect(group.getByRole("radio")).toHaveCount(3);
@@ -111,7 +115,10 @@ test.describe("last done when adding", () => {
     await expect(row(page, "Now job")).toContainText("Not done yet");
   });
 
-  for (const [choice, days] of [["Today", 0], ["A week ago", 7]] as const) {
+  for (const [choice, days] of [
+    ["Today", 0],
+    ["A week ago", 7],
+  ] as const) {
     test(`'${choice}' counts the next due date from that day`, async ({ page }) => {
       const dialog = await openAdd(page);
       await dialog.getByRole("textbox", { name: "Name" }).fill(`${choice} job`);
@@ -215,7 +222,10 @@ test.describe("the done dates", () => {
     await seedFiveDone(request, "Five job");
     const dialog = await openEdit(page, "Five job");
     await toggle(dialog).click();
-    await dialog.getByRole("button", { name: /^Remove the done date/ }).first().click();
+    await dialog
+      .getByRole("button", { name: /^Remove the done date/ })
+      .first()
+      .click();
     await expect(dialog.getByRole("group", { name: /^Remove \d+ \w+( \d{4})?\?$/ })).toBeVisible();
     await expect(dialog.getByRole("button", { name: "Keep it" })).toBeFocused();
     await expect(toggle(dialog)).toHaveText(/^Done on \(5\)/);
@@ -225,11 +235,17 @@ test.describe("the done dates", () => {
     await expect(toggle(dialog)).toHaveText(/^Done on \(5\)/);
   });
 
-  test("Yes, remove it takes that date off, updates the count and returns focus to the button", async ({ page, request }) => {
+  test("Yes, remove it takes that date off, updates the count and returns focus to the button", async ({
+    page,
+    request,
+  }) => {
     await seedFiveDone(request, "Five job");
     const dialog = await openEdit(page, "Five job");
     await toggle(dialog).click();
-    await dialog.getByRole("button", { name: /^Remove the done date/ }).first().click();
+    await dialog
+      .getByRole("button", { name: /^Remove the done date/ })
+      .first()
+      .click();
     await dialog.getByRole("button", { name: "Yes, remove it" }).click();
     await expect(toggle(dialog)).toHaveText(/^Done on \(4\)/);
     await expect(dialog.getByRole("listitem")).toHaveCount(3);
@@ -240,8 +256,14 @@ test.describe("the done dates", () => {
     await seedFiveDone(request, "Five job");
     const dialog = await openEdit(page, "Five job");
     await toggle(dialog).click();
-    await dialog.getByRole("button", { name: /^Remove the done date/ }).nth(0).click();
-    await dialog.getByRole("button", { name: /^Remove the done date/ }).nth(0).click();
+    await dialog
+      .getByRole("button", { name: /^Remove the done date/ })
+      .nth(0)
+      .click();
+    await dialog
+      .getByRole("button", { name: /^Remove the done date/ })
+      .nth(0)
+      .click();
     await expect(dialog.getByRole("button", { name: "Yes, remove it" })).toHaveCount(1);
   });
 });
@@ -312,8 +334,10 @@ test.describe("looks", () => {
     await page.emulateMedia({ reducedMotion: "reduce" });
     const dialog = await openEdit(page, "Five job");
     await toggle(dialog).click();
-    const running = await dialog.evaluate((element) =>
-      [...element.querySelectorAll("*")].filter((node) => parseFloat(getComputedStyle(node).animationDuration) > 0).length,
+    const running = await dialog.evaluate(
+      (element) =>
+        [...element.querySelectorAll("*")].filter((node) => parseFloat(getComputedStyle(node).animationDuration) > 0)
+          .length,
     );
     expect(running).toBe(0);
   });
@@ -344,10 +368,14 @@ test.describe("clicking outside the Upkeep dialog", () => {
     await expect(dialog).toBeVisible();
   });
 
-  test("Enter on a button inside it never closes it, even after a press that started outside and never finished", async ({ page }) => {
+  test("Enter on a button inside it never closes it, even after a press that started outside and never finished", async ({
+    page,
+  }) => {
     const dialog = await openAdd(page);
     // A press on the page behind whose release never reached the dialog, as when the pointer leaves the window.
-    await dialog.evaluate((element) => element.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, clientX: 4, clientY: 4 })));
+    await dialog.evaluate((element) =>
+      element.dispatchEvent(new MouseEvent("mousedown", { bubbles: true, clientX: 4, clientY: 4 })),
+    );
     await dialog.getByRole("button", { name: "One more" }).focus();
     await page.keyboard.press("Enter");
     await expect(everyBox(dialog)).toHaveValue("4");

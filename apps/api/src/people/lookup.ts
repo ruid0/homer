@@ -10,6 +10,10 @@ export const personNotFound = () => new TRPCError({ code: "NOT_FOUND", message: 
 export const isActivePerson = isNull(people.archivedAt);
 
 export const requirePerson = (db: Pick<Db, "select">, id: number): void => {
-  const found = db.select({ id: people.id }).from(people).where(and(eq(people.id, id), isActivePerson)).get();
+  const found = db
+    .select({ id: people.id })
+    .from(people)
+    .where(and(eq(people.id, id), isActivePerson))
+    .get();
   if (!found) throw personNotFound();
 };

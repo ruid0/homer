@@ -23,7 +23,11 @@ const circle = (ticked: boolean) =>
   `grid size-14 shrink-0 place-items-center rounded-full border-2 ${focusRing} ${ticked ? "border-ok bg-ok text-card" : "border-control text-control hover:bg-hover"}`;
 
 const square = (state: ReturnType<typeof dayState>, isToday: boolean) => {
-  const look = { done: "border-ok bg-ok text-card", partial: "border-ok text-ok", none: "border-control text-control hover:bg-hover" }[state];
+  const look = {
+    done: "border-ok bg-ok text-card",
+    partial: "border-ok text-ok",
+    none: "border-control text-control hover:bg-hover",
+  }[state];
   return `grid h-11 w-full max-w-12 place-items-center rounded-xl border ${isToday ? "ring-2 ring-ink" : ""} ${look} ${focusRing}`;
 };
 
@@ -33,7 +37,10 @@ const ReminderChips = ({ reminders, now }: { reminders: Reminder[]; now: Date })
       {reminders.map((reminder) => {
         const chip = reminderChip(reminder.fireAt, reminder.dailyTime, now);
         return (
-          <li key={reminder.id} className={`rounded-full border px-3 py-1 text-meta ${chip.soon ? "border-warn font-semibold text-warn" : "border-line text-muted"}`}>
+          <li
+            key={reminder.id}
+            className={`rounded-full border px-3 py-1 text-meta ${chip.soon ? "border-warn font-semibold text-warn" : "border-line text-muted"}`}
+          >
             {chip.text}
           </li>
         );
@@ -64,22 +71,28 @@ export const RoutineCards = ({ week, reminders, today, onSet, onEdit }: Props) =
             {todayIndex >= 0 && (
               <div className="flex flex-wrap items-center gap-3">
                 <div className="flex min-w-0 flex-wrap gap-3">
-                {Array.from({ length: item.targetPerDay }, (_, position) => (
-                  <button
-                    key={position}
-                    type="button"
-                    className={circle(position < doneToday)}
-                    aria-pressed={position < doneToday}
-                    aria-label={copy.routine.todayTick(item.name, position + 1, item.targetPerDay)}
-                    onClick={() => onSet(item.id, today, tickCount(doneToday, position))}
-                  >
-                    <Tick className="size-7" />
-                  </button>
-                ))}
+                  {Array.from({ length: item.targetPerDay }, (_, position) => (
+                    <button
+                      key={position}
+                      type="button"
+                      className={circle(position < doneToday)}
+                      aria-pressed={position < doneToday}
+                      aria-label={copy.routine.todayTick(item.name, position + 1, item.targetPerDay)}
+                      onClick={() => onSet(item.id, today, tickCount(doneToday, position))}
+                    >
+                      <Tick className="size-7" />
+                    </button>
+                  ))}
                 </div>
                 <p className="min-w-0 text-title font-semibold">
-                  {doneToday >= item.targetPerDay ? copy.routine.doneToday : item.targetPerDay === 1 ? copy.routine.notDone : copy.routine.progress(doneToday, item.targetPerDay)}
-                  <span className="block text-meta font-normal text-muted">{copy.routine.todayLine(dayLabel(today))}</span>
+                  {doneToday >= item.targetPerDay
+                    ? copy.routine.doneToday
+                    : item.targetPerDay === 1
+                      ? copy.routine.notDone
+                      : copy.routine.progress(doneToday, item.targetPerDay)}
+                  <span className="block text-meta font-normal text-muted">
+                    {copy.routine.todayLine(dayLabel(today))}
+                  </span>
                 </p>
               </div>
             )}
@@ -90,17 +103,33 @@ export const RoutineCards = ({ week, reminders, today, onSet, onEdit }: Props) =
                 const isToday = day === today;
                 return (
                   <div key={day} className="grid min-w-0 justify-items-center gap-0.5">
-                    <span aria-hidden="true" className={`text-meta ${isToday ? "font-bold text-ink" : "text-muted"}`}>{weekdayInitial(day)}</span>
+                    <span aria-hidden="true" className={`text-meta ${isToday ? "font-bold text-ink" : "text-muted"}`}>
+                      {weekdayInitial(day)}
+                    </span>
                     {isFuture(day, today) ? (
-                      <div role="img" aria-label={copy.routine.cellFuture(item.name, dayLabel(day))} className="h-11 w-full max-w-12 rounded-xl border border-dashed border-control opacity-40" />
+                      <div
+                        role="img"
+                        aria-label={copy.routine.cellFuture(item.name, dayLabel(day))}
+                        className="h-11 w-full max-w-12 rounded-xl border border-dashed border-control opacity-40"
+                      />
                     ) : (
                       <button
                         type="button"
                         className={square(dayState(done, item.targetPerDay), isToday)}
-                        aria-label={copy.routine.dayLabel(item.name, dayLabel(day), copy.routine.dayState(done, item.targetPerDay))}
+                        aria-label={copy.routine.dayLabel(
+                          item.name,
+                          dayLabel(day),
+                          copy.routine.dayState(done, item.targetPerDay),
+                        )}
                         onClick={() => onSet(item.id, day, cycleCount(done, item.targetPerDay))}
                       >
-                        {dayState(done, item.targetPerDay) === "partial" ? <span className="text-meta font-bold">{done}/{item.targetPerDay}</span> : <Tick className="size-5" />}
+                        {dayState(done, item.targetPerDay) === "partial" ? (
+                          <span className="text-meta font-bold">
+                            {done}/{item.targetPerDay}
+                          </span>
+                        ) : (
+                          <Tick className="size-5" />
+                        )}
                       </button>
                     )}
                   </div>

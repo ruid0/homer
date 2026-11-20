@@ -1,5 +1,11 @@
 import { useState, type SubmitEvent } from "react";
-import { MAX_MAINTENANCE_EVERY, MAX_MAINTENANCE_NAME, addDays, maintenanceUnitValues, type MaintenanceUnit } from "@homer/shared";
+import {
+  MAX_MAINTENANCE_EVERY,
+  MAX_MAINTENANCE_NAME,
+  addDays,
+  maintenanceUnitValues,
+  type MaintenanceUnit,
+} from "@homer/shared";
 import { copy } from "../copy";
 import type { MaintenanceItem } from "../trpc";
 import { Dialog } from "./Dialog";
@@ -34,7 +40,18 @@ type Props = {
 const YEAR_BACK_DAYS = 365;
 const DEFAULT_UNIT: MaintenanceUnit = "months";
 
-export const MaintenanceDialog = ({ item, start = null, today, takenNames, pending, serverError, onSave, onRemove, onChanged, onClose }: Props) => {
+export const MaintenanceDialog = ({
+  item,
+  start = null,
+  today,
+  takenNames,
+  pending,
+  serverError,
+  onSave,
+  onRemove,
+  onChanged,
+  onClose,
+}: Props) => {
   const started = start ? suggestionCycle(start) : null;
   const [name, setName] = useState(item?.name ?? start?.name ?? "");
   const [every, setEvery] = useState(String(item?.every ?? started?.every ?? 3));
@@ -55,9 +72,11 @@ export const MaintenanceDialog = ({ item, start = null, today, takenNames, pendi
     event.preventDefault();
     const count = Number(every);
     if (name.trim() === "") return setError(copy.maintenance.blankName);
-    if (!Number.isInteger(count) || count < 1 || count > MAX_MAINTENANCE_EVERY) return setError(copy.maintenance.badEvery);
+    if (!Number.isInteger(count) || count < 1 || count > MAX_MAINTENANCE_EVERY)
+      return setError(copy.maintenance.badEvery);
     const lastDoneOn = item ? null : lastDoneFor(lastDoneChoice, today, pickedDate);
-    if (lastDoneOn !== null && (lastDoneOn > today || lastDoneOn < addDays(today, -YEAR_BACK_DAYS))) return setError(copy.maintenance.badDate);
+    if (lastDoneOn !== null && (lastDoneOn > today || lastDoneOn < addDays(today, -YEAR_BACK_DAYS)))
+      return setError(copy.maintenance.badDate);
     setError(undefined);
     onSave({ name: name.trim(), every: count, unit, lastDoneOn });
   };
@@ -67,10 +86,22 @@ export const MaintenanceDialog = ({ item, start = null, today, takenNames, pendi
       <form onSubmit={submit} noValidate className="grid gap-4">
         {!item && <MaintenanceSuggestions takenNames={takenNames} selectedName={name} onPick={pick} />}
         <Field label={copy.maintenance.name}>
-          <input className={inputClass} value={name} maxLength={MAX_MAINTENANCE_NAME} onChange={(event) => setName(event.target.value)} autoFocus />
+          <input
+            className={inputClass}
+            value={name}
+            maxLength={MAX_MAINTENANCE_NAME}
+            onChange={(event) => setName(event.target.value)}
+            autoFocus
+          />
         </Field>
         <div className="flex flex-wrap items-end gap-x-3 gap-y-4">
-          <Stepper label={copy.maintenance.every} value={every} min={1} max={MAX_MAINTENANCE_EVERY} onChange={setEvery} />
+          <Stepper
+            label={copy.maintenance.every}
+            value={every}
+            min={1}
+            max={MAX_MAINTENANCE_EVERY}
+            onChange={setEvery}
+          />
           <SegmentedChoice
             label={copy.maintenance.unit}
             name="unit"
@@ -82,9 +113,15 @@ export const MaintenanceDialog = ({ item, start = null, today, takenNames, pendi
         {!item && (
           <>
             <Field label={copy.maintenance.lastDoneLabel}>
-              <select className={inputClass} value={lastDoneChoice} onChange={(event) => setLastDoneChoice(event.target.value as LastDoneChoice)}>
+              <select
+                className={inputClass}
+                value={lastDoneChoice}
+                onChange={(event) => setLastDoneChoice(event.target.value as LastDoneChoice)}
+              >
                 {lastDoneChoiceValues.map((value) => (
-                  <option key={value} value={value}>{copy.maintenance.lastDoneChoices[value]}</option>
+                  <option key={value} value={value}>
+                    {copy.maintenance.lastDoneChoices[value]}
+                  </option>
                 ))}
               </select>
             </Field>

@@ -23,7 +23,12 @@ export const ConfirmRemove = ({ pending, onRemove }: Props) => {
 
   if (!confirming) {
     return (
-      <button ref={removeButton} type="button" className={`${quietButton} justify-self-start`} onClick={() => change(true)}>
+      <button
+        ref={removeButton}
+        type="button"
+        className={`${quietButton} justify-self-start`}
+        onClick={() => change(true)}
+      >
         {copy.maintenance.remove}
       </button>
     );
@@ -32,8 +37,12 @@ export const ConfirmRemove = ({ pending, onRemove }: Props) => {
     <div className="grid gap-2" role="group" aria-label={copy.maintenance.remove}>
       <p>{copy.maintenance.confirmRemove}</p>
       <div className="flex gap-2">
-        <button type="button" className={secondaryButton} disabled={pending} onClick={onRemove}>{copy.maintenance.confirmYes}</button>
-        <button ref={keepButton} type="button" className={quietButton} onClick={() => change(false)}>{copy.maintenance.keep}</button>
+        <button type="button" className={secondaryButton} disabled={pending} onClick={onRemove}>
+          {copy.maintenance.confirmYes}
+        </button>
+        <button ref={keepButton} type="button" className={quietButton} onClick={() => change(false)}>
+          {copy.maintenance.keep}
+        </button>
       </div>
     </div>
   );

@@ -20,11 +20,27 @@ const REMINDERS_REFRESH_MS = 60_000;
 const legendBox = "inline-block size-4 rounded-md border";
 
 const Legend = () => (
-  <div role="group" aria-label={copy.routine.legendLabel} className="mb-6 mt-4 flex flex-wrap gap-x-4 gap-y-1 text-meta text-muted">
-    <span className="inline-flex items-center gap-2"><i className={`${legendBox} border-ok bg-ok`} aria-hidden="true" />{copy.routine.legend.done}</span>
-    <span className="inline-flex items-center gap-2"><i className={`${legendBox} border-ok`} aria-hidden="true" />{copy.routine.legend.partial}</span>
-    <span className="inline-flex items-center gap-2"><i className={`${legendBox} border-control`} aria-hidden="true" />{copy.routine.legend.notDone}</span>
-    <span className="inline-flex items-center gap-2"><i className={`${legendBox} border-dashed border-control opacity-40`} aria-hidden="true" />{copy.routine.legend.notYet}</span>
+  <div
+    role="group"
+    aria-label={copy.routine.legendLabel}
+    className="mb-6 mt-4 flex flex-wrap gap-x-4 gap-y-1 text-meta text-muted"
+  >
+    <span className="inline-flex items-center gap-2">
+      <i className={`${legendBox} border-ok bg-ok`} aria-hidden="true" />
+      {copy.routine.legend.done}
+    </span>
+    <span className="inline-flex items-center gap-2">
+      <i className={`${legendBox} border-ok`} aria-hidden="true" />
+      {copy.routine.legend.partial}
+    </span>
+    <span className="inline-flex items-center gap-2">
+      <i className={`${legendBox} border-control`} aria-hidden="true" />
+      {copy.routine.legend.notDone}
+    </span>
+    <span className="inline-flex items-center gap-2">
+      <i className={`${legendBox} border-dashed border-control opacity-40`} aria-hidden="true" />
+      {copy.routine.legend.notYet}
+    </span>
   </div>
 );
 
@@ -53,7 +69,8 @@ const RoutineView = ({ personId, name, remindersOn }: { personId: number; name: 
   // Counts taps still being saved. Refetching while one is in flight would put an older count back on screen.
   const saving = useRef(0);
   const setCount = trpc.routines.setCount.useMutation({
-    // The refetch that puts the real count back waits for onSettled, so a failed tap cannot bring back an older count while another is saving.
+    // The refetch that puts the real count back waits for onSettled, so a failed tap cannot bring back an older count
+    // while another is saving.
     onError: (error) => setProblem(error.message),
     onSettled: () => {
       saving.current -= 1;
@@ -79,7 +96,9 @@ const RoutineView = ({ personId, name, remindersOn }: { personId: number; name: 
     void utils.routines.week.cancel(input);
     utils.routines.week.setData(input, {
       ...data,
-      items: data.items.map((row) => (row.id === itemId ? { ...row, counts: row.counts.map((c, i) => (i === index ? count : c)) } : row)),
+      items: data.items.map((row) =>
+        row.id === itemId ? { ...row, counts: row.counts.map((c, i) => (i === index ? count : c)) } : row,
+      ),
     });
     saving.current += 1;
     setCount.mutate({ itemId, date: day, today, count });
@@ -97,7 +116,9 @@ const RoutineView = ({ personId, name, remindersOn }: { personId: number; name: 
 
   return (
     <>
-      <Link to="/people" className="mb-2 inline-block text-muted underline">{copy.routine.back}</Link>
+      <Link to="/people" className="mb-2 inline-block text-muted underline">
+        {copy.routine.back}
+      </Link>
       <h1 className="mb-1 text-page font-semibold">{copy.routine.title(name)}</h1>
       <p className="mb-4 text-muted">{copy.routine.visibleToAll}</p>
 
@@ -111,7 +132,11 @@ const RoutineView = ({ personId, name, remindersOn }: { personId: number; name: 
         >
           {copy.routine.previousGlyph}
         </button>
-        <p className="min-w-0 flex-1 whitespace-nowrap text-center font-semibold" role="status" aria-label={copy.routine.weekLabel}>
+        <p
+          className="min-w-0 flex-1 whitespace-nowrap text-center font-semibold"
+          role="status"
+          aria-label={copy.routine.weekLabel}
+        >
           {week.data ? weekRange(week.data.days) : ""}
         </p>
         <button
@@ -123,20 +148,42 @@ const RoutineView = ({ personId, name, remindersOn }: { personId: number; name: 
         >
           {copy.routine.nextGlyph}
         </button>
-        <button type="button" className={primaryButton} onClick={() => setEditing("new")}>{copy.routine.addRow}</button>
+        <button type="button" className={primaryButton} onClick={() => setEditing("new")}>
+          {copy.routine.addRow}
+        </button>
         {start !== mondayOf(today) && (
-          <button type="button" className={`${secondaryButton} basis-full sm:basis-auto`} onClick={() => setWeekStart(null)}>{copy.routine.thisWeek}</button>
+          <button
+            type="button"
+            className={`${secondaryButton} basis-full sm:basis-auto`}
+            onClick={() => setWeekStart(null)}
+          >
+            {copy.routine.thisWeek}
+          </button>
         )}
       </div>
 
       {week.isPending && <p>{copy.routine.loading}</p>}
-      {week.error && <p role="alert" className="text-late">{copy.routine.loadFailed}</p>}
+      {week.error && (
+        <p role="alert" className="text-late">
+          {copy.routine.loadFailed}
+        </p>
+      )}
       <ErrorToast message={problem} />
-      {reminders.error && <p role="alert" className="text-late">{copy.reminders.loadFailed}</p>}
+      {reminders.error && (
+        <p role="alert" className="text-late">
+          {copy.reminders.loadFailed}
+        </p>
+      )}
       {week.data && items.length === 0 && <p>{copy.routine.empty}</p>}
       {week.data && items.length > 0 && (
         <>
-          <RoutineCards week={week.data} reminders={reminders.data ?? []} today={today} onSet={change} onEdit={setEditing} />
+          <RoutineCards
+            week={week.data}
+            reminders={reminders.data ?? []}
+            today={today}
+            onSet={change}
+            onEdit={setEditing}
+          />
           <Legend />
         </>
       )}
@@ -170,7 +217,17 @@ export const RoutinePage = () => {
   const person = people.data?.find((candidate) => candidate.id === personId);
 
   if (people.isPending) return <p>{copy.routine.loading}</p>;
-  if (people.error) return <p role="alert" className="text-late">{copy.routine.loadFailed}</p>;
-  if (!person) return <p role="alert" className="text-late">{copy.routine.personMissing}</p>;
+  if (people.error)
+    return (
+      <p role="alert" className="text-late">
+        {copy.routine.loadFailed}
+      </p>
+    );
+  if (!person)
+    return (
+      <p role="alert" className="text-late">
+        {copy.routine.personMissing}
+      </p>
+    );
   return <RoutineView personId={person.id} name={person.name} remindersOn={person.remindersOn} />;
 };

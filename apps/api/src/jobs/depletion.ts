@@ -29,7 +29,10 @@ export const depleteAll = (db: Db, today: string): DepletionResult =>
     const due = active.filter((item) => item.depletedOn !== today);
     const changed = due.filter((item) => used(item, today) !== item.quantity);
     due.forEach((item) => {
-      tx.update(items).set({ quantity: used(item, today), depletedOn: today }).where(eq(items.id, item.id)).run();
+      tx.update(items)
+        .set({ quantity: used(item, today), depletedOn: today })
+        .where(eq(items.id, item.id))
+        .run();
     });
     // Only items whose quantity moved are synced, so the run never adds list entries for stock nobody touched.
     changed.forEach((item) => syncGrocery(tx, item.id));

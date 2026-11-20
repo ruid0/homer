@@ -17,7 +17,12 @@ describe("chat", () => {
     const result = await chat.chat([{ role: "user", content: "Hello" }], toolDefinitions);
     expect(result).toEqual({ content: "Hi", toolCalls: [] });
     expect(seen!.url).toBe("http://ollama.test/api/chat");
-    expect(seen!.body).toMatchObject({ model: "m1", stream: false, think: false, messages: [{ role: "user", content: "Hello" }] });
+    expect(seen!.body).toMatchObject({
+      model: "m1",
+      stream: false,
+      think: false,
+      messages: [{ role: "user", content: "Hello" }],
+    });
     expect(seen!.body.tools).toHaveLength(toolDefinitions.length);
     expect(seen!.body.tools[0]).toMatchObject({ type: "function", function: { name: toolDefinitions[0]!.name } });
   });
@@ -70,7 +75,11 @@ describe("chat", () => {
     await expect(bad.chat([], [])).rejects.toBeInstanceOf(OllamaUnreachable);
     const garbled = client(async () => new Response("not json", { status: 200 }));
     await expect(garbled.chat([], [])).rejects.toBeInstanceOf(OllamaUnreachable);
-    const slow = client((_url, init) => new Promise((_resolve, reject) => init?.signal?.addEventListener("abort", () => reject(new Error("aborted")))), 20);
+    const slow = client(
+      (_url, init) =>
+        new Promise((_resolve, reject) => init?.signal?.addEventListener("abort", () => reject(new Error("aborted")))),
+      20,
+    );
     await expect(slow.chat([], [])).rejects.toBeInstanceOf(OllamaUnreachable);
   });
 });

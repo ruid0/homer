@@ -7,11 +7,13 @@ import { trpc, type MaintenanceItem } from "../trpc";
 type Choice = (typeof copy.maintenance.notTodayChoices)[number];
 
 // The day a choice lands on, counted from today.
-export const snoozeUntil = (choice: Choice, today: string): string => ("days" in choice ? addDays(today, choice.days) : addMonths(today, choice.months));
+export const snoozeUntil = (choice: Choice, today: string): string =>
+  "days" in choice ? addDays(today, choice.days) : addMonths(today, choice.months);
 
 type Snoozed = { id: number; name: string; until: string };
 
-// "Not today" for an upkeep job: which job is being asked about, the save, and the Undo toast. Shared by the Upkeep page and the Home card.
+// "Not today" for an upkeep job: which job is being asked about, the save, and the Undo toast. Shared by the Upkeep
+// page and the Home card.
 export const useSnooze = (today: string, onSnoozed?: () => void) => {
   const utils = trpc.useUtils();
   const [asking, setAsking] = useState<MaintenanceItem | null>(null);
@@ -41,10 +43,16 @@ export const useSnooze = (today: string, onSnoozed?: () => void) => {
   const takeBack = () => {
     if (!snoozed) return;
     setProblem(undefined);
-    undo.mutate({ id: snoozed.id, until: null, today }, { onSuccess: () => setSnoozed(null), onSettled: () => void refresh() });
+    undo.mutate(
+      { id: snoozed.id, until: null, today },
+      { onSuccess: () => setSnoozed(null), onSettled: () => void refresh() },
+    );
   };
 
-  const toast = snoozed && { message: copy.maintenance.snoozedToast(snoozed.name, pastDate(snoozed.until, today)), busy: undo.isPending };
+  const toast = snoozed && {
+    message: copy.maintenance.snoozedToast(snoozed.name, pastDate(snoozed.until, today)),
+    busy: undo.isPending,
+  };
 
   return {
     asking,

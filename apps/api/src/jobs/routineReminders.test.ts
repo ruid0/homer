@@ -32,7 +32,9 @@ describe("sendDueReminders", () => {
     addAt(db, row.id, at(13, 30));
     const { sent, notify } = recorder();
     expect(await sendDueReminders(db, notify, at(13, 30))).toBe(1);
-    expect(sent).toEqual([{ topic, title: "HOMER", message: "Routine: 1 row not done.", path: `/people/${person.id}/routine` }]);
+    expect(sent).toEqual([
+      { topic, title: "HOMER", message: "Routine: 1 row not done.", path: `/people/${person.id}/routine` },
+    ]);
     expect(rows(db)[0]?.removedAt).not.toBeNull();
     expect(await sendDueReminders(db, notify, at(13, 31))).toBe(0);
   });

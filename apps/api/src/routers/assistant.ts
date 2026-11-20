@@ -22,7 +22,8 @@ type MessageRow = typeof assistantMessages.$inferSelect;
 
 const toView = (store: Db, rows: MessageRow[]) => {
   const ids = rows.flatMap((row) => row.actionIds);
-  const actions = ids.length === 0 ? [] : store.select().from(assistantActions).where(inArray(assistantActions.id, ids)).all();
+  const actions =
+    ids.length === 0 ? [] : store.select().from(assistantActions).where(inArray(assistantActions.id, ids)).all();
   return rows.map((row) => ({
     id: row.id,
     role: row.role,
@@ -55,38 +56,47 @@ const inTurn = <T>(task: () => Promise<T>): Promise<T> => {
 };
 
 export const assistantRouter = router({
-  send: publicProcedure.input(sendInput).mutation(({ ctx, input }) => inTurn(async () => {
-    const deps = ctx.assistant;
-    if (!deps) throw new TRPCError({ code: "PRECONDITION_FAILED", message: copy.noModel });
-    const store = ctx.db;
-    try {
-      const { reply, actionIds } = await runAssistant({
-        db: store,
-        chat: deps.chat,
-        today: localDate(deps.now()),
-        history: screenMessages(store, input.after),
-        text: input.text,
-      });
-      const [, saved] = store
-        .insert(assistantMessages)
-        .values([
-          { role: "user", text: input.text, actionIds: [] },
-          { role: "assistant", text: reply, actionIds },
-        ])
-        .returning()
-        .all();
-      return { status: "reply" as const, message: toView(store, [saved!])[0]! };
-    } catch (error) {
-      if (error instanceof OllamaUnreachable) return { status: "unreachable" as const };
-      throw error;
-    }
-  })),
+  send: publicProcedure.input(sendInput).mutation(({ ctx, input }) =>
+    inTurn(async () => {
+      const deps = ctx.assistant;
+      if (!deps) throw new TRPCError({ code: "PRECONDITION_FAILED", message: copy.noModel });
+      const store = ctx.db;
+      try {
+        const { reply, actionIds } = await runAssistant({
+          db: store,
+          chat: deps.chat,
+          today: localDate(deps.now()),
+          history: screenMessages(store, input.after),
+          text: input.text,
+        });
+        const [, saved] = store
+          .insert(assistantMessages)
+          .values([
+            { role: "user", text: input.text, actionIds: [] },
+            { role: "assistant", text: reply, actionIds },
+          ])
+          .returning()
+          .all();
+        return { status: "reply" as const, message: toView(store, [saved!])[0]! };
+      } catch (error) {
+        if (error instanceof OllamaUnreachable) return { status: "unreachable" as const };
+        throw error;
+      }
+    }),
+  ),
 
   history: publicProcedure.query(({ ctx }) => {
     const store = ctx.db;
     return {
-      messages: toView(store, store.select().from(assistantMessages).where(shown).orderBy(asc(assistantMessages.id)).all()),
-      lastId: store.select({ id: max(assistantMessages.id) }).from(assistantMessages).get()?.id ?? 0,
+      messages: toView(
+        store,
+        store.select().from(assistantMessages).where(shown).orderBy(asc(assistantMessages.id)).all(),
+      ),
+      lastId:
+        store
+          .select({ id: max(assistantMessages.id) })
+          .from(assistantMessages)
+          .get()?.id ?? 0,
     };
   }),
 
@@ -94,7 +104,11 @@ export const assistantRouter = router({
     const result = undoAction(ctx.db, input.actionId);
     if (result.ok) return { ok: true as const };
     const message =
-      result.reason === "changed" ? copy.undoChanged(result.label) : result.reason === "undone" ? copy.undoneAlready : copy.undoMissing;
+      result.reason === "changed"
+        ? copy.undoChanged(result.label)
+        : result.reason === "undone"
+          ? copy.undoneAlready
+          : copy.undoMissing;
     return { ok: false as const, message };
   }),
 

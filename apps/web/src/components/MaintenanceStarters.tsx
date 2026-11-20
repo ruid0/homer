@@ -1,7 +1,8 @@
 import { copy } from "../copy";
 import { suggestionCycle, type Suggestion } from "./MaintenanceSuggestions";
 
-// The empty Upkeep page: common jobs, one tap each. A tap opens the Add job dialog with that job filled in, and saves nothing.
+// The empty Upkeep page: common jobs, one tap each. A tap opens the Add job dialog with that job filled in, and saves
+// nothing.
 export const MaintenanceStarters = ({ onPick }: { onPick: (suggestion: Suggestion) => void }) => (
   <div className="grid gap-4">
     <p>{copy.maintenance.empty}</p>

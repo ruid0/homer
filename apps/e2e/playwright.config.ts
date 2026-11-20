@@ -39,7 +39,8 @@ const webServer = (name: keyof typeof copies) => ({
   env: { API_URL: `http://127.0.0.1:${copies[name].api}` },
 });
 
-// Tests share one in-memory database per copy, so every test makes its own person (see tests/scratch.ts) and must stay scoped to it.
+// Tests share one in-memory database per copy, so every test makes its own person (see tests/scratch.ts) and must stay
+// scoped to it.
 export default defineConfig({
   testDir: "./tests",
   reporter: [["list"]],
@@ -53,7 +54,8 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"], baseURL: `http://127.0.0.1:${copies.on.web}` },
     },
     {
-      // Safari's engine with an iPhone profile: date and time fields, focus and sizes that Chromium does not show. Read-only, on the same copy.
+      // Safari's engine with an iPhone profile: date and time fields, focus and sizes that Chromium does not show.
+      // Read-only, on the same copy.
       name: "iphone-webkit",
       testMatch: /\.webkit\.spec\.ts$/,
       use: { ...devices["iPhone 15"], baseURL: `http://127.0.0.1:${copies.on.web}` },
@@ -75,7 +77,8 @@ export default defineConfig({
     },
     {
       // Also the same copy and list: it waits for the home project, so no two files clear the list at once.
-      // The cost: a failure in the upkeep or home specs skips these tests, and a new spec for this list needs its own project in the chain.
+      // The cost: a failure in the upkeep or home specs skips these tests, and a new spec for this list needs its own
+      // project in the chain.
       name: "upkeep-list",
       testMatch: /list\.upkeep\.spec\.ts$/,
       dependencies: ["upkeep-home"],
@@ -120,5 +123,12 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"], baseURL: `http://127.0.0.1:${copies.off.web}` },
     },
   ],
-  webServer: [apiServer("on"), webServer("on"), apiServer("off"), webServer("off"), apiServer("upkeep"), webServer("upkeep")],
+  webServer: [
+    apiServer("on"),
+    webServer("on"),
+    apiServer("off"),
+    webServer("off"),
+    apiServer("upkeep"),
+    webServer("upkeep"),
+  ],
 });

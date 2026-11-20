@@ -169,8 +169,14 @@ describe("groceries.markBought", () => {
     const { api, db } = setup();
     const { id } = await api.inventory.create(rice);
     await api.inventory.archive({ id });
-    const [orphan] = db.insert(groceryEntries).values({ itemId: id, text: "Rice", addedBy: "manual" }).returning().all();
-    await expect(api.groceries.markBought({ id: orphan!.id, quantity: 2 })).rejects.toMatchObject({ code: "NOT_FOUND" });
+    const [orphan] = db
+      .insert(groceryEntries)
+      .values({ itemId: id, text: "Rice", addedBy: "manual" })
+      .returning()
+      .all();
+    await expect(api.groceries.markBought({ id: orphan!.id, quantity: 2 })).rejects.toMatchObject({
+      code: "NOT_FOUND",
+    });
     expect(db.select().from(groceryEntries).all()[0]?.boughtAt).toBeNull();
   });
 });

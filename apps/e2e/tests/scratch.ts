@@ -8,7 +8,8 @@ const call = async <T>(request: APIRequestContext, procedure: string, data: unkn
   return body.result.data;
 };
 
-// A person with one routine row ("Row A", twice a day) on the scratch copy. Each test gets its own, so tests do not share state.
+// A person with one routine row ("Row A", twice a day) on the scratch copy. Each test gets its own, so tests do not
+// share state.
 export const seedPerson = async (request: APIRequestContext) => {
   const person = await call<{ id: number }>(request, "people.add", { name: `Person ${randomUUID()}` });
   await call(request, "routines.addItem", { personId: person.id, name: "Row A", targetPerDay: 2 });
@@ -40,7 +41,8 @@ export const seedReminder = async (
   return call<{ id: number }>(request, "routines.addReminder", { itemId, text, repeatDaily });
 };
 
-export const removeReminder = (request: APIRequestContext, id: number) => call(request, "routines.removeReminder", { id });
+export const removeReminder = (request: APIRequestContext, id: number) =>
+  call(request, "routines.removeReminder", { id });
 
 // The clock time, in UTC like the scratch copies, that many minutes from now.
 export const clockIn = (minutes: number): string => new Date(Date.now() + minutes * 60_000).toISOString().slice(11, 16);
@@ -66,8 +68,10 @@ export const clearUpkeep = async (request: APIRequestContext) => {
   for (const item of items) await call(request, "maintenance.remove", { id: item.id });
 };
 
-export const seedUpkeep = (request: APIRequestContext, item: { name: string; every: number; unit: Unit; lastDoneOn: string | null }) =>
-  call<{ id: number }>(request, "maintenance.add", { ...item, today: todayUtc() });
+export const seedUpkeep = (
+  request: APIRequestContext,
+  item: { name: string; every: number; unit: Unit; lastDoneOn: string | null },
+) => call<{ id: number }>(request, "maintenance.add", { ...item, today: todayUtc() });
 
 // One more done date on a job, through the api.
 export const seedDone = (request: APIRequestContext, id: number, doneOn: string) =>

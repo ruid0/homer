@@ -23,7 +23,11 @@ const isShown = isNull(maintenanceItems.removedAt);
 const itemGone = () => new TRPCError({ code: "NOT_FOUND", message: messages.maintenanceGone });
 
 const requireShown = (db: Pick<Db, "select">, id: number) => {
-  const item = db.select().from(maintenanceItems).where(and(eq(maintenanceItems.id, id), isShown)).get();
+  const item = db
+    .select()
+    .from(maintenanceItems)
+    .where(and(eq(maintenanceItems.id, id), isShown))
+    .get();
   if (!item) throw itemGone();
   return item;
 };
@@ -46,13 +50,23 @@ const nameTaken = (name: string) => new TRPCError({ code: "CONFLICT", message: m
 // last_done_on is always the latest done_on among the item's rows.
 const syncLastDone = (db: Pick<Db, "select" | "update">, itemId: number): string | null => {
   const latest =
-    db.select({ latest: max(maintenanceDone.doneOn) }).from(maintenanceDone).where(eq(maintenanceDone.itemId, itemId)).get()?.latest ?? null;
+    db
+      .select({ latest: max(maintenanceDone.doneOn) })
+      .from(maintenanceDone)
+      .where(eq(maintenanceDone.itemId, itemId))
+      .get()?.latest ?? null;
   db.update(maintenanceItems).set({ lastDoneOn: latest }).where(eq(maintenanceItems.id, itemId)).run();
   return latest;
 };
 
-// A second record for the same day would only make Undo remove the wrong one. The record being moved is not counted against itself.
-const refuseSameDay = (db: Pick<Db, "select">, item: { id: number; name: string }, input: { doneOn: string; today: string }, exceptDoneId?: number) => {
+// A second record for the same day would only make Undo remove the wrong one. The record being moved is not counted
+// against itself.
+const refuseSameDay = (
+  db: Pick<Db, "select">,
+  item: { id: number; name: string },
+  input: { doneOn: string; today: string },
+  exceptDoneId?: number,
+) => {
   const sameDay = db
     .select({ id: maintenanceDone.id })
     .from(maintenanceDone)
@@ -64,7 +78,11 @@ const refuseSameDay = (db: Pick<Db, "select">, item: { id: number; name: string 
       ),
     )
     .get();
-  if (sameDay) throw new TRPCError({ code: "CONFLICT", message: messages.maintenanceAlreadyDone(item.name, input.doneOn === input.today) });
+  if (sameDay)
+    throw new TRPCError({
+      code: "CONFLICT",
+      message: messages.maintenanceAlreadyDone(item.name, input.doneOn === input.today),
+    });
 };
 
 export const maintenanceRouter = router({
@@ -121,7 +139,10 @@ export const maintenanceRouter = router({
   remove: publicProcedure.input(idInputSchema).mutation(({ ctx, input }) =>
     ctx.db.transaction((tx) => {
       requireShown(tx, input.id);
-      tx.update(maintenanceItems).set({ removedAt: new Date().toISOString() }).where(eq(maintenanceItems.id, input.id)).run();
+      tx.update(maintenanceItems)
+        .set({ removedAt: new Date().toISOString() })
+        .where(eq(maintenanceItems.id, input.id))
+        .run();
       return { id: input.id };
     }),
   ),
@@ -172,12 +193,14 @@ export const maintenanceRouter = router({
     }),
   ),
 
-  history: publicProcedure.input(idInputSchema).query(({ ctx, input }) =>
-    ctx.db
-      .select({ id: maintenanceDone.id, doneOn: maintenanceDone.doneOn })
-      .from(maintenanceDone)
-      .where(eq(maintenanceDone.itemId, input.id))
-      .orderBy(desc(maintenanceDone.doneOn), desc(maintenanceDone.id))
-      .all(),
-  ),
+  history: publicProcedure
+    .input(idInputSchema)
+    .query(({ ctx, input }) =>
+      ctx.db
+        .select({ id: maintenanceDone.id, doneOn: maintenanceDone.doneOn })
+        .from(maintenanceDone)
+        .where(eq(maintenanceDone.itemId, input.id))
+        .orderBy(desc(maintenanceDone.doneOn), desc(maintenanceDone.id))
+        .all(),
+    ),
 });

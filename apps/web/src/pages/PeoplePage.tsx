@@ -57,12 +57,22 @@ export const PeoplePage = () => {
             }}
           />
         </label>
-        <button type="submit" className={primaryButton} disabled={add.isPending}>{copy.people.add}</button>
+        <button type="submit" className={primaryButton} disabled={add.isPending}>
+          {copy.people.add}
+        </button>
       </form>
 
       {people.isPending && <p>{copy.people.loading}</p>}
-      {people.error && <p role="alert" className="text-late">{copy.people.loadFailed}</p>}
-      {blank && <p role="alert" className="mb-4 text-late">{copy.people.blankName}</p>}
+      {people.error && (
+        <p role="alert" className="text-late">
+          {copy.people.loadFailed}
+        </p>
+      )}
+      {blank && (
+        <p role="alert" className="mb-4 text-late">
+          {copy.people.blankName}
+        </p>
+      )}
       <ErrorToast message={add.error?.message} />
       {people.data?.length === 0 && <p>{copy.people.empty}</p>}
 

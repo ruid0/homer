@@ -14,7 +14,11 @@ describe("householdNotifications", () => {
     const notifier = async (note: Notification) => (sent.push(note), true);
     householdNotifications({ NTFY_HOUSEHOLD_TOPIC: "topic-a" }, vi.fn(), notifier)?.announceListed(2);
     await vi.waitFor(() => expect(sent).toHaveLength(1));
-    expect(sent[0]).toMatchObject({ topic: "topic-a", message: "2 items added to the grocery list.", path: "/groceries" });
+    expect(sent[0]).toMatchObject({
+      topic: "topic-a",
+      message: "2 items added to the grocery list.",
+      path: "/groceries",
+    });
   });
 
   it("logs the count, never the topic, when the send fails", async () => {

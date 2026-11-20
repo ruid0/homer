@@ -24,7 +24,10 @@ describe("people.reminderSetup", () => {
   it("gives each person their own topic", async () => {
     const { api, person } = await setup();
     const other = await api.people.add({ name: "Person B" });
-    const [a, b] = [await api.people.reminderSetup({ id: person.id }), await api.people.reminderSetup({ id: other.id })];
+    const [a, b] = [
+      await api.people.reminderSetup({ id: person.id }),
+      await api.people.reminderSetup({ id: other.id }),
+    ];
     expect(a.topic).not.toBe(b.topic);
   });
 
@@ -61,7 +64,9 @@ describe("people.notificationsOn", () => {
 describe("routines.addReminder", () => {
   it("needs reminders turned on for the person", async () => {
     const { api, row } = await setup();
-    await expect(api.routines.addReminder({ itemId: row.id, text: "in an hour", repeatDaily: false })).rejects.toMatchObject({
+    await expect(
+      api.routines.addReminder({ itemId: row.id, text: "in an hour", repeatDaily: false }),
+    ).rejects.toMatchObject({
       code: "PRECONDITION_FAILED",
       message: messages.remindersOff,
     });
@@ -95,7 +100,9 @@ describe("routines.addReminder", () => {
       code: "BAD_REQUEST",
       message: messages.reminderWhenUnknown,
     });
-    await expect(api.routines.addReminder({ itemId: row.id, text: "in an hour", repeatDaily: true })).rejects.toMatchObject({
+    await expect(
+      api.routines.addReminder({ itemId: row.id, text: "in an hour", repeatDaily: true }),
+    ).rejects.toMatchObject({
       code: "BAD_REQUEST",
       message: messages.reminderDailyNeedsClock,
     });
@@ -105,7 +112,9 @@ describe("routines.addReminder", () => {
     const { api, person, row } = await setup();
     await api.people.reminderSetup({ id: person.id });
     await api.routines.removeItem({ id: row.id });
-    await expect(api.routines.addReminder({ itemId: row.id, text: "13:30", repeatDaily: false })).rejects.toMatchObject({ code: "NOT_FOUND" });
+    await expect(api.routines.addReminder({ itemId: row.id, text: "13:30", repeatDaily: false })).rejects.toMatchObject(
+      { code: "NOT_FOUND" },
+    );
   });
 });
 
@@ -129,6 +138,9 @@ describe("routines.reminders and removeReminder", () => {
     await api.people.reminderSetup({ id: person.id });
     const reminder = await api.routines.addReminder({ itemId: row.id, text: "in an hour", repeatDaily: false });
     await api.routines.removeReminder({ id: reminder.id });
-    await expect(api.routines.removeReminder({ id: reminder.id })).rejects.toMatchObject({ code: "NOT_FOUND", message: messages.reminderGone });
+    await expect(api.routines.removeReminder({ id: reminder.id })).rejects.toMatchObject({
+      code: "NOT_FOUND",
+      message: messages.reminderGone,
+    });
   });
 });

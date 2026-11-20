@@ -7,10 +7,7 @@ type EstimateFields = {
   daysPerUnitLearned: number | null;
 };
 
-export const effectiveEstimate = ({
-  daysPerUnitEntered,
-  daysPerUnitLearned,
-}: EstimateFields): Estimate | null => {
+export const effectiveEstimate = ({ daysPerUnitEntered, daysPerUnitLearned }: EstimateFields): Estimate | null => {
   if (daysPerUnitLearned !== null) return { daysPerUnit: daysPerUnitLearned, source: "learned" };
   if (daysPerUnitEntered !== null) return { daysPerUnit: daysPerUnitEntered, source: "entered" };
   return null;
@@ -37,7 +34,8 @@ export const groceryAction = (needed: boolean, openEntry: { addedBy: GrocerySour
   return openEntry?.addedBy === "auto" ? "remove" : "keep";
 };
 
-// One unit lasts `daysPerUnit` days, so each day uses up 1 ÷ daysPerUnit of a unit. Rounded so repeated days do not pile up float noise.
+// One unit lasts `daysPerUnit` days, so each day uses up 1 ÷ daysPerUnit of a unit. Rounded so repeated days do not
+// pile up float noise.
 export const depleteStock = (quantity: number, daysPerUnit: number | null, elapsedDays: number): number => {
   if (daysPerUnit === null || elapsedDays <= 0) return quantity;
   return Math.max(0, Math.round((quantity - elapsedDays / daysPerUnit) * 1e6) / 1e6);

@@ -113,7 +113,12 @@ describe("compareMaintenance", () => {
   const item = (name: string, dueDate: string) => ({ name, dueOn: dueDate });
 
   it("puts the most overdue first, then by due date, then by name", () => {
-    const sorted = [item("B", "2026-11-09"), item("A", "2026-11-09"), item("C", "2026-11-01"), item("D", "2026-11-03")].sort(compareMaintenance);
+    const sorted = [
+      item("B", "2026-11-09"),
+      item("A", "2026-11-09"),
+      item("C", "2026-11-01"),
+      item("D", "2026-11-03"),
+    ].sort(compareMaintenance);
     expect(sorted.map((entry) => entry.name)).toEqual(["C", "D", "A", "B"]);
   });
 
@@ -127,7 +132,8 @@ describe("compareMaintenance", () => {
         });
         const today = "2010-01-01";
         const firstNotOverdue = sorted.findIndex((entry) => entry.dueOn >= today);
-        if (firstNotOverdue >= 0) expect(sorted.slice(firstNotOverdue).every((entry) => entry.dueOn >= today)).toBe(true);
+        if (firstNotOverdue >= 0)
+          expect(sorted.slice(firstNotOverdue).every((entry) => entry.dueOn >= today)).toBe(true);
       }),
     );
   });

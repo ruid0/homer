@@ -2,9 +2,7 @@ import { compareSchedule } from "@homer/shared";
 
 type Timed = { time: string | null };
 
-export type DayItem<Task, Event> =
-  | { kind: "task"; value: Task }
-  | { kind: "event"; value: Event };
+export type DayItem<Task, Event> = { kind: "task"; value: Task } | { kind: "event"; value: Event };
 
 export const timeOf = <Task extends { dueTime: string | null }, Event extends Timed>(item: DayItem<Task, Event>) =>
   item.kind === "task" ? item.value.dueTime : item.value.time;

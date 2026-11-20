@@ -7,7 +7,9 @@ export const Card = ({ title, children, className = "" }: Props) => {
   const headingId = useId();
   return (
     <section aria-labelledby={headingId} className={`rounded-2xl border border-line bg-card px-5 pb-4 ${className}`}>
-      <h2 id={headingId} className="pb-2 pt-4 text-section font-semibold">{title}</h2>
+      <h2 id={headingId} className="pb-2 pt-4 text-section font-semibold">
+        {title}
+      </h2>
       {children}
     </section>
   );

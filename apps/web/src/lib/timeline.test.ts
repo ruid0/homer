@@ -16,13 +16,7 @@ describe("timelineRows", () => {
       dayItems([task(2, "Bins", "18:00")], [event(1, "Standup", "08:00"), event(2, "Dentist", "11:30")]),
       "09:41",
     );
-    expect(labels(rows)).toEqual([
-      "overdue:Call plumber",
-      "event:Standup",
-      "now",
-      "event:Dentist",
-      "task:Bins",
-    ]);
+    expect(labels(rows)).toEqual(["overdue:Call plumber", "event:Standup", "now", "event:Dentist", "task:Bins"]);
   });
 
   it("keeps untimed items after the marker", () => {
@@ -66,8 +60,8 @@ describe("timelineRows", () => {
           expect(rows.slice(0, marker).every((row) => isEarlier(timeOfRow(row), now))).toBe(true);
           expect(rows.slice(marker + 1).every((row) => !isEarlier(timeOfRow(row), now))).toBe(true);
           expect(rows.filter((row) => row.kind !== "now").map(timeOfRow)).toEqual(
-            [...items.map((item) => (item.kind === "task" ? item.value.dueTime : item.value.time))].sort(
-              (a, b) => (a ?? "99:99") < (b ?? "99:99") ? -1 : (a ?? "99:99") > (b ?? "99:99") ? 1 : 0,
+            [...items.map((item) => (item.kind === "task" ? item.value.dueTime : item.value.time))].sort((a, b) =>
+              (a ?? "99:99") < (b ?? "99:99") ? -1 : (a ?? "99:99") > (b ?? "99:99") ? 1 : 0,
             ),
           );
         },

@@ -2,7 +2,16 @@ import { TRPCError } from "@trpc/server";
 import { and, isNull } from "drizzle-orm";
 import { ZodError } from "zod";
 import { issueMessages } from "../issues";
-import { MAX_SCHEDULE_DAYS, daysBetween, resolveName, toolDefinitions, type Named, type Resolution, type ToolCall, type ToolName } from "@homer/shared";
+import {
+  MAX_SCHEDULE_DAYS,
+  daysBetween,
+  resolveName,
+  toolDefinitions,
+  type Named,
+  type Resolution,
+  type ToolCall,
+  type ToolName,
+} from "@homer/shared";
 import type { Db } from "../db/client";
 import { tasks } from "../db/schema";
 import { toolMessages } from "../messages";
@@ -47,8 +56,10 @@ const withPerson = async (
 ): Promise<ToolResult> => {
   if (person == null) return found(null, null);
   const people = await api.people.list();
-  return orAsk(resolveName(person, people), { status: "person_not_found", name: person, people: names(people) }, (match) =>
-    found(match.id, match.name),
+  return orAsk(
+    resolveName(person, people),
+    { status: "person_not_found", name: person, people: names(people) },
+    (match) => found(match.id, match.name),
   );
 };
 
@@ -93,18 +104,29 @@ const handlers: Handlers = {
       resolution.kind === "one"
         ? await api.groceries.add({ itemId: resolution.match.id, quantity: amount })
         : await api.groceries.add({ text: name, quantity: amount });
-    return { status: "done", name: resolution.kind === "one" ? resolution.match.name : entry.text, quantity: entry.quantity };
+    return {
+      status: "done",
+      name: resolution.kind === "one" ? resolution.match.name : entry.text,
+      quantity: entry.quantity,
+    };
   },
 
   mark_bought: async ({ api }, { name, quantity }) => {
     const entries = await api.groceries.list();
-    return orAsk(resolveName(name, entries.map(({ id, text }) => ({ id, name: text }))), { status: "not_on_list", name }, async (match) => {
-      const entry = entries.find((candidate) => candidate.id === match.id);
-      const tracked = entry?.itemId != null;
-      if (tracked && quantity == null) return { status: "needs_quantity", name: match.name };
-      await api.groceries.markBought({ id: match.id, quantity: quantity ?? undefined });
-      return { status: "done", name: match.name, restocked: tracked ? (quantity ?? null) : null };
-    });
+    return orAsk(
+      resolveName(
+        name,
+        entries.map(({ id, text }) => ({ id, name: text })),
+      ),
+      { status: "not_on_list", name },
+      async (match) => {
+        const entry = entries.find((candidate) => candidate.id === match.id);
+        const tracked = entry?.itemId != null;
+        if (tracked && quantity == null) return { status: "needs_quantity", name: match.name };
+        await api.groceries.markBought({ id: match.id, quantity: quantity ?? undefined });
+        return { status: "done", name: match.name, restocked: tracked ? (quantity ?? null) : null };
+      },
+    );
   },
 
   list_tasks: async ({ api, today }, { from, to }) => {
@@ -112,10 +134,19 @@ const handlers: Handlers = {
     const end = to ?? start;
     const requested = daysBetween(start, end) + 1;
     if (requested < 1) return { status: "error", message: toolMessages.rangeBackwards };
-    if (requested > MAX_SCHEDULE_DAYS) return { status: "error", message: toolMessages.rangeTooLong(MAX_SCHEDULE_DAYS) };
+    if (requested > MAX_SCHEDULE_DAYS)
+      return { status: "error", message: toolMessages.rangeTooLong(MAX_SCHEDULE_DAYS) };
     // Overdue always counts from the real today. The schedule only looks forward, so past days are left out.
-    const view = await api.schedule.view({ today, days: Math.max(1, Math.min(daysBetween(today, end) + 1, MAX_SCHEDULE_DAYS)) });
-    const show = ({ title, dueDate, dueTime, personName }: (typeof view.overdue)[number]) => ({ title, dueDate, dueTime, person: personName });
+    const view = await api.schedule.view({
+      today,
+      days: Math.max(1, Math.min(daysBetween(today, end) + 1, MAX_SCHEDULE_DAYS)),
+    });
+    const show = ({ title, dueDate, dueTime, personName }: (typeof view.overdue)[number]) => ({
+      title,
+      dueDate,
+      dueTime,
+      person: personName,
+    });
     return {
       overdue: view.overdue.map(show),
       days: view.days
@@ -187,7 +218,10 @@ const execute = async (context: Context, call: ToolCall): Promise<ToolResult> =>
 // Every item and list entry the household has, for checks on what the model picked.
 export const knownNames = async (db: Db): Promise<string[]> => {
   const api = createCaller({ db });
-  return [...(await api.inventory.list()).map(({ name }) => name), ...(await api.groceries.list()).map(({ text }) => text)];
+  return [
+    ...(await api.inventory.list()).map(({ name }) => name),
+    ...(await api.groceries.list()).map(({ text }) => text),
+  ];
 };
 
 export const runTool = async (db: Db, today: string, call: ToolCall): Promise<ToolRun> => {

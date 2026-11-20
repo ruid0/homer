@@ -7,7 +7,8 @@ test.beforeEach(async ({ request }) => {
   await clearUpkeep(request);
 });
 
-const row = (page: Page, name: string) => page.getByRole("listitem").filter({ has: page.getByText(name, { exact: true }) });
+const row = (page: Page, name: string) =>
+  page.getByRole("listitem").filter({ has: page.getByText(name, { exact: true }) });
 
 const weekly = (name: string, lastDoneDaysAgo: number | null) => ({
   name,
@@ -93,12 +94,17 @@ test.describe("opening a job", () => {
 });
 
 test.describe("Done on a Later row", () => {
-  test("is quiet, with no outline, and is still a full-size target; Due now keeps its outline", async ({ page, request }) => {
+  test("is quiet, with no outline, and is still a full-size target; Due now keeps its outline", async ({
+    page,
+    request,
+  }) => {
     await seedUpkeep(request, weekly("Due job", 20));
     await seedUpkeep(request, far("Far job"));
     await page.goto("/upkeep");
     const outline = (name: string) =>
-      page.getByRole("button", { name: `Done: ${name}` }).evaluate((element) => Number.parseFloat(getComputedStyle(element).borderTopWidth));
+      page
+        .getByRole("button", { name: `Done: ${name}` })
+        .evaluate((element) => Number.parseFloat(getComputedStyle(element).borderTopWidth));
     expect(await outline("Due job")).toBeGreaterThan(0);
     expect(await outline("Far job")).toBe(0);
     const box = await page.getByRole("button", { name: "Done: Far job" }).boundingBox();
@@ -207,18 +213,25 @@ test.describe("layout", () => {
       const status = await item.getByText("days overdue").boundingBox();
       const chip = await item.getByText("Every week", { exact: true }).boundingBox();
       const edit = await page.getByRole("button", { name: "Edit Gutters" }).boundingBox();
-      expect(done && name && Math.abs(done.y + done.height / 2 - (name.y + name.height / 2))).toBeLessThan(name!.height);
+      expect(done && name && Math.abs(done.y + done.height / 2 - (name.y + name.height / 2))).toBeLessThan(
+        name!.height,
+      );
       expect(status!.y).toBeGreaterThan(name!.y + name!.height - 1);
       expect(chip!.y).toBeGreaterThan(status!.y);
       expect(edit!.y + edit!.height).toBeGreaterThan(chip!.y);
       expect(edit!.y).toBeGreaterThan(done!.y + done!.height - 1);
     });
 
-    test("a long list folds into one line of Later and the page does not scroll sideways", async ({ page, request }) => {
+    test("a long list folds into one line of Later and the page does not scroll sideways", async ({
+      page,
+      request,
+    }) => {
       await seedLater(request, 8);
       await page.goto("/upkeep");
       await expect(page.getByRole("button", { name: "Later (8)" })).toBeInViewport();
-      expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth),
+      ).toBeLessThanOrEqual(0);
     });
   });
 
@@ -251,7 +264,13 @@ test.describe("the suggestions dropdown", () => {
   });
 
   test("is not offered when all five jobs are already on the list", async ({ page, request }) => {
-    for (const name of ["Furnace filter", "Water softener salt", "Smoke alarm batteries", "Dryer vent", "Fridge coils"]) {
+    for (const name of [
+      "Furnace filter",
+      "Water softener salt",
+      "Smoke alarm batteries",
+      "Dryer vent",
+      "Fridge coils",
+    ]) {
       await seedUpkeep(request, far(name));
     }
     await page.goto("/upkeep");

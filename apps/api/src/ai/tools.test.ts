@@ -26,7 +26,13 @@ const item = (name: string, quantity = 1, daysPerUnit: number | null = null) => 
   lowThresholdDays: 7,
 });
 
-const task = (title: string, dueDate: string | null = null) => ({ title, dueDate, dueTime: null, repeat: null, personId: null });
+const task = (title: string, dueDate: string | null = null) => ({
+  title,
+  dueDate,
+  dueTime: null,
+  repeat: null,
+  personId: null,
+});
 
 describe("read tools", () => {
   it("list_items shows quantity and days remaining, and records no action", async () => {
@@ -74,8 +80,12 @@ describe("read tools", () => {
 
   it("list_tasks says when the range is backwards or too long", async () => {
     const { run } = setup();
-    expect((await run("list_tasks", { from: "2026-11-10", to: "2026-11-01" })).result).toMatchObject({ status: "error" });
-    expect((await run("list_tasks", { from: "2026-01-01", to: "2026-12-31" })).result).toMatchObject({ status: "error" });
+    expect((await run("list_tasks", { from: "2026-11-10", to: "2026-11-01" })).result).toMatchObject({
+      status: "error",
+    });
+    expect((await run("list_tasks", { from: "2026-01-01", to: "2026-12-31" })).result).toMatchObject({
+      status: "error",
+    });
   });
 });
 
@@ -202,7 +212,9 @@ describe("add_task, add_event and complete_task", () => {
     const { api, run } = setup();
     const done = await run("add_task", { title: "Call the plumber", dueDate: "2026-11-06" });
     expect(done.result).toMatchObject({ status: "done", title: "Call the plumber", dueDate: "2026-11-06" });
-    expect((await api.schedule.view({ today, days: 3 })).days[2]!.tasks[0]).toMatchObject({ title: "Call the plumber" });
+    expect((await api.schedule.view({ today, days: 3 })).days[2]!.tasks[0]).toMatchObject({
+      title: "Call the plumber",
+    });
   });
 
   it("adds a task without a date, without inventing one", async () => {

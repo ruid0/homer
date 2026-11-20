@@ -49,7 +49,12 @@ export type Journalled<T> = { result: T; actionId: number | null; changed: boole
 // Runs a change and records what it did to the rows. A run that changes nothing records nothing.
 // Limit: a transaction cannot span an await, so a write by someone else while `run` is pending is counted
 // as part of this action. Undo's conflict rule still protects rows edited after the action finished.
-export const journalled = async <T>(db: Db, tool: string, args: unknown, run: () => Promise<T>): Promise<Journalled<T>> => {
+export const journalled = async <T>(
+  db: Db,
+  tool: string,
+  args: unknown,
+  run: () => Promise<T>,
+): Promise<Journalled<T>> => {
   const before = snapshot(db);
   const result = await run();
   const changes = diffSnapshots(before, snapshot(db));
@@ -63,9 +68,7 @@ export const journalled = async <T>(db: Db, tool: string, args: unknown, run: ()
 };
 
 export type UndoResult =
-  | { ok: true }
-  | { ok: false; reason: "missing" | "undone" }
-  | { ok: false; reason: "changed"; label: string };
+  { ok: true } | { ok: false; reason: "missing" | "undone" } | { ok: false; reason: "changed"; label: string };
 
 const idTable = (name: TableName) => journalledTables[name] as SQLiteTable & { id: (typeof items)["id"] };
 
@@ -84,7 +87,11 @@ const findStale = (changes: Changes, now: Snapshot): Row | undefined =>
       const current = new Map(now[name].map((row) => [row.id, row]));
       const { added, changed, removed } = changes[name];
       const left = (row: Row) => current.has(row.id) && same(current.get(row.id)!, row);
-      return [...added.filter((row) => !left(row)), ...changed.map(({ after }) => after).filter((row) => !left(row)), ...removed.filter((row) => current.has(row.id))];
+      return [
+        ...added.filter((row) => !left(row)),
+        ...changed.map(({ after }) => after).filter((row) => !left(row)),
+        ...removed.filter((row) => current.has(row.id)),
+      ];
     })
     .at(0);
 
@@ -94,14 +101,20 @@ type Writer = Parameters<Parameters<Db["transaction"]>[0]>[0];
 // Foreign keys are checked at commit, so a row can point at one that is restored a step later.
 const applyReverse = (tx: Writer, changes: Changes) => {
   for (const name of [...tableNames].reverse()) {
-    for (const row of changes[name].added) tx.delete(idTable(name)).where(eq(idTable(name).id, row.id)).run();
+    for (const row of changes[name].added)
+      tx.delete(idTable(name))
+        .where(eq(idTable(name).id, row.id))
+        .run();
   }
   for (const name of tableNames) {
     for (const row of changes[name].removed) tx.insert(idTable(name)).values(toColumns(name, row)).run();
   }
   for (const name of tableNames) {
     for (const { before } of changes[name].changed) {
-      tx.update(idTable(name)).set(toColumns(name, before)).where(eq(idTable(name).id, before.id)).run();
+      tx.update(idTable(name))
+        .set(toColumns(name, before))
+        .where(eq(idTable(name).id, before.id))
+        .run();
     }
   }
 };
@@ -127,7 +140,10 @@ const reverseInTransaction = (db: Db, actionId: number): UndoResult =>
     if (stale) return { ok: false, reason: "changed", label: labelOf(stale, now) };
     tx.run(sql`pragma defer_foreign_keys = on`);
     applyReverse(tx, changes);
-    tx.update(assistantActions).set({ undoneAt: new Date().toISOString() }).where(eq(assistantActions.id, actionId)).run();
+    tx.update(assistantActions)
+      .set({ undoneAt: new Date().toISOString() })
+      .where(eq(assistantActions.id, actionId))
+      .run();
     return { ok: true };
   });
 

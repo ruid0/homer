@@ -8,13 +8,22 @@ import { trpc } from "../trpc";
 
 type StoredMessage = { id: number; role: "user" | "assistant"; text: string; actions: ChatAction[] };
 
-const fromStored = ({ id, role, text, actions }: StoredMessage): ChatMessage => ({ key: `h${id}`, role, text, actions });
+const fromStored = ({ id, role, text, actions }: StoredMessage): ChatMessage => ({
+  key: `h${id}`,
+  role,
+  text,
+  actions,
+});
 
 export const AssistantPage = () => {
   const utils = trpc.useUtils();
   // The stored chat is read fresh each time the screen opens and not kept, so `after` is never from an earlier visit.
   // The model sees only what comes after `after`, the last message when this screen opened.
-  const history = trpc.assistant.history.useQuery(undefined, { staleTime: Infinity, gcTime: 0, refetchOnWindowFocus: false });
+  const history = trpc.assistant.history.useQuery(undefined, {
+    staleTime: Infinity,
+    gcTime: 0,
+    refetchOnWindowFocus: false,
+  });
   const status = trpc.assistant.status.useQuery(undefined, { refetchInterval: 30_000 });
   const send = trpc.assistant.send.useMutation();
   const undo = trpc.assistant.undo.useMutation();
@@ -32,7 +41,9 @@ export const AssistantPage = () => {
     if (after === null && history.data) setAfter(history.data.lastId);
   }, [after, history.data]);
 
-  const earlier = (history.data?.messages ?? []).filter((message) => after !== null && message.id <= after).map(fromStored);
+  const earlier = (history.data?.messages ?? [])
+    .filter((message) => after !== null && message.id <= after)
+    .map(fromStored);
   // Until the status arrives the assistant is assumed to be there, so the page does not flash a warning.
   const modelState = status.data?.status;
   const offline = modelState !== undefined && modelState !== "ready";
@@ -56,7 +67,10 @@ export const AssistantPage = () => {
     if (clean === "" || after === null || send.isPending || offline) return;
     setProblem(null);
     setDraft("");
-    setThread((current) => [...current, { key: `u${current.length}-${Date.now()}`, role: "user", text: clean, actions: [] }]);
+    setThread((current) => [
+      ...current,
+      { key: `u${current.length}-${Date.now()}`, role: "user", text: clean, actions: [] },
+    ]);
     send.mutate(
       { text: clean, after },
       {
@@ -135,7 +149,12 @@ export const AssistantPage = () => {
         {history.isPending && <p role="status">{copy.home.loading}</p>}
         {history.error && <p role="alert">{copy.assistant.loadFailed}</p>}
         {earlier.length > 0 && (
-          <button type="button" className={`${quietButton} mb-2`} aria-expanded={showEarlier} onClick={() => setShowEarlier((open) => !open)}>
+          <button
+            type="button"
+            className={`${quietButton} mb-2`}
+            aria-expanded={showEarlier}
+            onClick={() => setShowEarlier((open) => !open)}
+          >
             {showEarlier ? copy.assistant.hideEarlier : copy.assistant.earlier(earlier.length)}
           </button>
         )}
@@ -145,7 +164,13 @@ export const AssistantPage = () => {
             <p className="text-muted">{copy.assistant.examplesHint}</p>
             <div className="flex flex-wrap gap-2">
               {copy.assistant.examples.map((example) => (
-                <button key={example} type="button" className={secondaryButton} disabled={offline || after === null || send.isPending} onClick={() => submit(example)}>
+                <button
+                  key={example}
+                  type="button"
+                  className={secondaryButton}
+                  disabled={offline || after === null || send.isPending}
+                  onClick={() => submit(example)}
+                >
                   {example}
                 </button>
               ))}
@@ -176,7 +201,11 @@ export const AssistantPage = () => {
           maxLength={2000}
           onChange={(event) => setDraft(event.target.value)}
         />
-        <button type="submit" className={primaryButton} disabled={offline || after === null || send.isPending || draft.trim() === ""}>
+        <button
+          type="submit"
+          className={primaryButton}
+          disabled={offline || after === null || send.isPending || draft.trim() === ""}
+        >
           {copy.assistant.send}
         </button>
       </form>

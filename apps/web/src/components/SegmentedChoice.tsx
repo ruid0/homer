@@ -1,4 +1,10 @@
-type Props = { label: string; name: string; value: string; options: readonly { value: string; label: string }[]; onChange: (value: string) => void };
+type Props = {
+  label: string;
+  name: string;
+  value: string;
+  options: readonly { value: string; label: string }[];
+  onChange: (value: string) => void;
+};
 
 // A few choices side by side where all of them show at once. Real radio buttons, so the arrow keys move between them.
 export const SegmentedChoice = ({ label, name, value, options, onChange }: Props) => (
@@ -11,7 +17,9 @@ export const SegmentedChoice = ({ label, name, value, options, onChange }: Props
           className={`relative -ml-px flex h-11 min-w-0 flex-auto cursor-pointer items-center justify-center border border-control px-2 capitalize text-base font-medium first:ml-0 has-[:focus-visible]:z-10 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ink ${
             index === 0 ? "rounded-l-lg" : ""
           } ${index === options.length - 1 ? "rounded-r-lg" : ""} ${
-            option.value === value ? "z-[1] border-primary bg-primary font-semibold text-on-primary" : "bg-card hover:bg-hover"
+            option.value === value
+              ? "z-[1] border-primary bg-primary font-semibold text-on-primary"
+              : "bg-card hover:bg-hover"
           }`}
         >
           <input

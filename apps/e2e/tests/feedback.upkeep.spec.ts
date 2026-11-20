@@ -21,19 +21,24 @@ const written = (daysFromToday: number): string => {
 // A weekly job last done 10 days ago: overdue, so it sits under Due now.
 const dueToday = (name: string) => ({ name, every: 1, unit: "weeks" as const, lastDoneOn: daysAgo(10) });
 
-const row = (page: Page, name: string) => page.getByRole("listitem").filter({ has: page.getByText(name, { exact: true }) });
+const row = (page: Page, name: string) =>
+  page.getByRole("listitem").filter({ has: page.getByText(name, { exact: true }) });
 const toastOf = (page: Page, name: string) => page.getByRole("status").filter({ hasText: `${name} done` });
 
 const markDone = async (page: Page, name: string) => {
   await page.goto("/upkeep");
-  await row(page, name).getByRole("button", { name: `Done: ${name}` }).click();
+  await row(page, name)
+    .getByRole("button", { name: `Done: ${name}` })
+    .click();
 };
 
 test.describe("the toast after Done", () => {
   test("says the job is done today and when it is next due, with Undo", async ({ page, request }) => {
     await seedUpkeep(request, dueToday("Filter job"));
     await markDone(page, "Filter job");
-    await expect(toastOf(page, "Filter job")).toHaveText(new RegExp(`^Filter job done today\\. Next due ${written(7)}\\.`));
+    await expect(toastOf(page, "Filter job")).toHaveText(
+      new RegExp(`^Filter job done today\\. Next due ${written(7)}\\.`),
+    );
     await expect(toastOf(page, "Filter job").getByRole("button", { name: "Undo" })).toBeVisible();
   });
 
@@ -42,7 +47,8 @@ test.describe("the toast after Done", () => {
     await markDone(page, "Plain job");
     await expect(toastOf(page, "Plain job")).toBeVisible();
     await expect(page.getByText("Done earlier?")).toHaveCount(0);
-    for (const label of ["Yesterday", "2 days ago", "A week ago"]) await expect(toastOf(page, "Plain job").getByRole("button", { name: label })).toHaveCount(0);
+    for (const label of ["Yesterday", "2 days ago", "A week ago"])
+      await expect(toastOf(page, "Plain job").getByRole("button", { name: label })).toHaveCount(0);
   });
 
   test("Undo removes the done date and the toast goes", async ({ page, request }) => {
@@ -185,16 +191,26 @@ test.describe("the empty page", () => {
     await expect(page.getByText(/Nothing is saved until you save it/)).toBeVisible();
   });
 
-  test("a suggestion opens Add job with the name and cycle filled in, and Cancel saves nothing", async ({ page, request }) => {
+  test("a suggestion opens Add job with the name and cycle filled in, and Cancel saves nothing", async ({
+    page,
+    request,
+  }) => {
     await page.goto("/upkeep");
     await page.getByRole("button", { name: /^Smoke alarm batteries/ }).click();
     const dialog = page.getByRole("dialog");
     await expect(dialog.getByRole("textbox", { name: "Name" })).toHaveValue("Smoke alarm batteries");
     await expect(dialog.getByRole("spinbutton", { name: "Every" })).toHaveValue("6");
-    await expect(dialog.locator("label").filter({ hasText: /^months$/i }).locator("input")).toBeChecked();
+    await expect(
+      dialog
+        .locator("label")
+        .filter({ hasText: /^months$/i })
+        .locator("input"),
+    ).toBeChecked();
     await dialog.getByRole("button", { name: "Cancel" }).click();
     await expect(starters(page)).toHaveCount(5);
-    const list = await request.get(`/trpc/maintenance.list?input=${encodeURIComponent(JSON.stringify({ today: todayUtc() }))}`);
+    const list = await request.get(
+      `/trpc/maintenance.list?input=${encodeURIComponent(JSON.stringify({ today: todayUtc() }))}`,
+    );
     expect(((await list.json()) as { result: { data: unknown[] } }).result.data).toHaveLength(0);
   });
 
@@ -203,14 +219,22 @@ test.describe("the empty page", () => {
     await page.getByRole("button", { name: /^Dryer vent/ }).click();
     const dialog = page.getByRole("dialog");
     await expect(dialog.getByRole("spinbutton", { name: "Every" })).toHaveValue("1");
-    await expect(dialog.locator("label").filter({ hasText: /^years$/i }).locator("input")).toBeChecked();
+    await expect(
+      dialog
+        .locator("label")
+        .filter({ hasText: /^years$/i })
+        .locator("input"),
+    ).toBeChecked();
     await dialog.getByRole("button", { name: "Save" }).click();
     await expect(dialog).toHaveCount(0);
     await expect(page.getByText("Dryer vent", { exact: true })).toBeVisible();
     await expect(page.getByText(/^Nothing here yet/)).toHaveCount(0);
   });
 
-  test("Add job on an empty page still starts blank, and the suggestions leave once a job exists", async ({ page, request }) => {
+  test("Add job on an empty page still starts blank, and the suggestions leave once a job exists", async ({
+    page,
+    request,
+  }) => {
     await page.goto("/upkeep");
     await page.getByRole("button", { name: /^Fridge coils/ }).click();
     await page.getByRole("dialog").getByRole("button", { name: "Cancel" }).click();

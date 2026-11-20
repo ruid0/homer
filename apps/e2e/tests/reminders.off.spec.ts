@@ -11,7 +11,10 @@ test.describe("routine reminders with notifications off", () => {
     await expect(card.getByRole("button")).toHaveCount(0);
   });
 
-  test("the row dialog says so, shows the pickers disabled, and has no way to turn reminders on", async ({ page, request }) => {
+  test("the row dialog says so, shows the pickers disabled, and has no way to turn reminders on", async ({
+    page,
+    request,
+  }) => {
     const id = await seedPerson(request);
     await page.goto(`/people/${id}/routine`);
     await page.getByRole("button", { name: "Edit Row A" }).click();

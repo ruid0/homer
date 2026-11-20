@@ -30,7 +30,9 @@ export const calls =
   ({ calls: made }) => {
     const sameTool = made.filter((call) => call.name === name);
     if (sameTool.length === 0) return `expected ${name}, got ${made.map(describeCall).join(", ") || "no tool calls"}`;
-    const fits = sameTool.some((call) => Object.entries(wanted).every(([key, matcher]) => matches(call.args[key], matcher)));
+    const fits = sameTool.some((call) =>
+      Object.entries(wanted).every(([key, matcher]) => matches(call.args[key], matcher)),
+    );
     return fits ? null : `${name} had the wrong arguments: ${sameTool.map(describeCall).join(", ")}`;
   };
 

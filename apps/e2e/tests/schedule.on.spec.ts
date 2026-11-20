@@ -5,7 +5,8 @@ import { daysAgo, daysAhead, seedTask, todayUtc } from "./scratch";
 
 const unique = (label: string) => `${label} ${randomUUID().slice(0, 8)}`;
 
-const row = (page: Page, title: string) => page.getByRole("listitem").filter({ has: page.getByText(title, { exact: true }) });
+const row = (page: Page, title: string) =>
+  page.getByRole("listitem").filter({ has: page.getByText(title, { exact: true }) });
 
 const openAdd = async (page: Page) => {
   await page.goto("/schedule");
@@ -118,7 +119,10 @@ test.describe("a repeating task in the week view", () => {
     const title = unique("Roll");
     await seedTask(request, { title, dueDate: todayUtc(), repeat: "daily" });
     await showWeek(page);
-    await row(page, title).first().getByRole("button", { name: `Mark ${title} done` }).click();
+    await row(page, title)
+      .first()
+      .getByRole("button", { name: `Mark ${title} done` })
+      .click();
     await expect(row(page, title)).toHaveCount(6);
     const tomorrow = page.locator("section").filter({ has: page.getByRole("heading", { name: /^Tomorrow/ }) });
     await expect(tomorrow.getByRole("button", { name: `Mark ${title} done` })).toBeVisible();
@@ -132,7 +136,8 @@ test.describe("a repeating task in the week view", () => {
     await expect(row(page, title)).toHaveCount(1);
   });
 
-  // A weekly or monthly task can only come round again inside the week when it is overdue, so that is how they are reached here.
+  // A weekly or monthly task can only come round again inside the week when it is overdue, so that is how they are
+  // reached here.
   test("an overdue weekly task is overdue once, then greyed on its next weekday", async ({ page, request }) => {
     const title = unique("Weekly late");
     await seedTask(request, { title, dueDate: daysAgo(6), repeat: "weekly" });
@@ -166,7 +171,10 @@ test.describe("a repeating task in the week view", () => {
     const title = unique("Edit me");
     await seedTask(request, { title, dueDate: todayUtc(), repeat: "daily" });
     await showWeek(page);
-    await row(page, title).nth(2).getByRole("button", { name: `Edit ${title}` }).click();
+    await row(page, title)
+      .nth(2)
+      .getByRole("button", { name: `Edit ${title}` })
+      .click();
     await expect(page.getByLabel(/^Due date/)).toHaveValue(todayUtc());
   });
 

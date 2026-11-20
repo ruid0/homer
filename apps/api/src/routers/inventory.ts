@@ -20,8 +20,7 @@ import { messages } from "../messages";
 import { localDate } from "../time";
 import { publicProcedure, router } from "../trpc";
 
-const nameTaken = (name: string) =>
-  new TRPCError({ code: "CONFLICT", message: messages.nameTaken(name) });
+const nameTaken = (name: string) => new TRPCError({ code: "CONFLICT", message: messages.nameTaken(name) });
 
 const activeNameTaken = (db: Db, name: string, exceptId?: number): boolean =>
   db
@@ -45,7 +44,11 @@ const findArchivedByName = (db: Db, name: string): ItemRow | null =>
     .get() ?? null;
 
 const findArchived = (db: Db, id: number): ItemRow => {
-  const row = db.select().from(items).where(and(eq(items.id, id), isNotNull(items.archivedAt))).get();
+  const row = db
+    .select()
+    .from(items)
+    .where(and(eq(items.id, id), isNotNull(items.archivedAt)))
+    .get();
   if (!row) throw notFound();
   return row;
 };
@@ -73,7 +76,9 @@ const itemValues = (input: z.infer<typeof itemInputSchema>) => ({
 
 // A new number typed by hand starts learning over: the old history described the old number.
 const restartLearning = (current: ItemRow, input: z.infer<typeof itemInputSchema>) =>
-  input.daysPerUnit === current.daysPerUnitEntered ? {} : { daysPerUnitLearned: null, learningSince: new Date().toISOString() };
+  input.daysPerUnit === current.daysPerUnitEntered
+    ? {}
+    : { daysPerUnitLearned: null, learningSince: new Date().toISOString() };
 
 export const inventoryRouter = router({
   list: publicProcedure.query(({ ctx }) =>
@@ -138,7 +143,12 @@ export const inventoryRouter = router({
       const restored = tx
         .update(items)
         // depletedOn restarts, so the days the item spent archived are not taken off the quantity just entered.
-        .set({ ...itemValues(input), ...restartLearning(archived, input), archivedAt: null, depletedOn: localDate(new Date()) })
+        .set({
+          ...itemValues(input),
+          ...restartLearning(archived, input),
+          archivedAt: null,
+          depletedOn: localDate(new Date()),
+        })
         .where(eq(items.id, input.id))
         .returning()
         .get();
@@ -155,12 +165,14 @@ export const inventoryRouter = router({
     });
   }),
 
-  history: publicProcedure.input(idInputSchema).query(({ ctx, input }) =>
-    ctx.db
-      .select()
-      .from(restocks)
-      .where(eq(restocks.itemId, input.id))
-      .orderBy(desc(restocks.restockedAt), desc(restocks.id))
-      .all(),
-  ),
+  history: publicProcedure
+    .input(idInputSchema)
+    .query(({ ctx, input }) =>
+      ctx.db
+        .select()
+        .from(restocks)
+        .where(eq(restocks.itemId, input.id))
+        .orderBy(desc(restocks.restockedAt), desc(restocks.id))
+        .all(),
+    ),
 });

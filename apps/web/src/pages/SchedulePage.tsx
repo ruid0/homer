@@ -79,18 +79,35 @@ export const SchedulePage = () => {
 
       <div className="mb-4 flex flex-wrap items-center gap-3">
         <div role="group" aria-label={copy.schedule.viewLabel} className="flex gap-3">
-          <button type="button" className={toggleButton(mode === "today")} aria-pressed={mode === "today"} onClick={() => setMode("today")}>
+          <button
+            type="button"
+            className={toggleButton(mode === "today")}
+            aria-pressed={mode === "today"}
+            onClick={() => setMode("today")}
+          >
             {copy.schedule.todayView}
           </button>
-          <button type="button" className={toggleButton(mode === "week")} aria-pressed={mode === "week"} onClick={() => setMode("week")}>
+          <button
+            type="button"
+            className={toggleButton(mode === "week")}
+            aria-pressed={mode === "week"}
+            onClick={() => setMode("week")}
+          >
             {copy.schedule.weekView}
           </button>
         </div>
         <div className="min-w-40 flex-1 sm:max-w-60">
-          <select aria-label={copy.schedule.person} className={inputClass} value={filter} onChange={(event) => setFilter(event.target.value)}>
+          <select
+            aria-label={copy.schedule.person}
+            className={inputClass}
+            value={filter}
+            onChange={(event) => setFilter(event.target.value)}
+          >
             <option value="">{copy.schedule.everyone}</option>
             {(people.data ?? []).map((person) => (
-              <option key={person.id} value={person.id}>{person.name}</option>
+              <option key={person.id} value={person.id}>
+                {person.name}
+              </option>
             ))}
           </select>
         </div>
@@ -113,27 +130,28 @@ export const SchedulePage = () => {
         <Section heading={copy.schedule.overdue} count={overdue.length} wide>
           {overdue.map(taskRow)}
         </Section>
-        {!nothingForPerson && dayList.map(({ date, items }) => (
-          <Section
-            key={date}
-            heading={mode === "today" ? copy.schedule.today : dayHeading(date, today)}
-            count={items.length}
-            wide={mode === "today"}
-            emptyText={mode === "week" ? copy.schedule.nothingThisDay : undefined}
-          >
-            {items.map((item) =>
-              item.kind === "task" ? (
-                taskRow(item.value)
-              ) : (
-                <EventRow
-                  key={`event-${item.value.id}`}
-                  event={item.value}
-                  onEdit={() => setEditing({ kind: "event", event: item.value })}
-                />
-              ),
-            )}
-          </Section>
-        ))}
+        {!nothingForPerson &&
+          dayList.map(({ date, items }) => (
+            <Section
+              key={date}
+              heading={mode === "today" ? copy.schedule.today : dayHeading(date, today)}
+              count={items.length}
+              wide={mode === "today"}
+              emptyText={mode === "week" ? copy.schedule.nothingThisDay : undefined}
+            >
+              {items.map((item) =>
+                item.kind === "task" ? (
+                  taskRow(item.value)
+                ) : (
+                  <EventRow
+                    key={`event-${item.value.id}`}
+                    event={item.value}
+                    onEdit={() => setEditing({ kind: "event", event: item.value })}
+                  />
+                ),
+              )}
+            </Section>
+          ))}
         <Section heading={copy.schedule.anytime} count={anytime.length} wide>
           {anytime.map(taskRow)}
         </Section>

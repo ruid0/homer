@@ -10,9 +10,11 @@ const open = async (page: Page, id: number) => {
 
 const circles = (page: Page, name: string) => page.getByRole("button", { name: new RegExp(`^${name}, today`) });
 const days = (page: Page, name: string) => page.getByRole("button", { name: new RegExp(`^${name}, \\w{3} \\d+: `) });
-const card = (page: Page, name: string) => page.getByRole("listitem").filter({ has: page.getByRole("button", { name: `Edit ${name}` }) });
+const card = (page: Page, name: string) =>
+  page.getByRole("listitem").filter({ has: page.getByRole("button", { name: `Edit ${name}` }) });
 
-const background = (locator: ReturnType<Page["locator"]>) => locator.evaluate((element) => getComputedStyle(element).backgroundColor);
+const background = (locator: ReturnType<Page["locator"]>) =>
+  locator.evaluate((element) => getComputedStyle(element).backgroundColor);
 
 // What the `ok` token paints, resolved the way the browser does.
 const okColour = (page: Page) =>
@@ -43,7 +45,8 @@ test.describe("a card for each row", () => {
     const id = await seedPerson(request);
     await open(page, id);
     const key = page.getByRole("group", { name: "Key" });
-    for (const text of ["Done", "Part done", "Not done", "Not yet"]) await expect(key.getByText(text, { exact: true })).toBeVisible();
+    for (const text of ["Done", "Part done", "Not done", "Not yet"])
+      await expect(key.getByText(text, { exact: true })).toBeVisible();
   });
 
   test("a row that is done once a day says Not done, then Done today", async ({ page, request }) => {
@@ -71,7 +74,8 @@ test.describe("today's circles", () => {
     await open(page, id);
     const saves: string[] = [];
     page.on("response", (response) => {
-      if (response.url().includes("routines.setCount") && response.request().method() === "POST") saves.push(response.url());
+      if (response.url().includes("routines.setCount") && response.request().method() === "POST")
+        saves.push(response.url());
     });
     await circles(page, "Row A").first().click();
     await expect(card(page, "Row A").getByText("1 of 2")).toBeVisible();
@@ -136,13 +140,17 @@ test.describe("the week strip", () => {
     await expect(today).toHaveAccessibleName(`Row A, ${todayLabel()}: not done`);
   });
 
-  test("done is a solid square and not done an outline, so the difference is not only the hue", async ({ page, request }) => {
+  test("done is a solid square and not done an outline, so the difference is not only the hue", async ({
+    page,
+    request,
+  }) => {
     const id = await seedPerson(request);
     await open(page, id);
     const today = page.getByRole("button", { name: new RegExp(`^Row A, ${todayLabel()}: `) });
     const ok = await okColour(page);
     expect(await background(today)).not.toBe(ok);
-    // The edge of a button that can be pressed is the control colour, readable against the card (3:1), not the faint divider colour.
+    // The edge of a button that can be pressed is the control colour, readable against the card (3:1), not the faint
+    // divider colour.
     expect(await contrastOf(today)).toBeGreaterThanOrEqual(3);
     expect(await contrastOf(circles(page, "Row A").first())).toBeGreaterThanOrEqual(3);
     await today.click();
@@ -161,7 +169,10 @@ test.describe("the week strip", () => {
     await expect(today.locator("svg")).toBeVisible();
   });
 
-  test("an earlier week has no circles, every day can be changed, and This week brings you back", async ({ page, request }) => {
+  test("an earlier week has no circles, every day can be changed, and This week brings you back", async ({
+    page,
+    request,
+  }) => {
     const id = await seedPerson(request);
     await open(page, id);
     await expect(page.getByRole("button", { name: "Later week" })).toBeDisabled();
@@ -200,7 +211,9 @@ test.describe("loading and failing", () => {
     const id = await seedPerson(request);
     await interceptCall(page, "routines.week", { answer: failure("down") });
     await page.goto(`/people/${id}/routine`);
-    await expect(page.getByRole("alert").filter({ hasText: "Couldn't load the routine" })).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole("alert").filter({ hasText: "Couldn't load the routine" })).toBeVisible({
+      timeout: 15_000,
+    });
     await expect(circles(page, "Row A")).toHaveCount(0);
   });
 });
@@ -219,7 +232,10 @@ test.describe("on a phone", () => {
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   });
 
-  test("the card fits the screen, the circles and strip are touch size and nothing scrolls sideways", async ({ page, request }) => {
+  test("the card fits the screen, the circles and strip are touch size and nothing scrolls sideways", async ({
+    page,
+    request,
+  }) => {
     const id = await seedPerson(request);
     await addRow(request, id, "Herbs", 3);
     await open(page, id);
@@ -245,7 +261,9 @@ test.describe("on a phone", () => {
     await open(page, id);
     await expect(circles(page, "Water")).toHaveCount(20);
     const box = await card(page, "Water").boundingBox();
-    const boxes = await circles(page, "Water").evaluateAll((all) => all.map((element) => element.getBoundingClientRect().toJSON()));
+    const boxes = await circles(page, "Water").evaluateAll((all) =>
+      all.map((element) => element.getBoundingClientRect().toJSON()),
+    );
     expect(box).not.toBeNull();
     for (const circle of boxes) {
       expect(circle.right).toBeLessThanOrEqual(box!.x + box!.width);
@@ -277,9 +295,13 @@ test.describe("on a phone", () => {
       await expect(chip).toHaveText(/^Reminder in (6|7) min$/);
     });
 
-    const chipsOf = (page: Page, name: string) => card(page, name).getByRole("list", { name: "Reminders" }).getByRole("listitem");
+    const chipsOf = (page: Page, name: string) =>
+      card(page, name).getByRole("list", { name: "Reminders" }).getByRole("listitem");
 
-    test("a due reminder says now until the list is refreshed, then a removed one leaves the card", async ({ page, request }) => {
+    test("a due reminder says now until the list is refreshed, then a removed one leaves the card", async ({
+      page,
+      request,
+    }) => {
       const id = await seedPerson(request);
       const rowId = (await addRow(request, id, "Pills")).id;
       const reminder = await seedReminder(request, id, rowId, "in 1 minutes");
@@ -343,7 +365,10 @@ test.describe("on a phone", () => {
     test("adding a reminder in the dialog puts the chip on the card", async ({ page, request }) => {
       const id = await seedPerson(request);
       await open(page, id);
-      await page.getByRole("region", { name: "Reminders on this phone" }).getByRole("button", { name: "Turn on reminders" }).click();
+      await page
+        .getByRole("region", { name: "Reminders on this phone" })
+        .getByRole("button", { name: "Turn on reminders" })
+        .click();
       await page.getByRole("button", { name: "Edit Row A" }).click();
       const dialog = page.getByRole("dialog");
       await dialog.getByLabel("Hours").selectOption("0");
@@ -351,14 +376,18 @@ test.describe("on a phone", () => {
       await dialog.getByRole("button", { name: "Add reminder" }).click();
       await expect(dialog.getByText(/^Today at /)).toBeVisible();
       await dialog.getByRole("button", { name: "Save" }).click();
-      await expect(card(page, "Row A").getByRole("list", { name: "Reminders" }).getByRole("listitem")).toHaveText(/^Reminder in (29|30|31) min$/);
+      await expect(card(page, "Row A").getByRole("list", { name: "Reminders" }).getByRole("listitem")).toHaveText(
+        /^Reminder in (29|30|31) min$/,
+      );
     });
 
     test("a failed reminders load says so and the cards still work", async ({ page, request }) => {
       const id = await seedPerson(request);
       await interceptCall(page, "routines.reminders", { answer: failure("down") });
       await open(page, id);
-      await expect(page.getByRole("alert").filter({ hasText: "Couldn't load the reminders" })).toHaveCount(1, { timeout: 15_000 });
+      await expect(page.getByRole("alert").filter({ hasText: "Couldn't load the reminders" })).toHaveCount(1, {
+        timeout: 15_000,
+      });
       await expect(circles(page, "Row A")).toHaveCount(2);
     });
 
@@ -371,7 +400,9 @@ test.describe("on a phone", () => {
       const chips = card(page, "Pills").getByRole("list", { name: "Reminders" }).getByRole("listitem");
       await expect(chips).toHaveCount(3);
       const box = (await card(page, "Pills").boundingBox())!;
-      for (const rect of await chips.evaluateAll((all) => all.map((element) => element.getBoundingClientRect().toJSON()))) {
+      for (const rect of await chips.evaluateAll((all) =>
+        all.map((element) => element.getBoundingClientRect().toJSON()),
+      )) {
         expect(rect.right).toBeLessThanOrEqual(box.x + box.width);
       }
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);

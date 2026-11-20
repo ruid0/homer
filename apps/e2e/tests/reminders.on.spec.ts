@@ -2,7 +2,10 @@ import { expect, test } from "@playwright/test";
 import { seedPerson } from "./scratch";
 
 test.describe("routine reminders with notifications on", () => {
-  test("the pickers are visible but disabled until reminders are turned on for the person", async ({ page, request }) => {
+  test("the pickers are visible but disabled until reminders are turned on for the person", async ({
+    page,
+    request,
+  }) => {
     const id = await seedPerson(request);
     await page.goto(`/people/${id}/routine`);
     await page.getByRole("button", { name: "Edit Row A" }).click();
@@ -26,7 +29,10 @@ test.describe("routine reminders with notifications on", () => {
   test("adds a wait and a daily time, adds with Enter, and removes one", async ({ page, request }) => {
     const id = await seedPerson(request);
     await page.goto(`/people/${id}/routine`);
-    await page.getByRole("region", { name: "Reminders on this phone" }).getByRole("button", { name: "Turn on reminders" }).click();
+    await page
+      .getByRole("region", { name: "Reminders on this phone" })
+      .getByRole("button", { name: "Turn on reminders" })
+      .click();
     await page.getByRole("button", { name: "Edit Row A" }).click();
     const dialog = page.getByRole("dialog");
 
@@ -48,7 +54,10 @@ test.describe("routine reminders with notifications on", () => {
   test("asks for a time before adding an at-a-time reminder", async ({ page, request }) => {
     const id = await seedPerson(request);
     await page.goto(`/people/${id}/routine`);
-    await page.getByRole("region", { name: "Reminders on this phone" }).getByRole("button", { name: "Turn on reminders" }).click();
+    await page
+      .getByRole("region", { name: "Reminders on this phone" })
+      .getByRole("button", { name: "Turn on reminders" })
+      .click();
     await page.getByRole("button", { name: "Edit Row A" }).click();
     const dialog = page.getByRole("dialog");
     await dialog.getByRole("button", { name: "At a time" }).click();
@@ -59,7 +68,10 @@ test.describe("routine reminders with notifications on", () => {
   test("a wait of exactly 24 hours leaves no minutes to pick", async ({ page, request }) => {
     const id = await seedPerson(request);
     await page.goto(`/people/${id}/routine`);
-    await page.getByRole("region", { name: "Reminders on this phone" }).getByRole("button", { name: "Turn on reminders" }).click();
+    await page
+      .getByRole("region", { name: "Reminders on this phone" })
+      .getByRole("button", { name: "Turn on reminders" })
+      .click();
     await page.getByRole("button", { name: "Edit Row A" }).click();
     const dialog = page.getByRole("dialog");
     await dialog.getByLabel("Hours").selectOption("24");

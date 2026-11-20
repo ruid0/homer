@@ -12,14 +12,20 @@ test.beforeEach(async ({ request }) => {
   await clearUpkeep(request);
 });
 
-const row = (page: Page, name: string) => page.getByRole("listitem").filter({ has: page.getByText(name, { exact: true }) });
+const row = (page: Page, name: string) =>
+  page.getByRole("listitem").filter({ has: page.getByText(name, { exact: true }) });
 
 const card = (page: Page) => page.getByRole("region", { name: "Upkeep" });
 
 // Due today, and after Done due in two weeks, so it leaves the card.
 const fortnightly = (name: string) => ({ name, every: 2, unit: "weeks" as const, lastDoneOn: daysAgo(14) });
 
-const weekly = (name: string, lastDoneDaysAgo: number) => ({ name, every: 1, unit: "weeks" as const, lastDoneOn: daysAgo(lastDoneDaysAgo) });
+const weekly = (name: string, lastDoneDaysAgo: number) => ({
+  name,
+  every: 1,
+  unit: "weeks" as const,
+  lastDoneOn: daysAgo(lastDoneDaysAgo),
+});
 
 test.describe("the Upkeep card on Home", () => {
   test("says nothing is due when the list is empty or everything is later", async ({ page, request }) => {
@@ -57,7 +63,9 @@ test.describe("the Upkeep card on Home", () => {
     await seedUpkeep(request, weekly("Today job", 7));
     await seedUpkeep(request, weekly("Soon job", 5));
     await page.goto("/");
-    const names = await card(page).getByRole("listitem").evaluateAll((rows) => rows.map((row) => row.querySelector("p")?.textContent));
+    const names = await card(page)
+      .getByRole("listitem")
+      .evaluateAll((rows) => rows.map((row) => row.querySelector("p")?.textContent));
     expect(names).toEqual(["Overdue job", "Today job", "Soon job"]);
     await expect(card(page)).toContainText("13 days overdue");
     await expect(card(page)).toContainText("Due today");
@@ -98,7 +106,10 @@ test.describe("the Upkeep card on Home", () => {
     await expect(card(page).getByText("Nothing due this week.")).toBeVisible();
   });
 
-  test("after the last due item is done, focus stays on the card instead of dropping to the top of the page", async ({ page, request }) => {
+  test("after the last due item is done, focus stays on the card instead of dropping to the top of the page", async ({
+    page,
+    request,
+  }) => {
     await seedUpkeep(request, fortnightly("Today job"));
     await page.goto("/");
     await card(page).getByRole("button", { name: "Done: Today job" }).click();
@@ -123,7 +134,9 @@ test.describe("the Upkeep card on Home", () => {
       await page.goto("/");
       await card(page).scrollIntoViewIfNeeded();
       await expect(card(page).getByRole("button", { name: /^Done: Long name/ })).toBeInViewport();
-      expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBeLessThanOrEqual(0);
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth),
+      ).toBeLessThanOrEqual(0);
     });
   });
 
@@ -133,19 +146,30 @@ test.describe("the Upkeep card on Home", () => {
       await seedUpkeep(request, weekly("Soon job", 5));
       await page.emulateMedia({ colorScheme: scheme });
       await page.goto("/");
-      for (const text of [card(page).getByText("13 days overdue"), card(page).getByText("Due in 2 days"), card(page).getByRole("heading", { name: "Upkeep" })]) {
+      for (const text of [
+        card(page).getByText("13 days overdue"),
+        card(page).getByText("Due in 2 days"),
+        card(page).getByRole("heading", { name: "Upkeep" }),
+      ]) {
         expect(await contrastOf(text)).toBeGreaterThanOrEqual(4.5);
       }
     });
   }
 });
 
-const fontSize = (locator: ReturnType<Page["locator"]>) => locator.evaluate((element) => parseFloat(getComputedStyle(element).fontSize));
-const weight = (locator: ReturnType<Page["locator"]>) => locator.evaluate((element) => parseInt(getComputedStyle(element).fontWeight, 10));
+const fontSize = (locator: ReturnType<Page["locator"]>) =>
+  locator.evaluate((element) => parseFloat(getComputedStyle(element).fontSize));
+const weight = (locator: ReturnType<Page["locator"]>) =>
+  locator.evaluate((element) => parseInt(getComputedStyle(element).fontWeight, 10));
 // The overdue bar is a pseudo-element: its width is 4px when there, and "auto" (no box) when not.
 const barWidth = (locator: ReturnType<Page["locator"]>) =>
-  locator.evaluate((element) => (getComputedStyle(element, "::before").content === "none" ? 0 : parseFloat(getComputedStyle(element, "::before").width)));
-const titleLeft = (locator: ReturnType<Page["locator"]>) => locator.evaluate((element) => element.querySelector("p")?.getBoundingClientRect().left ?? -1);
+  locator.evaluate((element) =>
+    getComputedStyle(element, "::before").content === "none"
+      ? 0
+      : parseFloat(getComputedStyle(element, "::before").width),
+  );
+const titleLeft = (locator: ReturnType<Page["locator"]>) =>
+  locator.evaluate((element) => element.querySelector("p")?.getBoundingClientRect().left ?? -1);
 
 // WCAG contrast of one rgb() string against another, for borders.
 const ratio = (page: Page, edge: string, ground: string) =>
@@ -191,15 +215,32 @@ test.describe("one look across screens", () => {
     expect(await fontSize(inRow(`Flour ${tag}`).getByText("Runs out in 2 days"))).toBe(home.job);
   });
 
-  test("overdue rows carry a bar at the left edge and other rows do not, and no title moves for it", async ({ page, request }) => {
+  test("overdue rows carry a bar at the left edge and other rows do not, and no title moves for it", async ({
+    page,
+    request,
+  }) => {
     const tag = randomUUID().slice(0, 8);
     await seedUpkeep(request, weekly(`Late job ${tag}`, 20));
     await seedUpkeep(request, weekly(`Soon job ${tag}`, 5));
     await seedTask(request, { title: `Late task ${tag}`, dueDate: daysAgo(3) });
     await page.goto("/");
-    expect(await barWidth(card(page).getByRole("listitem").filter({ hasText: `Late job ${tag}` }))).toBeGreaterThanOrEqual(3);
-    expect(await barWidth(card(page).getByRole("listitem").filter({ hasText: `Soon job ${tag}` }))).toBe(0);
-    expect(await barWidth(page.getByRole("listitem").filter({ hasText: `Late task ${tag}` }))).toBeGreaterThanOrEqual(3);
+    expect(
+      await barWidth(
+        card(page)
+          .getByRole("listitem")
+          .filter({ hasText: `Late job ${tag}` }),
+      ),
+    ).toBeGreaterThanOrEqual(3);
+    expect(
+      await barWidth(
+        card(page)
+          .getByRole("listitem")
+          .filter({ hasText: `Soon job ${tag}` }),
+      ),
+    ).toBe(0);
+    expect(await barWidth(page.getByRole("listitem").filter({ hasText: `Late task ${tag}` }))).toBeGreaterThanOrEqual(
+      3,
+    );
     await page.goto("/upkeep");
     expect(await barWidth(row(page, `Late job ${tag}`))).toBeGreaterThanOrEqual(3);
     expect(await barWidth(row(page, `Soon job ${tag}`))).toBe(0);
@@ -207,17 +248,26 @@ test.describe("one look across screens", () => {
   });
 
   for (const scheme of ["light", "dark"] as const) {
-    test(`in ${scheme} mode a button and an input have an edge of at least 3:1 against the card`, async ({ page, request }) => {
+    test(`in ${scheme} mode a button and an input have an edge of at least 3:1 against the card`, async ({
+      page,
+      request,
+    }) => {
       await seedUpkeep(request, weekly("Edge job", 7));
       await page.emulateMedia({ colorScheme: scheme });
       await page.goto("/upkeep");
       const done = page.getByRole("button", { name: "Done: Edge job" });
       const doneEdge = await done.evaluate((element) => getComputedStyle(element).borderTopColor);
-      const ground = await page.getByRole("listitem").first().evaluate((element) => getComputedStyle(element.closest("section") ?? element).backgroundColor);
+      const ground = await page
+        .getByRole("listitem")
+        .first()
+        .evaluate((element) => getComputedStyle(element.closest("section") ?? element).backgroundColor);
       expect(await ratio(page, doneEdge, ground)).toBeGreaterThanOrEqual(3);
       await page.getByRole("button", { name: "Add job" }).click();
       const input = page.getByRole("dialog").getByRole("textbox", { name: "Name" });
-      const [inputEdge, inputGround] = await input.evaluate((element) => [getComputedStyle(element).borderTopColor, getComputedStyle(element).backgroundColor]);
+      const [inputEdge, inputGround] = await input.evaluate((element) => [
+        getComputedStyle(element).borderTopColor,
+        getComputedStyle(element).backgroundColor,
+      ]);
       expect(await ratio(page, inputEdge ?? "", inputGround ?? "")).toBeGreaterThanOrEqual(3);
     });
   }
@@ -225,7 +275,14 @@ test.describe("one look across screens", () => {
   test("every list page puts its title and main action in the same place", async ({ page }) => {
     const tops: number[] = [];
     const sizes: number[] = [];
-    for (const [path, title] of [["/items", "Items"], ["/upkeep", "Upkeep"], ["/groceries", "Groceries"], ["/schedule", "Schedule"], ["/people", "People"], ["/assistant", "Assistant"]] as const) {
+    for (const [path, title] of [
+      ["/items", "Items"],
+      ["/upkeep", "Upkeep"],
+      ["/groceries", "Groceries"],
+      ["/schedule", "Schedule"],
+      ["/people", "People"],
+      ["/assistant", "Assistant"],
+    ] as const) {
       await page.goto(path);
       const heading = page.getByRole("heading", { level: 1, name: title });
       tops.push(Math.round((await heading.boundingBox())?.y ?? -1));
@@ -237,7 +294,9 @@ test.describe("one look across screens", () => {
 
   test("the Upkeep note is one short sentence", async ({ page }) => {
     await page.goto("/upkeep");
-    await expect(page.getByText("Jobs that come round every few weeks, months or years.", { exact: true })).toBeVisible();
+    await expect(
+      page.getByText("Jobs that come round every few weeks, months or years.", { exact: true }),
+    ).toBeVisible();
     await expect(page.getByText(/Everyone in the household/)).toHaveCount(0);
   });
 
@@ -255,11 +314,17 @@ test.describe("one look across screens", () => {
     await page.setViewportSize({ width: 1600, height: 900 });
     await page.goto("/people");
     const rootSize = await page.evaluate(() => parseFloat(getComputedStyle(document.documentElement).fontSize));
-    const box = await page.getByRole("heading", { level: 1, name: "People" }).locator("xpath=ancestor::header/..").boundingBox();
+    const box = await page
+      .getByRole("heading", { level: 1, name: "People" })
+      .locator("xpath=ancestor::header/..")
+      .boundingBox();
     expect(box?.width ?? 9999).toBeLessThanOrEqual(48 * rootSize + 1);
   });
 
-  test("the list pages stop growing on a wide screen, so a name and its button stay close", async ({ page, request }) => {
+  test("the list pages stop growing on a wide screen, so a name and its button stay close", async ({
+    page,
+    request,
+  }) => {
     await seedUpkeep(request, weekly("Width job", 7));
     await page.setViewportSize({ width: 1600, height: 900 });
     await page.goto("/upkeep");
@@ -268,9 +333,13 @@ test.describe("one look across screens", () => {
     expect(box?.width ?? 9999).toBeLessThanOrEqual(48 * rootSize + 1);
   });
 
-  test("Today scrolls inside itself and shows a short fade when it has more rows than fit", async ({ page, request }) => {
+  test("Today scrolls inside itself and shows a short fade when it has more rows than fit", async ({
+    page,
+    request,
+  }) => {
     const tag = randomUUID().slice(0, 8);
-    for (let index = 0; index < 14; index += 1) await seedTask(request, { title: `Fade task ${tag} ${index}`, dueDate: todayUtc(), dueTime: "23:59" });
+    for (let index = 0; index < 14; index += 1)
+      await seedTask(request, { title: `Fade task ${tag} ${index}`, dueDate: todayUtc(), dueTime: "23:59" });
     await page.setViewportSize({ width: 1280, height: 600 });
     await page.goto("/");
     const fade = page.getByRole("region", { name: "Today" }).getByTestId("scroll-fade");
@@ -279,7 +348,9 @@ test.describe("one look across screens", () => {
     expect((await fade.boundingBox())?.height).toBeCloseTo(2 * rootSize, 0);
   });
 
-  test("the Assistant page does not repeat its title in a card heading, but keeps it for screen readers", async ({ page }) => {
+  test("the Assistant page does not repeat its title in a card heading, but keeps it for screen readers", async ({
+    page,
+  }) => {
     await page.goto("/assistant");
     const heading = page.getByRole("heading", { name: "Chat" });
     await expect(heading).toBeAttached();
@@ -310,12 +381,19 @@ test.describe("motion", () => {
       await page.getByRole("button", { name: "Add job" }).click();
       const dialog = page.getByRole("dialog");
       expect(await animationName(dialog)).toBe("sheet-up");
-      await expect.poll(async () => Math.round(((await dialog.boundingBox())?.y ?? 0) + ((await dialog.boundingBox())?.height ?? 0))).toBe(700);
+      await expect
+        .poll(async () =>
+          Math.round(((await dialog.boundingBox())?.y ?? 0) + ((await dialog.boundingBox())?.height ?? 0)),
+        )
+        .toBe(700);
       expect(Math.round((await dialog.boundingBox())?.width ?? 0)).toBe(375);
     });
   });
 
-  test("a Done flashes the row that moved and slides the toast in, and nothing else flashes", async ({ page, request }) => {
+  test("a Done flashes the row that moved and slides the toast in, and nothing else flashes", async ({
+    page,
+    request,
+  }) => {
     await seedUpkeep(request, weekly("Moved job", 20));
     await seedUpkeep(request, weekly("Other job", 10));
     await page.goto("/upkeep");
@@ -389,7 +467,10 @@ test.describe("motion", () => {
     await page.mouse.up();
   });
 
-  test("with reduced motion asked for, the dialog, backdrop, toast, flash, press response and nav fade are all off", async ({ page, request }) => {
+  test("with reduced motion asked for, the dialog, backdrop, toast, flash, press response and nav fade are all off", async ({
+    page,
+    request,
+  }) => {
     await seedUpkeep(request, weekly("Calm job", 20));
     await page.emulateMedia({ reducedMotion: "reduce" });
     await page.goto("/upkeep");
@@ -402,14 +483,25 @@ test.describe("motion", () => {
     const dialog = page.getByRole("dialog");
     expect(await animationName(dialog)).toBe("none");
     expect(await animationName(dialog, "::backdrop")).toBe("none");
-    expect(await page.getByRole("button", { name: "Save" }).evaluate((element) => getComputedStyle(element).transitionDuration)).toBe("0s");
+    expect(
+      await page
+        .getByRole("button", { name: "Save" })
+        .evaluate((element) => getComputedStyle(element).transitionDuration),
+    ).toBe("0s");
     await page.getByRole("button", { name: "Cancel" }).click();
-    expect(await page.getByRole("link", { name: "Home" }).first().evaluate((element) => getComputedStyle(element).transitionDuration)).toBe("0s");
+    expect(
+      await page
+        .getByRole("link", { name: "Home" })
+        .first()
+        .evaluate((element) => getComputedStyle(element).transitionDuration),
+    ).toBe("0s");
   });
 });
 
 test.describe("Home layout, naming and the nav", () => {
-  test("from lg the cards sit in two columns: Today on the left, Upkeep over Running out on the right", async ({ page }) => {
+  test("from lg the cards sit in two columns: Today on the left, Upkeep over Running out on the right", async ({
+    page,
+  }) => {
     await page.setViewportSize({ width: 1280, height: 900 });
     await page.goto("/");
     const today = await page.getByRole("region", { name: "Today" }).boundingBox();
@@ -436,7 +528,10 @@ test.describe("Home layout, naming and the nav", () => {
     });
   });
 
-  test("Upkeep and Running out are as tall as their rows: all rows show and nothing fades or scrolls inside", async ({ page, request }) => {
+  test("Upkeep and Running out are as tall as their rows: all rows show and nothing fades or scrolls inside", async ({
+    page,
+    request,
+  }) => {
     for (let index = 0; index < 8; index += 1) await seedUpkeep(request, weekly(`Many ${index}`, 7));
     await page.setViewportSize({ width: 1280, height: 600 });
     await page.goto("/");
@@ -454,12 +549,15 @@ test.describe("Home layout, naming and the nav", () => {
   test("the nav lists the pages in the agreed order", async ({ page }) => {
     await page.goto("/");
     const labels = await page.getByRole("navigation", { name: "Main" }).getByRole("link").allTextContents();
-    expect(labels.map((label) => label.replace(/\d+\+?/g, "").trim()).filter((label) => label !== "" && label !== "HOMER")).toEqual([
-      "Home", "Groceries", "Schedule", "Upkeep", "Items", "People", "Assistant",
-    ]);
+    expect(
+      labels.map((label) => label.replace(/\d+\+?/g, "").trim()).filter((label) => label !== "" && label !== "HOMER"),
+    ).toEqual(["Home", "Groceries", "Schedule", "Upkeep", "Items", "People", "Assistant"]);
   });
 
-  test("the Upkeep nav item shows how many jobs need doing, in words for a screen reader, and nothing when none do", async ({ page, request }) => {
+  test("the Upkeep nav item shows how many jobs need doing, in words for a screen reader, and nothing when none do", async ({
+    page,
+    request,
+  }) => {
     await page.goto("/");
     const nav = page.getByRole("navigation", { name: "Main" });
     await expect(nav.getByRole("link", { name: "Upkeep", exact: true })).toBeVisible();
@@ -473,7 +571,10 @@ test.describe("Home layout, naming and the nav", () => {
   test("the badge is red when something is late, amber when jobs are only due this week", async ({ page, request }) => {
     await seedUpkeep(request, weekly("Soon only", 5));
     await page.goto("/");
-    const badge = page.getByRole("navigation", { name: "Main" }).getByRole("link", { name: /^Upkeep/ }).locator("[data-level]");
+    const badge = page
+      .getByRole("navigation", { name: "Main" })
+      .getByRole("link", { name: /^Upkeep/ })
+      .locator("[data-level]");
     await expect(badge).toHaveAttribute("data-level", "soon", RETRIES);
     await seedUpkeep(request, weekly("Now late", 20));
     await page.reload();
@@ -493,7 +594,12 @@ test.describe("Home layout, naming and the nav", () => {
   test("the badge stops at 9+", async ({ page, request }) => {
     for (let index = 0; index < 11; index += 1) await seedUpkeep(request, weekly(`Badge ${index}`, 20));
     await page.goto("/");
-    await expect(page.getByRole("navigation", { name: "Main" }).getByRole("link", { name: /^Upkeep/ }).getByText("9+")).toBeVisible();
+    await expect(
+      page
+        .getByRole("navigation", { name: "Main" })
+        .getByRole("link", { name: /^Upkeep/ })
+        .getByText("9+"),
+    ).toBeVisible();
   });
 
   test("the Upkeep card title is a link to the page, underlined only when hovered or focused", async ({ page }) => {
@@ -513,7 +619,10 @@ test.describe("Home layout, naming and the nav", () => {
     expect(await underline()).toBe("underline");
   });
 
-  test("Items calls the stock button 'Ran out', not 'Out of it', and keeps it in the Edit dialog", async ({ page, request }) => {
+  test("Items calls the stock button 'Ran out', not 'Out of it', and keeps it in the Edit dialog", async ({
+    page,
+    request,
+  }) => {
     const tag = randomUUID().slice(0, 8);
     await seedItem(request, `Naming ${tag}`);
     await page.goto("/items");

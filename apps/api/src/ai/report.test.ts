@@ -4,19 +4,62 @@ import { claimsChange, composeReply, reportLine, skippedLine, withChanges } from
 describe("reportLine", () => {
   it.each([
     ["mark_out", { status: "done", item: "Salt" }, "Marked Salt as out and added it to groceries."],
-    ["restock_item", { status: "done", item: "Milk", added: 4, quantity: 5, unit: "litre" }, "Restocked Milk: added 4 litre, now 5."],
-    ["add_item", { status: "done", item: "Olive oil", quantity: 2, unit: "bottle" }, "Now tracking Olive oil: 2 bottle."],
+    [
+      "restock_item",
+      { status: "done", item: "Milk", added: 4, quantity: 5, unit: "litre" },
+      "Restocked Milk: added 4 litre, now 5.",
+    ],
+    [
+      "add_item",
+      { status: "done", item: "Olive oil", quantity: 2, unit: "bottle" },
+      "Now tracking Olive oil: 2 bottle.",
+    ],
     ["add_to_groceries", { status: "done", name: "Candles", quantity: null }, "Added Candles to the grocery list."],
     ["add_to_groceries", { status: "done", name: "Milk", quantity: 2 }, "Added 2 of Milk to the grocery list."],
     ["mark_bought", { status: "done", name: "Bread", restocked: null }, "Marked Bread as bought."],
     ["mark_bought", { status: "done", name: "Milk", restocked: 3 }, "Marked Milk as bought and restocked 3."],
-    ["add_task", { status: "done", title: "Call the plumber", dueDate: "2026-11-06", dueTime: null, repeat: null, person: null }, 'Added the task "Call the plumber" for Friday 2026-11-06.'],
-    ["add_task", { status: "done", title: "Gift", dueDate: null, dueTime: null, repeat: null, person: null }, 'Added the task "Gift" with no date.'],
-    ["add_task", { status: "done", title: "Water plants", dueDate: "2026-11-08", dueTime: "18:00", repeat: "weekly", person: "Ben" }, 'Added the task "Water plants" for Sunday 2026-11-08 at 18:00, weekly, for Ben.'],
-    ["add_event", { status: "done", title: "Dentist", date: "2026-11-05", time: "09:30", person: "Anna" }, 'Added the event "Dentist" on Thursday 2026-11-05 at 09:30 for Anna.'],
-    ["add_event", { status: "done", title: "Parents' evening", date: "2026-11-10", time: null, person: null }, "Added the event \"Parents' evening\" on Tuesday 2026-11-10."],
-    ["complete_task", { status: "done", title: "Call the plumber", nextDueDate: null }, 'Marked "Call the plumber" as done.'],
-    ["complete_task", { status: "done", title: "Water plants", nextDueDate: "2026-11-11" }, 'Marked "Water plants" as done. The next one is due Wednesday 2026-11-11.'],
+    [
+      "add_task",
+      { status: "done", title: "Call the plumber", dueDate: "2026-11-06", dueTime: null, repeat: null, person: null },
+      'Added the task "Call the plumber" for Friday 2026-11-06.',
+    ],
+    [
+      "add_task",
+      { status: "done", title: "Gift", dueDate: null, dueTime: null, repeat: null, person: null },
+      'Added the task "Gift" with no date.',
+    ],
+    [
+      "add_task",
+      {
+        status: "done",
+        title: "Water plants",
+        dueDate: "2026-11-08",
+        dueTime: "18:00",
+        repeat: "weekly",
+        person: "Ben",
+      },
+      'Added the task "Water plants" for Sunday 2026-11-08 at 18:00, weekly, for Ben.',
+    ],
+    [
+      "add_event",
+      { status: "done", title: "Dentist", date: "2026-11-05", time: "09:30", person: "Anna" },
+      'Added the event "Dentist" on Thursday 2026-11-05 at 09:30 for Anna.',
+    ],
+    [
+      "add_event",
+      { status: "done", title: "Parents' evening", date: "2026-11-10", time: null, person: null },
+      'Added the event "Parents\' evening" on Tuesday 2026-11-10.',
+    ],
+    [
+      "complete_task",
+      { status: "done", title: "Call the plumber", nextDueDate: null },
+      'Marked "Call the plumber" as done.',
+    ],
+    [
+      "complete_task",
+      { status: "done", title: "Water plants", nextDueDate: "2026-11-11" },
+      'Marked "Water plants" as done. The next one is due Wednesday 2026-11-11.',
+    ],
   ])("%s", (name, result, line) => {
     expect(reportLine(name, result)).toBe(line);
   });
@@ -58,18 +101,24 @@ describe("composeReply", () => {
   it("says the same refusal once", () => {
     const refusal = { status: "cannot_delete", message: "I can't delete items." };
     const salt = [{ name: "mark_out", result: { status: "done", item: "Salt" } }];
-    expect(composeReply({ done: salt, skipped: [refusal, refusal] }, "")).toBe("Marked Salt as out and added it to groceries.\nI can't delete items.");
+    expect(composeReply({ done: salt, skipped: [refusal, refusal] }, "")).toBe(
+      "Marked Salt as out and added it to groceries.\nI can't delete items.",
+    );
   });
 
   const done = [{ name: "mark_out", result: { status: "done", item: "Salt" } }];
 
   it("uses the code's line when something changed, not the model's words", () => {
-    expect(composeReply({ done }, "Sure thing! I have gone ahead and marked salt.")).toBe("Marked Salt as out and added it to groceries.");
+    expect(composeReply({ done }, "Sure thing! I have gone ahead and marked salt.")).toBe(
+      "Marked Salt as out and added it to groceries.",
+    );
   });
 
   it("lists one line per change", () => {
     const two = [...done, { name: "add_to_groceries", result: { status: "done", name: "Bread", quantity: null } }];
-    expect(composeReply({ done: two }, "ok")).toBe("Marked Salt as out and added it to groceries.\nAdded Bread to the grocery list.");
+    expect(composeReply({ done: two }, "ok")).toBe(
+      "Marked Salt as out and added it to groceries.\nAdded Bread to the grocery list.",
+    );
   });
 
   it("keeps a closing question from the model", () => {
@@ -83,7 +132,9 @@ describe("composeReply", () => {
   });
 
   it("does not let a claim of change through when nothing changed", () => {
-    expect(composeReply({ done: [] }, "I've added the dentist appointment for Anna.")).toBe("I didn't change anything. Try saying it again.");
+    expect(composeReply({ done: [] }, "I've added the dentist appointment for Anna.")).toBe(
+      "I didn't change anything. Try saying it again.",
+    );
   });
 
   it("falls back to a line when the model said nothing", () => {
@@ -112,7 +163,10 @@ describe("composeReply", () => {
 
 describe("skippedLine", () => {
   it.each([
-    [{ status: "ambiguous", matches: ["Oat milk", "Soy milk"] }, "More than one matches: Oat milk, Soy milk. Which one?"],
+    [
+      { status: "ambiguous", matches: ["Oat milk", "Soy milk"] },
+      "More than one matches: Oat milk, Soy milk. Which one?",
+    ],
     [{ status: "needs_quantity", name: "Milk" }, "How much Milk did you buy?"],
     [{ status: "person_not_found", name: "Zoe" }, "I don't know Zoe."],
     [{ status: "not_on_list", name: "Bread" }, "Bread isn't on the list."],
@@ -125,9 +179,12 @@ describe("skippedLine", () => {
 
 describe("withChanges", () => {
   it("puts the changes already made before a line about stopping early", () => {
-    expect(withChanges({ done: [{ name: "mark_out", result: { status: "done", item: "Salt" } }] }, "That took too many steps.")).toBe(
-      "Marked Salt as out and added it to groceries.\nThat took too many steps.",
-    );
+    expect(
+      withChanges(
+        { done: [{ name: "mark_out", result: { status: "done", item: "Salt" } }] },
+        "That took too many steps.",
+      ),
+    ).toBe("Marked Salt as out and added it to groceries.\nThat took too many steps.");
   });
 
   it("is only the line when nothing changed", () => {

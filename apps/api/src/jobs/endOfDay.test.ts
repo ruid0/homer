@@ -70,7 +70,13 @@ describe("startEndOfDay", () => {
   it("logs a failed send as a failure, not as a quiet day", async () => {
     const db = await withTask();
     const log = vi.fn();
-    startEndOfDay(db, { time: "20:00", topic: "topic-a", notify: recorder(false).notify, now: () => at(21), log })?.stop();
+    startEndOfDay(db, {
+      time: "20:00",
+      topic: "topic-a",
+      notify: recorder(false).notify,
+      now: () => at(21),
+      log,
+    })?.stop();
     await vi.waitFor(() => expect(log).toHaveBeenCalled());
     expect(log.mock.calls[0]?.[0]).toMatch(/could not be sent/);
   });
@@ -95,7 +101,9 @@ describe("startEndOfDay", () => {
 
   it("logs and carries on when the time is invalid", () => {
     const log = vi.fn();
-    expect(startEndOfDay(createDb(":memory:"), { time: "late", topic: "t", notify: recorder().notify, log })).toBeNull();
+    expect(
+      startEndOfDay(createDb(":memory:"), { time: "late", topic: "t", notify: recorder().notify, log }),
+    ).toBeNull();
     expect(log.mock.calls[0]?.[0]).toMatch(/END_OF_DAY_TIME/);
   });
 });

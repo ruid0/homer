@@ -1,10 +1,7 @@
 import { timeOf, type DayItem } from "./dayItems";
 
 export type TimelineRow<Task, Event> =
-  | { kind: "overdue"; value: Task }
-  | { kind: "task"; value: Task }
-  | { kind: "event"; value: Event }
-  | { kind: "now" };
+  { kind: "overdue"; value: Task } | { kind: "task"; value: Task } | { kind: "event"; value: Event } | { kind: "now" };
 
 // `items` are already in day order (see dayItems). Timed items before `now` sit above the marker, and
 // everything else, including items with no time, sits below it. `now` is "HH:MM".

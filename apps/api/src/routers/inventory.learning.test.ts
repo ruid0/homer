@@ -106,13 +106,22 @@ describe("learned usage", () => {
     // Older actions stored item rows without learningSince.
     const stored = db.select().from(assistantActions).where(eq(assistantActions.id, done.actionId!)).get()!;
     const strip = (rows: Record<string, unknown>[]) => rows.map(({ learningSince: _gone, ...rest }) => rest);
-    const changes = stored.changes as { items: { added: Record<string, unknown>[]; changed: { before: Record<string, unknown>; after: Record<string, unknown> }[]; removed: Record<string, unknown>[] } };
+    const changes = stored.changes as {
+      items: {
+        added: Record<string, unknown>[];
+        changed: { before: Record<string, unknown>; after: Record<string, unknown> }[];
+        removed: Record<string, unknown>[];
+      };
+    };
     const old = {
       ...changes,
       items: {
         added: strip(changes.items.added),
         removed: strip(changes.items.removed),
-        changed: changes.items.changed.map(({ before, after }) => ({ before: strip([before])[0]!, after: strip([after])[0]! })),
+        changed: changes.items.changed.map(({ before, after }) => ({
+          before: strip([before])[0]!,
+          after: strip([after])[0]!,
+        })),
       },
     };
     db.update(assistantActions).set({ changes: old }).where(eq(assistantActions.id, done.actionId!)).run();

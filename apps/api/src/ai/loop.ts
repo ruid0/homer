@@ -15,19 +15,36 @@ export type Outcome = { reply: string; actionIds: number[] };
 
 const asContent = (value: unknown) => JSON.stringify(value);
 
-type Step = { messages: ChatMessage[]; actionIds: number[]; done: DoneChange[]; skipped: Record<string, unknown>[]; invalid: number };
+type Step = {
+  messages: ChatMessage[];
+  actionIds: number[];
+  done: DoneChange[];
+  skipped: Record<string, unknown>[];
+  invalid: number;
+};
 
-// Runs every call of one model turn. A bad call is answered with the reason so the model can fix it. Nothing is written for it.
+// Runs every call of one model turn. A bad call is answered with the reason so the model can fix it. Nothing is written
+// for it.
 const runCalls = async (db: Db, today: string, said: Said, calls: RawToolCall[]): Promise<Step> => {
   const known = await knownNames(db);
   const step: Step = { messages: [], actionIds: [], done: [], skipped: [], invalid: 0 };
-  // A said time is filled in only when one call can take it. With a task and an event in one turn it is not clear whose it is.
+  // A said time is filled in only when one call can take it. With a task and an event in one turn it is not clear whose
+  // it is.
   const fillsTime = calls.filter((call) => takesTime(call.name)).length === 1;
   for (const call of calls) {
-    const parsed = parseToolCall(call.name, fillsTime ? addSaidTime(call.name, resolveToolDates(call.args, today), said.now) : resolveToolDates(call.args, today));
+    const parsed = parseToolCall(
+      call.name,
+      fillsTime
+        ? addSaidTime(call.name, resolveToolDates(call.args, today), said.now)
+        : resolveToolDates(call.args, today),
+    );
     if (!parsed.ok) {
       step.invalid += 1;
-      step.messages.push({ role: "tool", toolName: call.name, content: asContent({ status: "error", message: parsed.error }) });
+      step.messages.push({
+        role: "tool",
+        toolName: call.name,
+        content: asContent({ status: "error", message: parsed.error }),
+      });
       continue;
     }
     const refusal = isWriteTool(parsed.call.name) ? refuseWrite(parsed.call, said, known) : null;
@@ -50,8 +67,15 @@ const runCalls = async (db: Db, today: string, said: Said, calls: RawToolCall[])
 
 // The model's loop: ask, run what it calls, show it the results, until it answers in words.
 export const runAssistant = async ({ db, chat, today, history, text }: Input): Promise<Outcome> => {
-  const messages: ChatMessage[] = [{ role: "system", content: systemPrompt(today) }, ...history, { role: "user", content: text }];
-  const said = { now: text, recent: [...history.filter(({ role }) => role === "user").map(({ content }) => content), text].join(" ") };
+  const messages: ChatMessage[] = [
+    { role: "system", content: systemPrompt(today) },
+    ...history,
+    { role: "user", content: text },
+  ];
+  const said = {
+    now: text,
+    recent: [...history.filter(({ role }) => role === "user").map(({ content }) => content), text].join(" "),
+  };
   const actionIds: number[] = [];
   const done: DoneChange[] = [];
   const skipped: Record<string, unknown>[] = [];

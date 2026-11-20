@@ -67,7 +67,13 @@ describe("undoAction", () => {
 
   it("puts back rows an action removed", async () => {
     const { db, api } = setup();
-    const { id } = await api.tasks.add({ title: "Call plumber", dueDate: null, dueTime: null, repeat: null, personId: null });
+    const { id } = await api.tasks.add({
+      title: "Call plumber",
+      dueDate: null,
+      dueTime: null,
+      repeat: null,
+      personId: null,
+    });
     const before = snapshot(db);
     const done = await journalled(db, "complete_task", {}, () => api.tasks.complete({ id, today: "2026-11-04" }));
     expect(undoAction(db, done.actionId!)).toEqual({ ok: true });
@@ -157,10 +163,18 @@ describe("undo restores the tables exactly", () => {
             if (kind === "create") return api.inventory.create({ ...milk, name: `Item ${n} ${index}` });
             if (kind === "restock" && item) return api.inventory.restock({ itemId: item.id, quantity: n });
             if (kind === "out" && item) return api.inventory.markOut({ id: item.id });
-            if (kind === "task") return api.tasks.add({ title: `Task ${n}`, dueDate: "2026-11-04", dueTime: null, repeat: n % 2 ? "daily" : null, personId: null });
+            if (kind === "task")
+              return api.tasks.add({
+                title: `Task ${n}`,
+                dueDate: "2026-11-04",
+                dueTime: null,
+                repeat: n % 2 ? "daily" : null,
+                personId: null,
+              });
             if (kind === "complete" && task) return api.tasks.complete({ id: task.id, today: "2026-11-04" });
             if (kind === "grocery") return api.groceries.add({ text: `Thing ${n}`, quantity: n });
-            if (kind === "event") return api.events.add({ title: `Event ${n}`, date: "2026-11-05", time: null, personId: null });
+            if (kind === "event")
+              return api.events.add({ title: `Event ${n}`, date: "2026-11-05", time: null, personId: null });
             return null;
           };
           const done = await journalled(db, kind, { kind, n }, run);

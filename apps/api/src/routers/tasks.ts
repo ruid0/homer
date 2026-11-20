@@ -1,6 +1,12 @@
 import { TRPCError } from "@trpc/server";
 import { and, eq, isNull } from "drizzle-orm";
-import { completeTaskInputSchema, idInputSchema, nextDueDate, taskInputSchema, updateTaskInputSchema } from "@homer/shared";
+import {
+  completeTaskInputSchema,
+  idInputSchema,
+  nextDueDate,
+  taskInputSchema,
+  updateTaskInputSchema,
+} from "@homer/shared";
 import type { Db } from "../db/client";
 import { tasks } from "../db/schema";
 import { messages } from "../messages";
@@ -15,7 +21,11 @@ const closed = () => new TRPCError({ code: "NOT_FOUND", message: messages.taskCl
 const isOpen = and(isNull(tasks.doneAt), isNull(tasks.removedAt));
 
 const findOpen = (db: Pick<Db, "select">, id: number): TaskRow => {
-  const row = db.select().from(tasks).where(and(eq(tasks.id, id), isOpen)).get();
+  const row = db
+    .select()
+    .from(tasks)
+    .where(and(eq(tasks.id, id), isOpen))
+    .get();
   if (!row) throw closed();
   return row;
 };

@@ -27,7 +27,11 @@ const isShown = isNull(routineItems.removedAt);
 const rowRemoved = () => new TRPCError({ code: "NOT_FOUND", message: messages.routineRowRemoved });
 
 const requireShown = (db: Pick<Db, "select">, id: number) => {
-  const row = db.select().from(routineItems).where(and(eq(routineItems.id, id), isShown)).get();
+  const row = db
+    .select()
+    .from(routineItems)
+    .where(and(eq(routineItems.id, id), isShown))
+    .get();
   if (!row) throw rowRemoved();
   return row;
 };
@@ -68,7 +72,10 @@ export const routinesRouter = router({
           .from(routineTicks)
           .where(
             and(
-              inArray(routineTicks.routineItemId, rows.map((row) => row.id)),
+              inArray(
+                routineTicks.routineItemId,
+                rows.map((row) => row.id),
+              ),
               inArray(routineTicks.date, days),
             ),
           )
@@ -139,7 +146,12 @@ export const routinesRouter = router({
   reminders: publicProcedure.input(routineRemindersInputSchema).query(({ ctx, input }) => {
     requirePerson(ctx.db, input.personId);
     return ctx.db
-      .select({ id: routineReminders.id, itemId: routineReminders.routineItemId, fireAt: routineReminders.fireAt, dailyTime: routineReminders.dailyTime })
+      .select({
+        id: routineReminders.id,
+        itemId: routineReminders.routineItemId,
+        fireAt: routineReminders.fireAt,
+        dailyTime: routineReminders.dailyTime,
+      })
       .from(routineReminders)
       .innerJoin(routineItems, eq(routineItems.id, routineReminders.routineItemId))
       .where(and(eq(routineItems.personId, input.personId), isShown, isNull(routineReminders.removedAt)))

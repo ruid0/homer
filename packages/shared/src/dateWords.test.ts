@@ -61,7 +61,10 @@ describe("resolveToolDates", () => {
   });
 
   it("reads arguments sent as a JSON string", () => {
-    expect(resolveToolDates('{"title":"x","dueDate":"tomorrow"}', today)).toEqual({ title: "x", dueDate: "2026-11-05" });
+    expect(resolveToolDates('{"title":"x","dueDate":"tomorrow"}', today)).toEqual({
+      title: "x",
+      dueDate: "2026-11-05",
+    });
   });
 
   it("passes through what it cannot read", () => {

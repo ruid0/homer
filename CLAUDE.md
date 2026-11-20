@@ -19,6 +19,7 @@ pnpm install
 pnpm typecheck     # tsc --noEmit in every package (pnpm -r)
 pnpm test          # vitest run (Vitest + fast-check)
 pnpm --filter @homer/web build   # production build of the web app; must print no warnings
+pnpm format        # Prettier (120 columns) over every .ts/.tsx; pnpm format:check only reports
 pnpm exec vitest related <file> --run   # tests touching one file
 pnpm dev           # web :3000, api :3001
 pnpm db:generate   # new Drizzle migration from apps/api/src/db/schema.ts (run in apps/api)

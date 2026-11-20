@@ -29,10 +29,22 @@ describe("resolveName", () => {
   });
 
   it("does not treat a short fragment as a word", () => {
-    const result = resolveName("m", [{ id: 1, name: "Milk" }, { id: 2, name: "Mustard" }]);
+    const result = resolveName("m", [
+      { id: 1, name: "Milk" },
+      { id: 2, name: "Mustard" },
+    ]);
     expect(result.kind).toBe("none");
-    const two = resolveName("milk", [{ id: 1, name: "Oat milk" }, { id: 2, name: "Soy milk" }]);
-    expect(two).toEqual({ kind: "many", matches: [{ id: 1, name: "Oat milk" }, { id: 2, name: "Soy milk" }] });
+    const two = resolveName("milk", [
+      { id: 1, name: "Oat milk" },
+      { id: 2, name: "Soy milk" },
+    ]);
+    expect(two).toEqual({
+      kind: "many",
+      matches: [
+        { id: 1, name: "Oat milk" },
+        { id: 2, name: "Soy milk" },
+      ],
+    });
   });
 
   it("does not match a longer request to a shorter tracked name", () => {
