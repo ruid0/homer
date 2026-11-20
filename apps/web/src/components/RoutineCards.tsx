@@ -1,16 +1,20 @@
 import { copy } from "../copy";
+import { useClock } from "../lib/clock";
+import { reminderChip } from "../lib/reminderText";
 import { cycleCount, dayLabel, dayState, isFuture, tickCount, weekdayInitial } from "../lib/routineWeek";
 import type { RoutineWeek } from "../trpc";
 import { Tick } from "./Tick";
 
 type Props = {
   week: RoutineWeek;
+  reminders: Reminder[];
   today: string;
   onSet: (itemId: number, day: string, count: number) => void;
   onEdit: (itemId: number) => void;
 };
 
 type Item = RoutineWeek["items"][number];
+type Reminder = { id: number; itemId: number; fireAt: string; dailyTime: string | null };
 
 // Offset wider than the ring that marks today, so a focused square is not read as a second "today".
 const focusRing = "focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-ink";
@@ -23,7 +27,22 @@ const square = (state: ReturnType<typeof dayState>, isToday: boolean) => {
   return `grid h-11 w-full max-w-12 place-items-center rounded-xl border ${isToday ? "ring-2 ring-ink" : ""} ${look} ${focusRing}`;
 };
 
-export const RoutineCards = ({ week, today, onSet, onEdit }: Props) => {
+const ReminderChips = ({ reminders, now }: { reminders: Reminder[]; now: Date }) =>
+  reminders.length === 0 ? null : (
+    <ul className="flex flex-wrap gap-2" aria-label={copy.reminders.title}>
+      {reminders.map((reminder) => {
+        const chip = reminderChip(reminder.fireAt, reminder.dailyTime, now);
+        return (
+          <li key={reminder.id} className={`rounded-full border px-3 py-1 text-meta ${chip.soon ? "border-warn font-semibold text-warn" : "border-line text-muted"}`}>
+            {chip.text}
+          </li>
+        );
+      })}
+    </ul>
+  );
+
+export const RoutineCards = ({ week, reminders, today, onSet, onEdit }: Props) => {
+  const now = useClock();
   const todayIndex = week.days.indexOf(today);
   return (
     <ul className="grid gap-4">
@@ -39,6 +58,8 @@ export const RoutineCards = ({ week, today, onSet, onEdit }: Props) => {
             >
               {item.name}
             </button>
+
+            <ReminderChips reminders={reminders.filter((reminder) => reminder.itemId === item.id)} now={now} />
 
             {todayIndex >= 0 && (
               <div className="flex flex-wrap items-center gap-3">

@@ -29,10 +29,21 @@ export const todayLabel = (): string => {
 };
 
 // Turns reminders on for a person and adds one at a clock time, all through the api.
-export const seedReminder = async (request: APIRequestContext, personId: number, itemId: number, text: string) => {
+export const seedReminder = async (
+  request: APIRequestContext,
+  personId: number,
+  itemId: number,
+  text: string,
+  repeatDaily = false,
+) => {
   await call(request, "people.reminderSetup", { id: personId });
-  return call(request, "routines.addReminder", { itemId, text, repeatDaily: false });
+  return call<{ id: number }>(request, "routines.addReminder", { itemId, text, repeatDaily });
 };
+
+export const removeReminder = (request: APIRequestContext, id: number) => call(request, "routines.removeReminder", { id });
+
+// The clock time, in UTC like the scratch copies, that many minutes from now.
+export const clockIn = (minutes: number): string => new Date(Date.now() + minutes * 60_000).toISOString().slice(11, 16);
 
 type Unit = "weeks" | "months" | "years";
 

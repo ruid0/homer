@@ -90,7 +90,7 @@ The grid read as confusing on a phone (a sideways-scrolling table, "0 of 2" in e
 - **Week bar:** arrow buttons (still named "Earlier week" and "Later week"), the date range between them, then Add a row; "This week" appears off the current week.
 - **Key** under the cards (done, not done, not yet) and the reminders box at the bottom, as before.
 - **Colour:** a new `ok` token in `index.css`, for done and nothing else (light `#15803d`, dark `#6fcf8a`). Done is a filled shape, not done an outline, and the words say it too. Not-done edges use the `control` token (3:1), not the divider colour. The owner asked for a grey check on not done, so it stays.
-- **Not in this PR:** a chip on each card showing the row's reminder (with a live countdown when it fires within the hour). It needs the reminders list on the page and is the next PR.
+- **Reminder chips (built):** each card lists the row's open reminders as chips under the name. A reminder more than an hour away reads as its clock time ("Today at 20:00", "Every day at 20:00") in muted text. Within the hour it counts down in whole minutes, rounded up ("Reminder in 12 min", "Every day at 20:00, in 12 min"), in the `warn` colour and bold, and says "now" until the note goes out. The clock ticks every 30 seconds. Chips are not buttons; the row dialog still adds and removes reminders.
 - On a 360px phone the strip squares are 41px wide (44px high), because seven fit in the card; a 2-row strip would be the only way to 44 and was judged not worth it. Focus uses a wider offset than the ring that marks today.
 - Counts and the api are unchanged; `setCount` takes a count, so a tap works out the new count (`cycleCount`, `tickCount` in `apps/web/src/lib/routineWeek.ts`).
 

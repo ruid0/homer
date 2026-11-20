@@ -30,3 +30,14 @@ export const reminderWhenLabel = (fireAt: string, dailyTime: string | null, now:
   const at = new Date(fireAt);
   return localDate(at) === localDate(now) ? copy.reminders.todayAt(timeOfDay(at)) : copy.reminders.tomorrowAt(timeOfDay(at));
 };
+
+const MINUTE_MS = 60_000;
+const SOON_MINUTES = 60;
+
+// What a routine card shows for a reminder. Within the hour it counts down, and that is the one case worth drawing the eye to.
+export const reminderChip = (fireAt: string, dailyTime: string | null, now: Date): { text: string; soon: boolean } => {
+  const minutes = Math.ceil((new Date(fireAt).getTime() - now.getTime()) / MINUTE_MS);
+  if (minutes > SOON_MINUTES) return { text: reminderWhenLabel(fireAt, dailyTime, now), soon: false };
+  const wait = minutes <= 0 ? copy.reminders.dueNow : copy.reminders.inMinutes(minutes);
+  return { text: dailyTime ? copy.reminders.dailyCountdown(dailyTime, wait) : copy.reminders.countdown(wait), soon: true };
+};
