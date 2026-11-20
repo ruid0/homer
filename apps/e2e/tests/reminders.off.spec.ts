@@ -27,4 +27,12 @@ test.describe("routine reminders with notifications off", () => {
     await expect(dialog.getByRole("textbox", { name: "Time" })).toBeDisabled();
     await expect(dialog.getByLabel("Every day")).toBeDisabled();
   });
+
+  test("the top of the page says reminders are off and why", async ({ page, request }) => {
+    const id = await seedPerson(request);
+    await page.goto(`/people/${id}/routine`);
+    const status = page.getByRole("status", { name: "Reminders" });
+    await expect(status).toContainText("Reminders: Off");
+    await expect(status).toContainText("Notifications are not set up for this household.");
+  });
 });

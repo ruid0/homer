@@ -309,6 +309,7 @@ test.describe("saving and keyboard", () => {
     const dialog = await openRow(page);
     const held = gate();
     await interceptCall(page, "routines.addReminder", { when: held.when });
+    await dialog.getByLabel("Minutes").selectOption("15");
     try {
       await dialog.getByRole("button", { name: "Add reminder" }).click();
       await expect(dialog.getByRole("button", { name: "Add reminder" })).toBeDisabled();
@@ -327,6 +328,8 @@ test.describe("saving and keyboard", () => {
     await seedReminder(request, id, (await addRow(request, id, "Row B")).id, "in 2 hours");
     await page.goto(`/people/${id}/routine`);
     const dialog = await openRow(page);
+    // The pickers start blank, so a wait is picked for the Enter at the end to add.
+    await dialog.getByLabel("Minutes").selectOption("15");
     await dialog.getByRole("button", { name: "After a wait" }).focus();
     await page.keyboard.press("Tab");
     await expect(dialog.getByRole("button", { name: "At a time" })).toBeFocused();
