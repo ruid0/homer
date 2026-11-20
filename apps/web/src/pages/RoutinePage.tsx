@@ -37,6 +37,7 @@ const RoutineView = ({ personId, name, remindersOn }: { personId: number; name: 
   const start = weekStart ?? mondayOf(today);
   const input = { personId, today, weekOf: start };
   const week = trpc.routines.week.useQuery(input);
+  const reminders = trpc.routines.reminders.useQuery({ personId });
   const refresh = () => utils.routines.week.invalidate();
 
   const resetDialogErrors = () => [addItem, updateItem, removeItem, moveItem].forEach((mutation) => mutation.reset());
@@ -128,10 +129,11 @@ const RoutineView = ({ personId, name, remindersOn }: { personId: number; name: 
       {week.isPending && <p>{copy.routine.loading}</p>}
       {week.error && <p role="alert" className="text-late">{copy.routine.loadFailed}</p>}
       <ErrorToast message={problem} />
+      {reminders.error && <p role="alert" className="text-late">{copy.reminders.chipsFailed}</p>}
       {week.data && items.length === 0 && <p>{copy.routine.empty}</p>}
       {week.data && items.length > 0 && (
         <>
-          <RoutineCards week={week.data} today={today} onSet={change} onEdit={setEditing} />
+          <RoutineCards week={week.data} reminders={reminders.data ?? []} today={today} onSet={change} onEdit={setEditing} />
           <Legend />
         </>
       )}

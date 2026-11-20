@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { contrastOf } from "./contrast";
 import { failure, interceptCall } from "./intercept";
-import { addRow, seedEmptyPerson, seedPerson, todayLabel } from "./scratch";
+import { addRow, seedEmptyPerson, seedPerson, seedReminder, todayLabel } from "./scratch";
 
 const open = async (page: Page, id: number) => {
   await page.goto(`/people/${id}/routine`);
@@ -255,5 +255,75 @@ test.describe("on a phone", () => {
     // Ticking the last circle fills all twenty, and the card says so.
     await circles(page, "Water").nth(19).click();
     await expect(card(page, "Water").getByText("Done today")).toBeVisible();
+  });
+
+  test.describe("reminder chips", () => {
+    test("a row with no reminder shows no chip", async ({ page, request }) => {
+      const id = await seedPerson(request);
+      await open(page, id);
+      await expect(card(page, "Row A").getByRole("list", { name: "Reminders" })).toHaveCount(0);
+    });
+
+    test("a reminder inside the hour is a chip that counts down as time passes", async ({ page, request }) => {
+      const id = await seedPerson(request);
+      const rowId = (await addRow(request, id, "Pills")).id;
+      await seedReminder(request, id, rowId, "in 12 minutes");
+      await page.clock.install({ time: new Date() });
+      await open(page, id);
+      const chip = card(page, "Pills").getByRole("list", { name: "Reminders" }).getByRole("listitem");
+      await expect(chip).toHaveText("Reminder in 12 min");
+      await expect(chip).toHaveClass(/text-warn/);
+      await page.clock.fastForward("05:00");
+      await expect(chip).toHaveText("Reminder in 7 min");
+    });
+
+    test("a reminder further off is a quiet clock time, and other rows are untouched", async ({ page, request }) => {
+      const id = await seedPerson(request);
+      const rowId = (await addRow(request, id, "Vitamins")).id;
+      await seedReminder(request, id, rowId, "in 5 hours");
+      await open(page, id);
+      const chip = card(page, "Vitamins").getByRole("list", { name: "Reminders" }).getByRole("listitem");
+      await expect(chip).toHaveText(/^(Today|Tomorrow) at \d\d:\d\d$/);
+      await expect(chip).toHaveClass(/text-muted/);
+      await expect(card(page, "Row A").getByRole("list", { name: "Reminders" })).toHaveCount(0);
+    });
+
+    test("adding a reminder in the dialog puts the chip on the card", async ({ page, request }) => {
+      const id = await seedPerson(request);
+      await open(page, id);
+      await page.getByRole("region", { name: "Reminders on this phone" }).getByRole("button", { name: "Turn on reminders" }).click();
+      await page.getByRole("button", { name: "Edit Row A" }).click();
+      const dialog = page.getByRole("dialog");
+      await dialog.getByLabel("Hours").selectOption("0");
+      await dialog.getByLabel("Minutes").selectOption("30");
+      await dialog.getByRole("button", { name: "Add reminder" }).click();
+      await expect(dialog.getByText(/^Today at /)).toBeVisible();
+      await dialog.getByRole("button", { name: "Save" }).click();
+      await expect(card(page, "Row A").getByRole("list", { name: "Reminders" }).getByRole("listitem")).toHaveText(/^Reminder in (29|30|31) min$/);
+    });
+
+    test("a failed reminders load says so and the cards still work", async ({ page, request }) => {
+      const id = await seedPerson(request);
+      await interceptCall(page, "routines.reminders", { answer: failure("down") });
+      await open(page, id);
+      await expect(page.getByRole("alert").filter({ hasText: "Couldn't load the reminders" })).toBeVisible({ timeout: 15_000 });
+      await expect(circles(page, "Row A")).toHaveCount(2);
+    });
+
+    test("many chips wrap inside the card on a phone, the warning colour is readable", async ({ page, request }) => {
+      const id = await seedPerson(request);
+      const rowId = (await addRow(request, id, "Pills")).id;
+      for (const text of ["in 10 minutes", "in 20 minutes", "in 3 hours"]) await seedReminder(request, id, rowId, text);
+      await page.setViewportSize({ width: 360, height: 740 });
+      await open(page, id);
+      const chips = card(page, "Pills").getByRole("list", { name: "Reminders" }).getByRole("listitem");
+      await expect(chips).toHaveCount(3);
+      const box = (await card(page, "Pills").boundingBox())!;
+      for (const rect of await chips.evaluateAll((all) => all.map((element) => element.getBoundingClientRect().toJSON()))) {
+        expect(rect.right).toBeLessThanOrEqual(box.x + box.width);
+      }
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+      expect(await contrastOf(chips.first())).toBeGreaterThanOrEqual(4.5);
+    });
   });
 });
