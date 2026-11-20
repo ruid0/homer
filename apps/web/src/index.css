@@ -135,6 +135,30 @@ body {
   @apply bg-surface font-sans text-ink;
 }
 
+/* iOS Safari sizes a date or time field by its own native widget and can push it past the edge of its box (and renders an empty one shorter).
+   Dropping the native look lets the width and height we set apply, like any other field. */
+input[type="date"],
+input[type="time"] {
+  -webkit-appearance: none;
+  appearance: none;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  max-width: 100%;
+  text-align: left;
+}
+
+/* The value is inside the field in WebKit; without this it keeps its own line box and sits at the top. */
+input[type="date"]::-webkit-date-and-time-value {
+  text-align: left;
+  min-height: 1.5em;
+}
+
+input[type="date"]::-webkit-datetime-edit,
+input[type="time"]::-webkit-datetime-edit {
+  padding: 0;
+}
+
 /* "*" does not reach pseudo-elements, so the dialog backdrop and the overdue bar are named. */
 @media (prefers-reduced-motion: reduce) {
   *,

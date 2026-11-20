@@ -109,7 +109,7 @@ export const SchedulePage = () => {
         </div>
       )}
 
-      <div className="grid items-start gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
         <Section heading={copy.schedule.overdue} count={overdue.length} wide>
           {overdue.map(taskRow)}
         </Section>

@@ -53,6 +53,12 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"], baseURL: `http://127.0.0.1:${copies.on.web}` },
     },
     {
+      // Safari's engine with an iPhone profile: date and time fields, focus and sizes that Chromium does not show. Read-only, on the same copy.
+      name: "iphone-webkit",
+      testMatch: /\.webkit\.spec\.ts$/,
+      use: { ...devices["iPhone 15"], baseURL: `http://127.0.0.1:${copies.on.web}` },
+    },
+    {
       name: "upkeep",
       testMatch: /\.upkeep\.spec\.ts$/,
       testIgnore: /(home|list|dialog|feedback|snooze|errors)\.upkeep\.spec\.ts$/,
