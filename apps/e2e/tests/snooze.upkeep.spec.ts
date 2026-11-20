@@ -29,18 +29,30 @@ const toastOf = (page: Page, name: string) => page.getByRole("status").filter({ 
 const choices = (page: Page, name: string) =>
   page.getByRole("dialog").filter({ has: page.getByRole("heading", { name: `Not today: ${name}` }) });
 
+// On the Upkeep page Not today is in the job's Edit dialog; it closes that dialog and opens the choices.
+const openChoices = async (page: Page, name: string) => {
+  await page.getByRole("button", { name: `Edit ${name}` }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Not today", exact: true }).click();
+};
 const ask = async (page: Page, name: string) => {
   await page.goto("/upkeep");
-  await notToday(page, name).click();
+  await openChoices(page, name);
 };
 
 test.describe("Not today on the Upkeep page", () => {
-  test("is on a due or overdue job, and not on one that is only coming up", async ({ page, request }) => {
+  test("is in the Edit dialog of a due or overdue job, and not of one that is only coming up", async ({
+    page,
+    request,
+  }) => {
     await seedUpkeep(request, overdue("Due job"));
     await seedUpkeep(request, notYet("Soon job"));
     await page.goto("/upkeep");
-    await expect(notToday(page, "Due job")).toBeVisible();
-    await expect(notToday(page, "Soon job")).toHaveCount(0);
+    await expect(notToday(page, "Due job")).toHaveCount(0);
+    await page.getByRole("button", { name: "Edit Due job" }).click();
+    await expect(page.getByRole("dialog").getByRole("button", { name: "Not today", exact: true })).toBeVisible();
+    await page.keyboard.press("Escape");
+    await page.getByRole("button", { name: "Edit Soon job" }).click();
+    await expect(page.getByRole("dialog").getByRole("button", { name: "Not today", exact: true })).toHaveCount(0);
   });
 
   test("opens three choices, each with its day", async ({ page, request }) => {
@@ -58,7 +70,7 @@ test.describe("Not today on the Upkeep page", () => {
     await ask(page, "Kept job");
     await choices(page, "Kept job").getByRole("button", { name: "Cancel" }).click();
     await expect(choices(page, "Kept job")).toHaveCount(0);
-    await notToday(page, "Kept job").click();
+    await openChoices(page, "Kept job");
     await page.keyboard.press("Escape");
     await expect(choices(page, "Kept job")).toHaveCount(0);
     await expect(row(page, "Kept job")).toContainText("days overdue");
@@ -163,11 +175,11 @@ test.describe("Not today, more states", () => {
     await expect(page.getByRole("region", { name: "Due now" }).getByText("Retry job")).toBeVisible();
   });
 
-  test("Escape returns focus to the button that opened the choices", async ({ page, request }) => {
+  test("Escape on the Upkeep page puts focus back on the job's row", async ({ page, request }) => {
     await seedUpkeep(request, overdue("Focus job"));
     await ask(page, "Focus job");
     await page.keyboard.press("Escape");
-    await expect(notToday(page, "Focus job")).toBeFocused();
+    await expect(page.getByRole("button", { name: "Edit Focus job" })).toBeFocused();
   });
 
   test("on Home, Escape and Cancel leave the job and focus returns", async ({ page, request }) => {
@@ -216,8 +228,9 @@ test.describe("Not today on a phone", () => {
     const buttons = choices(page, "Phone job").getByRole("button");
     for (const button of await buttons.all()) expect((await button.boundingBox())?.height).toBeGreaterThanOrEqual(44);
     await choices(page, "Phone job").getByRole("button", { name: "Cancel" }).click();
-    await expect(notToday(page, "Phone job")).toBeFocused();
-    expect((await notToday(page, "Phone job").boundingBox())?.height).toBeGreaterThanOrEqual(44);
+    expect((await page.getByRole("button", { name: "Edit Phone job" }).boundingBox())?.height).toBeGreaterThanOrEqual(
+      44,
+    );
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     await page.goto("/");
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
@@ -232,6 +245,6 @@ test.describe("Not today on a phone", () => {
       .getByRole("listitem")
       .filter({ hasText: "Smoke alarm batteries" });
     expect((await item.getByText("Smoke alarm batteries").boundingBox())?.width).toBeGreaterThanOrEqual(150);
-    expect((await item.boundingBox())?.height).toBeLessThanOrEqual(120);
+    expect((await item.boundingBox())?.height).toBeLessThanOrEqual(96);
   });
 });

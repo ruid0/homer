@@ -1,9 +1,8 @@
-import { useRef, type MouseEvent } from "react";
 import { copy } from "../copy";
 import { dueWords, isDoneToday, needsDoing, rowChips } from "../lib/maintenanceText";
 import type { MaintenanceItem } from "../trpc";
-import { UpkeepChips } from "./UpkeepChips";
-import { cx, doneSize, lateBar, quietButton, secondaryButton, statusClass } from "./ui";
+import { Row } from "./Row";
+import { cx, quietButton, rowAction, secondaryButton } from "./ui";
 
 type Props = {
   item: MaintenanceItem;
@@ -11,82 +10,43 @@ type Props = {
   justDone?: boolean;
   onDone: () => void;
   onEdit: () => void;
-  onSnooze: () => void;
 };
 
-// Phone: the name and Done share a line, then the status, then the chips with Edit at the end.
-// Wide: the three text lines on the left, Edit and Done together on the right.
-// Not today and Edit come before Done in the markup, so Tab follows the wide layout left to right.
-export const MaintenanceRow = ({ item, busy, justDone = false, onDone, onEdit, onSnooze }: Props) => {
+// Tap the row to edit (Not today is in that dialog); Done is the one button. A job done today has no Done, since a
+// second done on the same day is refused.
+export const MaintenanceRow = ({ item, busy, justDone = false, onDone, onEdit }: Props) => {
   const late = item.status === "overdue" || item.status === "due";
-  const level = late ? "late" : item.status === "soon" ? "warn" : "plain";
+  const words = dueWords(item);
+  const status = late
+    ? { text: words, level: "late" as const }
+    : item.status === "soon"
+      ? { text: words, level: "warn" as const }
+      : undefined;
   // Later rows are not asked for yet, so their Done is quiet; Due now rows keep the outlined one.
   const doneStyle = needsDoing(item.status) ? secondaryButton : quietButton;
-
-  const editButton = useRef<HTMLButtonElement>(null);
-
-  // The row opens the editor; its own buttons keep their own job, and selecting text on the row (to copy it) is not a
-  // tap.
-  // Focus goes to Edit first, so closing the dialog returns focus to this row and not to the top of the page.
-  const openFromRow = (event: MouseEvent<HTMLLIElement>) => {
-    if ((event.target as HTMLElement).closest("button") || !window.getSelection()?.isCollapsed) return;
-    editButton.current?.focus();
-    onEdit();
-  };
-
   return (
-    <li
-      onClick={openFromRow}
-      className={cx(
-        "grid min-h-20 cursor-pointer grid-cols-[1fr_auto] items-center gap-x-3 border-t border-line py-3",
-        "sm:grid-cols-[1fr_auto_auto]",
-        item.status === "overdue" && lateBar,
-        justDone && "animate-row-flash",
-      )}
-    >
-      <p className="col-start-1 row-start-1 min-w-0 text-title font-semibold">{item.name}</p>
-      <p className="col-span-2 row-start-2 sm:col-span-1 sm:col-start-1">
-        <span className={statusClass(level)}>{dueWords(item)}</span>
-      </p>
-      <div className="col-start-1 row-start-3 mt-1.5">
-        <UpkeepChips chips={rowChips(item)} />
-      </div>
-      <div className="col-start-2 row-start-3 flex sm:row-span-3 sm:row-start-1 sm:self-center">
-        {/* Only a job that is due or overdue can be put off; a snooze changes nothing for one that is not yet due. */}
-        {late && (
+    <Row
+      title={item.name}
+      status={status}
+      meta={[...(status ? [] : [words]), ...rowChips(item)].join(copy.common.separator)}
+      overdue={item.status === "overdue"}
+      flash={justDone}
+      onOpen={onEdit}
+      openLabel={copy.maintenance.editLabel(item.name)}
+      action={
+        isDoneToday(item) ? undefined : (
           <button
             type="button"
-            className={quietButton}
+            className={cx(doneStyle, rowAction)}
             disabled={busy}
-            onClick={onSnooze}
-            aria-label={copy.maintenance.notTodayLabel(item.name)}
+            data-done-action
+            onClick={onDone}
+            aria-label={copy.maintenance.doneLabel(item.name)}
           >
-            {copy.maintenance.notToday}
+            {copy.maintenance.done}
           </button>
-        )}
-        <button
-          ref={editButton}
-          type="button"
-          className={quietButton}
-          onClick={onEdit}
-          aria-label={copy.maintenance.editLabel(item.name)}
-        >
-          {copy.maintenance.edit}
-        </button>
-      </div>
-      {/* A second done on the same day is refused, so a job done today has no Done. */}
-      {!isDoneToday(item) && (
-        <button
-          type="button"
-          className={`${doneStyle} ${doneSize} col-start-2 row-start-1 sm:col-start-3 sm:row-span-3 sm:self-center`}
-          disabled={busy}
-          data-done-action
-          onClick={onDone}
-          aria-label={copy.maintenance.doneLabel(item.name)}
-        >
-          {copy.maintenance.done}
-        </button>
-      )}
-    </li>
+        )
+      }
+    />
   );
 };

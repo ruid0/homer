@@ -16,7 +16,7 @@ import { MaintenanceSuggestions, suggestionCycle, type Suggestion } from "./Main
 import { DialogActions } from "./DialogActions";
 import { SegmentedChoice } from "./SegmentedChoice";
 import { Stepper } from "./Stepper";
-import { inputClass } from "./ui";
+import { inputClass, secondaryButton } from "./ui";
 import { lastDoneChoiceValues, lastDoneOn as lastDoneFor, type LastDoneChoice } from "../lib/lastDone";
 
 export type MaintenanceForm = { name: string; every: number; unit: MaintenanceUnit; lastDoneOn: string | null };
@@ -34,6 +34,8 @@ type Props = {
   onSave: (form: MaintenanceForm) => void;
   onRemove: () => void;
   onChanged: () => void;
+  // Put the job off. Only a job that is due or overdue can be put off, so only those get the button.
+  onSnooze?: () => void;
   onClose: () => void;
 };
 
@@ -50,6 +52,7 @@ export const MaintenanceDialog = ({
   onSave,
   onRemove,
   onChanged,
+  onSnooze,
   onClose,
 }: Props) => {
   const started = start ? suggestionCycle(start) : null;
@@ -138,6 +141,14 @@ export const MaintenanceDialog = ({
               </Field>
             )}
           </>
+        )}
+        {item && onSnooze && (item.status === "overdue" || item.status === "due") && (
+          <div className="grid justify-items-start gap-1">
+            <button type="button" className={secondaryButton} disabled={pending} onClick={onSnooze}>
+              {copy.maintenance.notToday}
+            </button>
+            <p className="text-meta text-muted">{copy.maintenance.notTodayHint}</p>
+          </div>
         )}
         {item && <MaintenanceHistory itemId={item.id} today={today} onChanged={onChanged} />}
         {item && <ConfirmRemove pending={pending} onRemove={onRemove} />}

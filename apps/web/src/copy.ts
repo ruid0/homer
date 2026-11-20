@@ -172,7 +172,6 @@ export const copy = {
     actionFailed: (message: string) => `${message} Refresh the list and try again.`,
     empty: "No items yet. Add something you don't want to run out of.",
     confirmRemove: (name: string) => `Remove ${name}? Its restock history is kept.`,
-    onGroceryList: "On the grocery list",
     outLabel: (name: string) => `Ran out: ${name}`,
     editLabel: editItem,
     estimateSource: { entered: "Entered by hand", learned: "Learned from restocks" },
@@ -288,6 +287,7 @@ export const copy = {
     doneToast: (name: string, next: string) => `${name} done today. Next due ${next}.`,
     undo: "Undo",
     notToday: "Not today",
+    notTodayHint: "Puts this job off until a day you pick.",
     notTodayLabel: (name: string) => `Not today: ${name}`,
     notTodayChoices: [
       { label: "Tomorrow", days: 1 },

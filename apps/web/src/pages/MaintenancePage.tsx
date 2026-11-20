@@ -59,6 +59,24 @@ export const MaintenancePage = () => {
     focusNextDone();
   });
   const { justDoneId, busy } = markDone;
+  // The choices open from the Edit dialog, which has closed by then, so there is no button for focus to return to: when
+  // the choices close, put focus on that job's row. The timeout lets the dialog's own focus handling run first.
+  const askedName = useRef<string | null>(null);
+  useEffect(() => {
+    if (snooze.asking) {
+      askedName.current = snooze.asking.name;
+      return;
+    }
+    const name = askedName.current;
+    askedName.current = null;
+    if (name === null) return;
+    const timer = window.setTimeout(() => {
+      [...document.querySelectorAll<HTMLButtonElement>("main li > button")]
+        .find((button) => button.getAttribute("aria-label")?.startsWith(copy.maintenance.editLabel(name)))
+        ?.focus();
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [snooze.asking]);
   const problem = markDone.problem ?? snooze.problem;
   const finish = (item: MaintenanceItem) => {
     snooze.closeToast();
@@ -93,7 +111,6 @@ export const MaintenancePage = () => {
           justDone={item.id === justDoneId}
           onDone={() => finish(item)}
           onEdit={() => open(item.id)}
-          onSnooze={() => snooze.ask(item)}
         />
       ))}
     </ListCard>
@@ -171,6 +188,14 @@ export const MaintenancePage = () => {
           onSave={save}
           onRemove={() => editingItem && remove.mutate({ id: editingItem.id })}
           onChanged={refresh}
+          onSnooze={
+            editingItem
+              ? () => {
+                  open(null);
+                  snooze.ask(editingItem);
+                }
+              : undefined
+          }
           onClose={() => open(null)}
         />
       )}
