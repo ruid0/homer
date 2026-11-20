@@ -237,4 +237,23 @@ test.describe("on a phone", () => {
     // The first card, with today's circles, is on the first screen without scrolling.
     await expect(card(page, "Row A")).toBeInViewport({ ratio: 1 });
   });
+
+  test("twenty times a day wraps onto rows and stays inside the card on a phone", async ({ page, request }) => {
+    const id = await seedEmptyPerson(request);
+    await addRow(request, id, "Water", 20);
+    await page.setViewportSize({ width: 360, height: 740 });
+    await open(page, id);
+    await expect(circles(page, "Water")).toHaveCount(20);
+    const box = await card(page, "Water").boundingBox();
+    const boxes = await circles(page, "Water").evaluateAll((all) => all.map((element) => element.getBoundingClientRect().toJSON()));
+    expect(box).not.toBeNull();
+    for (const circle of boxes) {
+      expect(circle.right).toBeLessThanOrEqual(box!.x + box!.width);
+      expect(circle.width).toBeGreaterThanOrEqual(44);
+    }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+    // Ticking the last circle fills all twenty, and the card says so.
+    await circles(page, "Water").nth(19).click();
+    await expect(card(page, "Water").getByText("Done today")).toBeVisible();
+  });
 });

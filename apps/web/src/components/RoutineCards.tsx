@@ -41,7 +41,8 @@ export const RoutineCards = ({ week, today, onSet, onEdit }: Props) => {
             </button>
 
             {todayIndex >= 0 && (
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex min-w-0 flex-wrap gap-3">
                 {Array.from({ length: item.targetPerDay }, (_, position) => (
                   <button
                     key={position}
@@ -54,6 +55,7 @@ export const RoutineCards = ({ week, today, onSet, onEdit }: Props) => {
                     <Tick className="size-7" />
                   </button>
                 ))}
+                </div>
                 <p className="min-w-0 text-title font-semibold">
                   {doneToday >= item.targetPerDay ? copy.routine.doneToday : item.targetPerDay === 1 ? copy.routine.notDone : copy.routine.progress(doneToday, item.targetPerDay)}
                   <span className="block text-meta font-normal text-muted">{copy.routine.todayLine(dayLabel(today))}</span>
