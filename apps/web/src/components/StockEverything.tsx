@@ -11,6 +11,10 @@ import { sortByUrgency } from "../lib/itemText";
 import { trpc, type ArchivedItem, type ListItem } from "../trpc";
 import { copy } from "../copy";
 
+// The item an Add to list call is for. A call by name (from the To buy form) is not for a row.
+const addingId = (variables: { itemId: number } | { text: string } | undefined) =>
+  variables && "itemId" in variables ? variables.itemId : null;
+
 type Editing = ListItem | "new" | null;
 type Choice = { values: ItemInput; archived: ArchivedItem };
 
@@ -86,8 +90,8 @@ export const StockEverything = () => {
               item={item}
               onList={listedIds.has(item.id)}
               onBought={() => setRestocking(item)}
-              onAddToList={() => addToList.mutate({ text: item.name })}
-              adding={addToList.isPending}
+              onAddToList={() => addToList.mutate({ itemId: item.id })}
+              adding={addToList.isPending && addingId(addToList.variables) === item.id}
               onEdit={() => setEditing(item)}
             />
           ))}

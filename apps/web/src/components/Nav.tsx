@@ -90,10 +90,10 @@ const linkClass =
       isActive ? "bg-primary text-on-primary" : "hover:bg-hover",
     );
 
-// The rail is w-32, which fits "Groceries" at text-base; a longer label needs a wider rail.
+// The rail is w-32, which fits "Assistant" at text-base; a longer label needs a wider rail.
 const railLink = linkClass("gap-1 rounded-2xl py-2 text-base");
 // Six labels share the width of a phone, so the bar uses a small size and a tight track. the nav token keeps
-// "Groceries" inside its cell at 360px.
+// "Assistant" inside its cell at 360px.
 const barLink = linkClass("min-h-14 min-w-0 gap-0.5 rounded-xl text-nav tracking-tight");
 
 export const RailNav = ({ header }: { header: React.ReactNode }) => (

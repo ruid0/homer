@@ -26,6 +26,8 @@ Status: In progress (the page, the redirects and the nav are built in one PR) ·
 
 The view is the `view` query parameter (`everything`, otherwise To buy), so a link or Back lands on the same view. The switch is two joined buttons with `aria-pressed`, 44px tall, with the count in each label once its list has loaded. Each view keeps its own page logic (`StockBuy`, `StockEverything`), moved from the two old pages unchanged apart from the header; the page owns the title and the switch.
 
+Rows in Everything keep Edit and "Bought it" (restocking something that is not on the list, such as a bulk buy, still has to be possible), and a row that is not on the list also gets a quiet "Add to list". A row that is on the list shows an "On the grocery list" chip beside its status, so listed rows stand out when scanning. The pressed button of the switch is the filled primary colour, so the choice is not only a thin border.
+
 UI pass: `homer-ui` (44px targets, `control` edges, tokens only, copy in `copy.ts`, errors as red toasts) and `frontend-design` (nothing new: the page is a list in the existing style, and the aim is fewer places, not a new look).
 
 ## 3. Open questions
