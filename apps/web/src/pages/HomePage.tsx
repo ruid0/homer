@@ -12,7 +12,8 @@ import { TimelineList } from "../components/TimelineList";
 import { DoneToast } from "../components/DoneToast";
 import { Toast } from "../components/Toast";
 import { timeOfDay, useClock } from "../lib/clock";
-import { dateName, dayHeading } from "../lib/dayHeading";
+import { dateParts, dayHeading } from "../lib/dayHeading";
+import { homeSummary } from "../lib/homeSummary";
 import { dayItems } from "../lib/dayItems";
 import { localDate } from "../lib/localDate";
 import { needsDoing } from "../lib/maintenanceText";
@@ -66,6 +67,17 @@ export const HomePage = () => {
   const running = runningOut(items.data ?? [], listedIds);
   const due = (upkeep.data ?? []).filter((item) => needsDoing(item.status));
 
+  const heading = dateParts(today);
+  const loaded = view.data !== undefined && items.data !== undefined && upkeep.data !== undefined;
+  const summary = loaded
+    ? homeSummary({
+        tasks: (view.data?.overdue.length ?? 0) + (day?.tasks.length ?? 0),
+        events: (day?.events ?? []).filter((event) => event.time === null || event.time >= nowTime).length,
+        jobs: due.length,
+        low: running.length,
+      })
+    : null;
+
   const finish = (task: ScheduleTask) =>
     complete.mutate(
       { id: task.id, today },
@@ -100,7 +112,15 @@ export const HomePage = () => {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-page font-semibold">{dateName(today)}</h1>
+      <header>
+        <h1>
+          {/* The space keeps the heading reading as one date, "Friday 20 Nov", to a screen reader. */}
+          <span className="block text-day font-semibold">{heading.weekday}</span>{" "}
+          <span className="block text-answer text-muted">{heading.date}</span>
+        </h1>
+        {/* The line is always reserved, so the page below does not jump when the counts arrive. */}
+        <p className="mt-1 min-h-7 text-title">{summary}</p>
+      </header>
 
       {/* One column up to lg, two equal columns from lg, 3 to 2 from xl.
           One to three late jobs jump to the top of the single column. */}

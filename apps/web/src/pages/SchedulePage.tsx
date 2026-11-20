@@ -2,13 +2,16 @@ import { ErrorToast } from "../components/ErrorToast";
 import { keepPreviousData } from "@tanstack/react-query";
 import { PageHeader } from "../components/PageHeader";
 import { useState } from "react";
+import { NowLine } from "../components/NowLine";
 import { EventEditor } from "../components/EventEditor";
 import { EventRow, TaskRow } from "../components/ScheduleRows";
 import { TaskEditor } from "../components/TaskEditor";
 import { inputClass, primaryButton, secondaryButton, toggleButton } from "../components/ui";
 import { dayHeading } from "../lib/dayHeading";
 import { dayItems } from "../lib/dayItems";
-import { useToday } from "../lib/useToday";
+import { timeOfDay, useClock } from "../lib/clock";
+import { localDate } from "../lib/localDate";
+import { countBefore } from "../lib/timeline";
 import { trpc, type ScheduleEvent, type ScheduleTask } from "../trpc";
 import { copy } from "../copy";
 
@@ -20,7 +23,9 @@ type Editing = { kind: "task"; task?: ScheduleTask } | { kind: "event"; event?: 
 
 export const SchedulePage = () => {
   const utils = trpc.useUtils();
-  const today = useToday();
+  const now = useClock();
+  const today = localDate(now);
+  const nowTime = timeOfDay(now);
   const [filter, setFilter] = useState("");
   const personId = filter === "" ? undefined : Number(filter);
   const [mode, setMode] = useState<Mode>("today");
@@ -60,6 +65,25 @@ export const SchedulePage = () => {
       onEdit={() => setEditing({ kind: "task", task })}
     />
   );
+
+  const itemRow = (item: (typeof dayList)[number]["items"][number]) =>
+    item.kind === "task" ? (
+      taskRow(item.value)
+    ) : (
+      <EventRow
+        key={`event-${item.value.id}`}
+        event={item.value}
+        onEdit={() => setEditing({ kind: "event", event: item.value })}
+      />
+    );
+
+  // Today's list carries the Now line, as Home does: what is past above it, what is coming below.
+  const withNow = (date: string, items: (typeof dayList)[number]["items"]) => {
+    const rows = items.map(itemRow);
+    if (date !== today) return rows;
+    const at = countBefore(items, nowTime);
+    return [...rows.slice(0, at), <NowLine key="now" time={nowTime} />, ...rows.slice(at)];
+  };
 
   return (
     <>
@@ -139,17 +163,7 @@ export const SchedulePage = () => {
               wide={mode === "today"}
               emptyText={mode === "week" ? copy.schedule.nothingThisDay : undefined}
             >
-              {items.map((item) =>
-                item.kind === "task" ? (
-                  taskRow(item.value)
-                ) : (
-                  <EventRow
-                    key={`event-${item.value.id}`}
-                    event={item.value}
-                    onEdit={() => setEditing({ kind: "event", event: item.value })}
-                  />
-                ),
-              )}
+              {withNow(date, items)}
             </Section>
           ))}
         <Section heading={copy.schedule.anytime} count={anytime.length} wide>

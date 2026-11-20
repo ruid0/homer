@@ -54,7 +54,7 @@ test.describe("adding a task with the date left blank", () => {
     await dialog.getByLabel("What needs doing").fill(title);
     await dialog.getByRole("button", { name: "Save" }).click();
     await expect(dialog).toHaveCount(0);
-    const anytime = page.locator("section").filter({ has: page.getByRole("heading", { name: "Anytime" }) });
+    const anytime = page.locator("section").filter({ has: page.getByRole("heading", { name: "Any time" }) });
     await expect(anytime.getByRole("listitem").filter({ hasText: title })).toBeVisible();
   });
 

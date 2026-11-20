@@ -1,7 +1,7 @@
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import { dayItems } from "./dayItems";
-import { timelineRows, type TimelineRow } from "./timeline";
+import { countBefore, timelineRows, type TimelineRow } from "./timeline";
 
 const task = (id: number, title: string, dueTime: string | null) => ({ id, title, dueTime });
 const event = (id: number, title: string, time: string | null) => ({ id, title, time });
@@ -67,5 +67,25 @@ describe("timelineRows", () => {
         },
       ),
     );
+  });
+});
+
+describe("countBefore", () => {
+  const items = dayItems([task(2, "Bins", "18:00"), task(3, "Wash", null)], [event(1, "Standup", "08:00")]);
+
+  it("counts the timed items earlier than now, which sit above the marker", () => {
+    expect(countBefore(items, "09:41")).toBe(1);
+    expect(countBefore(items, "18:00")).toBe(1);
+    expect(countBefore(items, "18:01")).toBe(2);
+  });
+
+  it("never counts an item with no time", () => {
+    expect(countBefore(items, "23:59")).toBe(2);
+    expect(countBefore(dayItems([task(1, "Wash", null)], []), "23:59")).toBe(0);
+  });
+
+  it("agrees with where timelineRows puts the marker", () => {
+    const rows = timelineRows([], items, "09:41");
+    expect(rows.findIndex((row) => row.kind === "now")).toBe(countBefore(items, "09:41"));
   });
 });
