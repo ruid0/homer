@@ -141,11 +141,12 @@ const handlers: Handlers = {
       today,
       days: Math.max(1, Math.min(daysBetween(today, end) + 1, MAX_SCHEDULE_DAYS)),
     });
-    const show = ({ title, dueDate, dueTime, personName }: (typeof view.overdue)[number]) => ({
+    const show = ({ title, dueDate, dueTime, personName, repeat }: (typeof view.overdue)[number]) => ({
       title,
       dueDate,
       dueTime,
       person: personName,
+      repeat,
     });
     return {
       overdue: view.overdue.map(show),
@@ -153,7 +154,12 @@ const handlers: Handlers = {
         .filter((day) => day.date >= start && day.date <= end)
         .map((day) => ({
           date: day.date,
-          tasks: day.tasks.map(show),
+          // A repeating task also comes round on the days after its due date; the view lists those apart. They are shown
+          // on the day they come round to, marked `comesRound`, so they are not mistaken for a task due or overdue.
+          tasks: [
+            ...day.tasks.map(show),
+            ...day.repeats.map((task) => ({ ...show(task), dueDate: day.date, comesRound: true })),
+          ],
           events: day.events.map(({ title, time, personName }) => ({ title, time, person: personName })),
         })),
       undated: view.undated.map(show),

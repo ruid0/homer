@@ -67,6 +67,45 @@ describe("read tools", () => {
     expect(titles).not.toContain("Later");
   });
 
+  it("list_tasks lists a repeating task on each later day it comes round to, marked as coming round", async () => {
+    const { api, run } = setup();
+    await api.tasks.add({ ...task("Pills", today), repeat: "daily" });
+    const week = (await run("list_tasks", { from: today, to: "2026-11-12" })).result as {
+      days: { date: string; tasks: { title: string; dueDate: string; repeat: string; comesRound?: boolean }[] }[];
+    };
+    expect(week.days.length).toBeGreaterThan(1);
+    expect(week.days[0]?.tasks).toMatchObject([{ title: "Pills", dueDate: today, repeat: "daily" }]);
+    expect(week.days[0]?.tasks[0]?.comesRound).toBeUndefined();
+    for (const day of week.days.slice(1)) {
+      expect(day.tasks).toMatchObject([{ title: "Pills", dueDate: day.date, repeat: "daily", comesRound: true }]);
+    }
+  });
+
+  it("list_tasks lists a weekly task only on its weekday", async () => {
+    const { api, run } = setup();
+    await api.tasks.add({ ...task("Bins", today), repeat: "weekly" });
+    const range = (await run("list_tasks", { from: today, to: "2026-11-20" })).result as {
+      days: { date: string; tasks: { title: string }[] }[];
+    };
+    expect(range.days.filter((day) => day.tasks.length > 0).map((day) => day.date)).toEqual([
+      today,
+      "2026-11-11",
+      "2026-11-18",
+    ]);
+  });
+
+  it("list_tasks shows an overdue repeating task once as overdue, and its next turn on a later day", async () => {
+    const { api, run } = setup();
+    await api.tasks.add({ ...task("Water plants", "2026-11-01"), repeat: "daily" });
+    const done = (await run("list_tasks", { from: today, to: "2026-11-06" })).result as {
+      overdue: { title: string }[];
+      days: { date: string; tasks: { comesRound?: boolean }[] }[];
+    };
+    expect(done.overdue).toMatchObject([{ title: "Water plants" }]);
+    expect(done.days[0]?.tasks).toEqual([]);
+    expect(done.days[1]?.tasks).toMatchObject([{ comesRound: true }]);
+  });
+
   it("list_tasks counts overdue from today, whatever range is asked for", async () => {
     const { api, run } = setup();
     await api.tasks.add(task("Between", "2026-11-06"));
