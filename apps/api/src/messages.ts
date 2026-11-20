@@ -78,7 +78,7 @@ export const notifyLog = {
   maintenance: {
     sent: "maintenance note sent",
     quiet: "maintenance note: nothing new to say",
-    failed: "maintenance note could not be sent, it will be tried again when the api next starts",
+    failed: "maintenance note could not be sent, it will be tried again when the api next starts or at the next run",
   },
   insecureServer: "NTFY_SERVER is plain http with a token set: the token and text cross the network unencrypted",
   reminderError: (reason: string) => `routine reminders failed: ${reason}`,
