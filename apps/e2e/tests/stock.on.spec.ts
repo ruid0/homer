@@ -80,9 +80,9 @@ test.describe("Add to list", () => {
     await seedStocked(request, name);
     await page.goto("/stock?view=everything");
     const item = row(page, name);
-    await expect(item).not.toContainText("On the grocery list");
+    await expect(item).not.toContainText("On the list");
     await item.getByRole("button", { name: `Add ${name} to the list` }).click();
-    await expect(item).toContainText("On the grocery list");
+    await expect(item).toContainText("On the list");
     await expect(item.getByRole("button", { name: `Add ${name} to the list` })).toHaveCount(0);
     await toBuy(page).click();
     await expect(row(page, name)).toBeVisible();
@@ -97,7 +97,7 @@ test.describe("Add to list", () => {
     await item.getByRole("button", { name: `Add ${name} to the list` }).click();
     await expect(page.getByRole("alert").filter({ hasText: "Could not save. Try again." })).toBeVisible();
     await expect(item.getByRole("button", { name: `Add ${name} to the list` })).toBeVisible();
-    await expect(item).not.toContainText("On the grocery list");
+    await expect(item).not.toContainText("On the list");
   });
 });
 
@@ -119,7 +119,7 @@ test.describe("Add to list while saving", () => {
     } finally {
       held.release();
     }
-    await expect(row(page, first)).toContainText("On the grocery list");
+    await expect(row(page, first)).toContainText("On the list");
   });
 });
 

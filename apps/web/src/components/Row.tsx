@@ -17,7 +17,7 @@ type Props = {
   faded?: boolean;
 };
 
-// The compact row (Home, Schedule): an optional time, the body, and one action in a column on the right, all on one line.
+// The compact row (Home, Schedule, Stock): an optional time, the body, and one action in a column on the right, all on one line.
 export const Row = ({ when, title, status, meta, onOpen, openLabel, action, overdue, faded }: Props) => {
   const body = (
     <>
