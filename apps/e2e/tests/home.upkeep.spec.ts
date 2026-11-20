@@ -211,7 +211,7 @@ test.describe("one look across screens", () => {
     expect(await weight(row(page, `Soon job ${tag}`).getByText("Due in 2 days"))).toBeLessThan(600);
     await page.goto("/schedule");
     expect(await fontSize(inRow(`Late task ${tag}`).getByText("3 days overdue"))).toBe(home.job);
-    await page.goto("/items");
+    await page.goto("/stock?view=everything");
     expect(await fontSize(inRow(`Flour ${tag}`).getByText("Runs out in 2 days"))).toBe(home.job);
   });
 
@@ -276,9 +276,8 @@ test.describe("one look across screens", () => {
     const tops: number[] = [];
     const sizes: number[] = [];
     for (const [path, title] of [
-      ["/items", "Items"],
+      ["/stock", "Stock"],
       ["/upkeep", "Upkeep"],
-      ["/groceries", "Groceries"],
       ["/schedule", "Schedule"],
       ["/people", "People"],
       ["/assistant", "Assistant"],
@@ -551,7 +550,7 @@ test.describe("Home layout, naming and the nav", () => {
     const labels = await page.getByRole("navigation", { name: "Main" }).getByRole("link").allTextContents();
     expect(
       labels.map((label) => label.replace(/\d+\+?/g, "").trim()).filter((label) => label !== "" && label !== "HOMER"),
-    ).toEqual(["Home", "Groceries", "Schedule", "Upkeep", "Items", "People", "Assistant"]);
+    ).toEqual(["Home", "Stock", "Schedule", "Upkeep", "People", "Assistant"]);
   });
 
   test("the Upkeep nav item shows how many jobs need doing, in words for a screen reader, and nothing when none do", async ({
@@ -625,7 +624,7 @@ test.describe("Home layout, naming and the nav", () => {
   }) => {
     const tag = randomUUID().slice(0, 8);
     await seedItem(request, `Naming ${tag}`);
-    await page.goto("/items");
+    await page.goto("/stock?view=everything");
     await page.getByRole("button", { name: `Edit Naming ${tag}` }).click();
     await expect(page.getByRole("dialog").getByRole("button", { name: `Ran out: Naming ${tag}` })).toBeVisible();
     await expect(page.getByRole("button", { name: /^Out of it/ })).toHaveCount(0);
@@ -650,7 +649,7 @@ test.describe("Home layout, naming and the nav", () => {
     const held = gate();
     await interceptCall(page, "inventory.list", { when: held.when });
     try {
-      await page.goto("/items");
+      await page.goto("/stock?view=everything");
       await expect(page.getByText("Loading.", { exact: true })).toBeVisible();
     } finally {
       held.release();

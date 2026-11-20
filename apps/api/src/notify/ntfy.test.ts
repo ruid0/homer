@@ -20,12 +20,10 @@ describe("ntfyConfig", () => {
 
 describe("ntfyPayload", () => {
   it("adds a tap link only when a public address is set", () => {
-    expect(ntfyPayload(config, { ...note, path: "/groceries" })).not.toHaveProperty("click");
-    expect(ntfyPayload({ ...config, openUrl: "https://home.example/" }, { ...note, path: "/groceries" })).toMatchObject(
-      {
-        click: "https://home.example/groceries",
-      },
-    );
+    expect(ntfyPayload(config, { ...note, path: "/stock" })).not.toHaveProperty("click");
+    expect(ntfyPayload({ ...config, openUrl: "https://home.example/" }, { ...note, path: "/stock" })).toMatchObject({
+      click: "https://home.example/stock",
+    });
   });
 
   it("keeps title and message within ntfy's limits", () => {

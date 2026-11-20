@@ -17,7 +17,7 @@ describe("householdNotifications", () => {
     expect(sent[0]).toMatchObject({
       topic: "topic-a",
       message: "2 items added to the grocery list.",
-      path: "/groceries",
+      path: "/stock",
     });
   });
 

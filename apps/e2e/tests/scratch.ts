@@ -98,3 +98,11 @@ export const seedEvent = (request: APIRequestContext, event: { title: string; da
 // An item that runs out in two days (one unit, two days per unit), with a unique name.
 export const seedItem = (request: APIRequestContext, name: string) =>
   call<{ id: number }>(request, "inventory.create", { name, unit: "bag", quantity: 1, daysPerUnit: 2 });
+
+// A free-text entry on the grocery list, through the api.
+export const seedListEntry = (request: APIRequestContext, text: string) =>
+  call<{ id: number }>(request, "groceries.add", { text });
+
+// An item with plenty left (ten units that each last thirty days), so it is not low and not on the grocery list.
+export const seedStocked = (request: APIRequestContext, name: string) =>
+  call<{ id: number }>(request, "inventory.create", { name, unit: "bag", quantity: 10, daysPerUnit: 30 });
