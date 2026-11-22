@@ -207,3 +207,36 @@ test.describe("the reminder on a row", () => {
     });
   }
 });
+
+test.describe("saving the row with a reminder picked but not added", () => {
+  test("is refused with a message, and saves once the reminder is added or the pick cleared", async ({
+    page,
+    request,
+  }) => {
+    const id = await seedPerson(request);
+    await page.goto(`/people/${id}/routine`);
+    await turnOn(page);
+    await page.getByRole("button", { name: "Edit Row A" }).click();
+    const dialog = page.getByRole("dialog");
+
+    await dialog.getByLabel("Minutes").selectOption("5");
+    await dialog.getByRole("button", { name: "Save" }).click();
+    await expect(dialog.getByRole("alert")).toHaveText(/picked a reminder but did not add it/);
+    await expect(dialog).toBeVisible();
+
+    await dialog.getByLabel("Minutes").selectOption("");
+    await dialog.getByRole("button", { name: "At a time" }).click();
+    await dialog.getByRole("textbox", { name: "Time" }).fill("13:30");
+    await dialog.getByRole("button", { name: "Save" }).click();
+    await expect(dialog.getByRole("alert")).toHaveText(/picked a reminder but did not add it/);
+
+    await dialog.getByRole("button", { name: "Add reminder" }).click();
+    await expect(dialog.getByText(/^(Today|Tomorrow) at 13:30$/)).toBeVisible();
+    await expect(dialog.getByRole("textbox", { name: "Time" })).toHaveValue("");
+    await dialog.getByRole("button", { name: "Save" }).click();
+    await expect(dialog).toHaveCount(0);
+    await expect(page.getByRole("list", { name: "Reminders" }).getByRole("listitem")).toHaveText(
+      /^Reminder: (Today|Tomorrow) at 13:30$/,
+    );
+  });
+});

@@ -1,4 +1,4 @@
-import { useState, type KeyboardEvent } from "react";
+import { useEffect, useState, type KeyboardEvent } from "react";
 import { copy } from "../copy";
 import { useClock } from "../lib/clock";
 import { durationAsText, isValidDuration, reminderWhenLabel, type ReminderState } from "../lib/reminderText";
@@ -6,7 +6,8 @@ import { trpc } from "../trpc";
 import { Field } from "./Field";
 import { inputClass, quietButton, secondaryButton, toggleButton } from "./ui";
 
-type Props = { personId: number; itemId: number; state: ReminderState };
+// `onUnaddedChange` says whether a wait or time is picked but not added yet, so the dialog can warn before it saves.
+type Props = { personId: number; itemId: number; state: ReminderState; onUnaddedChange: (unadded: boolean) => void };
 
 type Kind = "in" | "at";
 
@@ -14,7 +15,7 @@ const MAX_HOURS = 24;
 const HOURS = Array.from({ length: MAX_HOURS + 1 }, (_, hour) => hour);
 const MINUTES = Array.from({ length: 60 }, (_, minute) => minute);
 
-export const RoutineReminders = ({ personId, itemId, state }: Props) => {
+export const RoutineReminders = ({ personId, itemId, state, onUnaddedChange }: Props) => {
   const utils = trpc.useUtils();
   const now = useClock();
   const [kind, setKind] = useState<Kind>("in");
@@ -28,7 +29,13 @@ export const RoutineReminders = ({ personId, itemId, state }: Props) => {
   const list = trpc.routines.reminders.useQuery({ personId });
   const refresh = () => utils.routines.reminders.invalidate();
   const add = trpc.routines.addReminder.useMutation({
-    onSuccess: refresh,
+    onSuccess: () => {
+      setHours(null);
+      setMinutes(null);
+      setTime("");
+      setEveryDay(false);
+      return refresh();
+    },
     onError: (failure) => setError(failure.message),
   });
   const remove = trpc.routines.removeReminder.useMutation({
@@ -49,6 +56,8 @@ export const RoutineReminders = ({ personId, itemId, state }: Props) => {
   };
 
   const ready = state === "ready";
+  const unadded = kind === "in" ? hours !== null || minutes !== null : time !== "";
+  useEffect(() => onUnaddedChange(unadded), [unadded, onUnaddedChange]);
 
   const mine = (list.data ?? []).filter((reminder) => reminder.itemId === itemId);
 

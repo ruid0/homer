@@ -41,9 +41,14 @@ export const RoutineRowDialog = ({
   const [target, setTarget] = useState(String(row?.targetPerDay ?? 1));
   const [error, setError] = useState<string>();
   const [confirming, setConfirming] = useState(false);
+  const [unadded, setUnadded] = useState(false);
 
   const submit = (event: SubmitEvent) => {
     event.preventDefault();
+    if (unadded) {
+      setError(copy.reminders.unadded);
+      return;
+    }
     const parsed = updateRoutineItemInputSchema.safeParse({ id: 0, name, targetPerDay: Number(target) });
     if (!parsed.success) {
       setError(
@@ -72,7 +77,7 @@ export const RoutineRowDialog = ({
             onChange={(event) => setTarget(event.target.value)}
           />
         </Field>
-        {row && <RoutineReminders personId={personId} itemId={row.id} state={state} />}
+        {row && <RoutineReminders personId={personId} itemId={row.id} state={state} onUnaddedChange={setUnadded} />}
         {row && (
           <div className="flex flex-wrap gap-2">
             <button
