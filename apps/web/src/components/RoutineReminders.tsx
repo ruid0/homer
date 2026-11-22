@@ -1,4 +1,4 @@
-import { useState, type KeyboardEvent } from "react";
+import { useState, type KeyboardEvent, type RefObject } from "react";
 import { copy } from "../copy";
 import { useClock } from "../lib/clock";
 import { durationAsText, isValidDuration, reminderWhenLabel, type ReminderState } from "../lib/reminderText";
@@ -6,7 +6,10 @@ import { trpc } from "../trpc";
 import { Field } from "./Field";
 import { inputClass, quietButton, secondaryButton, toggleButton } from "./ui";
 
-type Props = { personId: number; itemId: number; state: ReminderState };
+// `addPicked` is how the dialog adds a wait or time that is picked but not added yet, when the row is saved. It says
+// whether the row can go on saving.
+export type AddPicked = { current: (() => Promise<boolean>) | null };
+type Props = { personId: number; itemId: number; state: ReminderState; addPicked: RefObject<AddPicked["current"]> };
 
 type Kind = "in" | "at";
 
@@ -14,7 +17,7 @@ const MAX_HOURS = 24;
 const HOURS = Array.from({ length: MAX_HOURS + 1 }, (_, hour) => hour);
 const MINUTES = Array.from({ length: 60 }, (_, minute) => minute);
 
-export const RoutineReminders = ({ personId, itemId, state }: Props) => {
+export const RoutineReminders = ({ personId, itemId, state, addPicked }: Props) => {
   const utils = trpc.useUtils();
   const now = useClock();
   const [kind, setKind] = useState<Kind>("in");
@@ -28,7 +31,13 @@ export const RoutineReminders = ({ personId, itemId, state }: Props) => {
   const list = trpc.routines.reminders.useQuery({ personId });
   const refresh = () => utils.routines.reminders.invalidate();
   const add = trpc.routines.addReminder.useMutation({
-    onSuccess: refresh,
+    onSuccess: () => {
+      setHours(null);
+      setMinutes(null);
+      setTime("");
+      setEveryDay(false);
+      return refresh();
+    },
     onError: (failure) => setError(failure.message),
   });
   const remove = trpc.routines.removeReminder.useMutation({
@@ -49,20 +58,33 @@ export const RoutineReminders = ({ personId, itemId, state }: Props) => {
   };
 
   const ready = state === "ready";
+  const unadded = kind === "in" ? hours !== null || minutes !== null : time !== "";
 
   const mine = (list.data ?? []).filter((reminder) => reminder.itemId === itemId);
 
-  const submit = () => {
-    if (kind === "in" && hours === null && minutes === null) return setError(copy.reminders.pickWait);
-    if (kind === "in" && !isValidDuration(hours ?? 0, minutes ?? 0)) return setError(copy.reminders.badDuration);
-    if (kind === "at" && time === "") return setError(copy.reminders.blankTime);
-    setError(undefined);
-    add.mutate({
-      itemId,
-      text: kind === "in" ? durationAsText(hours ?? 0, minutes ?? 0) : time,
-      repeatDaily: kind === "at" && everyDay,
-    });
+  const complain = (message: string) => {
+    setError(message);
+    return false;
   };
+
+  const run = async (): Promise<boolean> => {
+    if (kind === "in" && hours === null && minutes === null) return complain(copy.reminders.pickWait);
+    if (kind === "in" && !isValidDuration(hours ?? 0, minutes ?? 0)) return complain(copy.reminders.badDuration);
+    if (kind === "at" && time === "") return complain(copy.reminders.blankTime);
+    setError(undefined);
+    try {
+      await add.mutateAsync({
+        itemId,
+        text: kind === "in" ? durationAsText(hours ?? 0, minutes ?? 0) : time,
+        repeatDaily: kind === "at" && everyDay,
+      });
+      return true;
+    } catch {
+      return false;
+    }
+  };
+  const submit = () => void run();
+  addPicked.current = () => (unadded ? run() : Promise.resolve(true));
 
   // Enter inside the pickers adds the reminder. It must not save the row form around this section.
   const enter = (event: KeyboardEvent) => {

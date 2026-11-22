@@ -1,4 +1,4 @@
-import { useState, type SubmitEvent } from "react";
+import { useRef, useState, type SubmitEvent } from "react";
 import { MAX_ROUTINE_TARGET, updateRoutineItemInputSchema } from "@homer/shared";
 import { copy } from "../copy";
 import type { ReminderState } from "../lib/reminderText";
@@ -6,7 +6,7 @@ import type { RoutineRow } from "../trpc";
 import { Dialog } from "./Dialog";
 import { DialogActions } from "./DialogActions";
 import { Field } from "./Field";
-import { RoutineReminders } from "./RoutineReminders";
+import { RoutineReminders, type AddPicked } from "./RoutineReminders";
 import { inputClass, quietButton, secondaryButton } from "./ui";
 
 type Props = {
@@ -41,8 +41,9 @@ export const RoutineRowDialog = ({
   const [target, setTarget] = useState(String(row?.targetPerDay ?? 1));
   const [error, setError] = useState<string>();
   const [confirming, setConfirming] = useState(false);
+  const addPicked = useRef<AddPicked["current"]>(null);
 
-  const submit = (event: SubmitEvent) => {
+  const submit = async (event: SubmitEvent) => {
     event.preventDefault();
     const parsed = updateRoutineItemInputSchema.safeParse({ id: 0, name, targetPerDay: Number(target) });
     if (!parsed.success) {
@@ -51,6 +52,9 @@ export const RoutineRowDialog = ({
       );
       return;
     }
+    // A wait or time that is picked is meant to be set, so saving the row adds it first. If it cannot be added, the
+    // reminders section says why and the row stays open.
+    if (!(await (addPicked.current?.() ?? true))) return;
     setError(undefined);
     onSave(parsed.data.name, parsed.data.targetPerDay);
   };
@@ -72,7 +76,7 @@ export const RoutineRowDialog = ({
             onChange={(event) => setTarget(event.target.value)}
           />
         </Field>
-        {row && <RoutineReminders personId={personId} itemId={row.id} state={state} />}
+        {row && <RoutineReminders personId={personId} itemId={row.id} state={state} addPicked={addPicked} />}
         {row && (
           <div className="flex flex-wrap gap-2">
             <button
