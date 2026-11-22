@@ -41,7 +41,8 @@ const SOON_MINUTES = 60;
 // eye to.
 export const reminderChip = (fireAt: string, dailyTime: string | null, now: Date): { text: string; soon: boolean } => {
   const minutes = Math.ceil((new Date(fireAt).getTime() - now.getTime()) / MINUTE_MS);
-  if (minutes > SOON_MINUTES) return { text: reminderWhenLabel(fireAt, dailyTime, now), soon: false };
+  if (minutes > SOON_MINUTES)
+    return { text: copy.reminders.chip(reminderWhenLabel(fireAt, dailyTime, now)), soon: false };
   const wait = minutes <= 0 ? copy.reminders.dueNow : copy.reminders.inMinutes(minutes);
   return {
     text: dailyTime ? copy.reminders.dailyCountdown(dailyTime, wait) : copy.reminders.countdown(wait),

@@ -322,8 +322,10 @@ test.describe("on a phone", () => {
       await seedReminder(request, id, soon, clockIn(10), true);
       await seedReminder(request, id, later, clockIn(180), true);
       await open(page, id);
-      await expect(chipsOf(page, "Soon")).toHaveText(new RegExp(`^Every day at ${clockIn(10)}, in (9|10|11) min$`));
-      await expect(chipsOf(page, "Later")).toHaveText(`Every day at ${clockIn(180)}`);
+      await expect(chipsOf(page, "Soon")).toHaveText(
+        new RegExp(`^Reminder every day at ${clockIn(10)}, in (9|10|11) min$`),
+      );
+      await expect(chipsOf(page, "Later")).toHaveText(`Reminder: Every day at ${clockIn(180)}`);
     });
 
     for (const scheme of ["light", "dark"] as const) {
@@ -357,8 +359,9 @@ test.describe("on a phone", () => {
       await seedReminder(request, id, rowId, "in 5 hours");
       await open(page, id);
       const chip = card(page, "Vitamins").getByRole("list", { name: "Reminders" }).getByRole("listitem");
-      await expect(chip).toHaveText(/^(Today|Tomorrow) at \d\d:\d\d$/);
-      await expect(chip).toHaveClass(/text-muted/);
+      await expect(chip).toHaveText(/^Reminder: (Today|Tomorrow) at \d\d:\d\d$/);
+      await expect(chip).toHaveClass(/border-ok/);
+      await expect(chip).not.toHaveClass(/border-warn/);
       await expect(card(page, "Row A").getByRole("list", { name: "Reminders" })).toHaveCount(0);
     });
 
