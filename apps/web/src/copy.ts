@@ -361,7 +361,6 @@ export const copy = {
     hours: "Hours",
     minutes: "Minutes",
     pick: "Pick",
-    unadded: "You picked a reminder but did not add it. Tap Add reminder, or clear the pick, then save.",
     pickWait: "Pick how long to wait, in hours or minutes.",
     statusOn: "On",
     statusOff: "Off",

@@ -209,34 +209,52 @@ test.describe("the reminder on a row", () => {
 });
 
 test.describe("saving the row with a reminder picked but not added", () => {
-  test("is refused with a message, and saves once the reminder is added or the pick cleared", async ({
-    page,
-    request,
-  }) => {
+  test("adds the picked wait or time, then saves, and shows the pill on the row", async ({ page, request }) => {
     const id = await seedPerson(request);
     await page.goto(`/people/${id}/routine`);
     await turnOn(page);
     await page.getByRole("button", { name: "Edit Row A" }).click();
     const dialog = page.getByRole("dialog");
-
     await dialog.getByLabel("Minutes").selectOption("5");
     await dialog.getByRole("button", { name: "Save" }).click();
-    await expect(dialog.getByRole("alert")).toHaveText(/picked a reminder but did not add it/);
-    await expect(dialog).toBeVisible();
+    await expect(dialog).toHaveCount(0);
+    const chips = page.getByRole("list", { name: "Reminders" }).getByRole("listitem");
+    await expect(chips).toHaveText(/^Reminder in [4-6] min$/);
 
-    await dialog.getByLabel("Minutes").selectOption("");
+    await page.getByRole("button", { name: "Edit Row A" }).click();
     await dialog.getByRole("button", { name: "At a time" }).click();
     await dialog.getByRole("textbox", { name: "Time" }).fill("13:30");
-    await dialog.getByRole("button", { name: "Save" }).click();
-    await expect(dialog.getByRole("alert")).toHaveText(/picked a reminder but did not add it/);
-
-    await dialog.getByRole("button", { name: "Add reminder" }).click();
-    await expect(dialog.getByText(/^(Today|Tomorrow) at 13:30$/)).toBeVisible();
-    await expect(dialog.getByRole("textbox", { name: "Time" })).toHaveValue("");
+    await dialog.getByLabel("Every day").check();
     await dialog.getByRole("button", { name: "Save" }).click();
     await expect(dialog).toHaveCount(0);
-    await expect(page.getByRole("list", { name: "Reminders" }).getByRole("listitem")).toHaveText(
-      /^Reminder: (Today|Tomorrow) at 13:30$/,
-    );
+    await expect(chips).toHaveCount(2);
+    await expect(chips.filter({ hasText: "Reminder: Every day at 13:30" })).toHaveCount(1);
+  });
+
+  test("when the reminder cannot be added, the dialog stays open with the error and nothing is lost", async ({
+    page,
+    request,
+  }) => {
+    const id = await seedPerson(request);
+    await interceptCall(page, "routines.addReminder", { answer: failure("Could not add it.") });
+    await page.goto(`/people/${id}/routine`);
+    await turnOn(page);
+    await page.getByRole("button", { name: "Edit Row A" }).click();
+    const dialog = page.getByRole("dialog");
+    await dialog.getByLabel("Minutes").selectOption("5");
+    await dialog.getByRole("button", { name: "Save" }).click();
+    await expect(dialog.getByRole("alert")).toHaveText("Could not add it.");
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByLabel("Minutes")).toHaveValue("5");
+  });
+
+  test("a row saved with nothing picked saves as before", async ({ page, request }) => {
+    const id = await seedPerson(request);
+    await page.goto(`/people/${id}/routine`);
+    await turnOn(page);
+    await page.getByRole("button", { name: "Edit Row A" }).click();
+    await page.getByRole("dialog").getByRole("button", { name: "Save" }).click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect(page.getByRole("list", { name: "Reminders" })).toHaveCount(0);
   });
 });
