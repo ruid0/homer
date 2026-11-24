@@ -1,6 +1,6 @@
 # MCP server: HOMER's tools for the owner's local agent. Definition, technical plan and system design
 
-Status: In progress (approved 2026-11-23 with the proposed defaults; all three PRs built; real use from Pi still to check) · Owner: Igor Bondarenko · Last updated: 2026-11-23 · Source: `docs/v2-plan.md` theme E ("MCP is a way of offering HOMER's tools to other apps… could be useful on its own later"), and `~/PetProjects/local-harness/docs/DESIGN.md` (v1.3) §7.1, §7.2 and milestone M2.
+Status: Built (all three PRs merged; a real run from Pi still to check; the usage guide is `docs/mcp.md`) · Owner: Igor Bondarenko · Last updated: 2026-11-24 · Source: `docs/v2-plan.md` theme E ("MCP is a way of offering HOMER's tools to other apps… could be useful on its own later"), and `~/PetProjects/local-harness/docs/DESIGN.md` (v1.3) §7.1, §7.2 and milestone M2.
 
 The repo is public. Tokens and the household's real data never go into this repo, its tests or its logs.
 

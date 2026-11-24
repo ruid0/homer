@@ -1,6 +1,6 @@
 # H.O.M.E.R. — Product Requirements
 
-Status: Built (v1 scope, released as v1.0.0; v2.0.0 added backups, routines, notes and maintenance; the rest of v2 is in `docs/v2-plan.md`) · Owner: Igor Bondarenko · Last updated: 2026-11-20
+Status: Built (v1 scope, released as v1.0.0; v2.0.0 added backups, routines, notes and maintenance; the rest of v2 is in `docs/v2-plan.md`) · Owner: Igor Bondarenko · Last updated: 2026-11-24
 
 ## 1. Problem
 
@@ -97,7 +97,7 @@ A chat screen backed by a local model (Ollama, `qwen3.5:9b`) that can read and c
 
 ## 5. Non-functional requirements
 
-- **Local only.** No outbound network calls except to Ollama on `127.0.0.1`. No telemetry. One exception, off by default: when the owner sets `NTFY_HOUSEHOLD_TOPIC`, HOMER posts short notifications to ntfy. The default server, `ntfy.sh`, is a third-party cloud service: the text and the topic name pass through it, and on that server the topic name is the only access control. `NTFY_SERVER` can point at the owner's own server instead. The text is counts and generic words, never names, and the topic is a long random string (see `docs/design-jobs-and-ntfy.md`).
+- **Local only.** One inbound listener, off by default: with `HOMER_MCP_TOKEN` set, HOMER answers MCP calls from an agent on this machine, on its own port bound to `127.0.0.1` and never shared over Tailscale (`docs/mcp.md`). No outbound network calls except to Ollama on `127.0.0.1`. No telemetry. One exception, off by default: when the owner sets `NTFY_HOUSEHOLD_TOPIC`, HOMER posts short notifications to ntfy. The default server, `ntfy.sh`, is a third-party cloud service: the text and the topic name pass through it, and on that server the topic name is the only access control. `NTFY_SERVER` can point at the owner's own server instead. The text is counts and generic words, never names, and the topic is a long random string (see `docs/design-jobs-and-ntfy.md`).
 - **One file to back up.** All data in a single SQLite file, copied automatically once a day (see the README).
 - **Installable.** PWA that can be added to a phone or tablet home screen.
 - **Usable on a tablet with busy hands.** 44px touch targets, readable from arm's length, dark mode.
