@@ -8,6 +8,7 @@ import { startDepletion } from "./jobs/depletion";
 import { startEndOfDay } from "./jobs/endOfDay";
 import { startMaintenance } from "./jobs/maintenance";
 import { startRoutineReminders } from "./jobs/routineReminders";
+import { startMcp } from "./mcp/listen";
 import { householdNotifications } from "./notify/household";
 
 export type { AppRouter } from "./routers";
@@ -42,3 +43,5 @@ const chat = createOllamaClient({
 serve({ fetch: createApp(db, { chat, now: () => new Date() }, household?.server ?? null).fetch, port }, () => {
   console.log(`api listening on :${port}, database ${databasePath}`);
 });
+
+startMcp(db, process.env);

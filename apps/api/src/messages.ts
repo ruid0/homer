@@ -22,6 +22,14 @@ export const messages = {
   routineDateTooOld: (weeks: number) => `That day is before the last ${weeks} weeks. Pick a more recent day.`,
 };
 
+export const mcpMessages = {
+  unauthorized: "Missing or wrong token.",
+  summary: (tool: string, count: number) => `${tool}: ${count} ${count === 1 ? "row" : "rows"}.`,
+  // Written to the api log.
+  tokenTooShort: (length: number) => `mcp stays off: HOMER_MCP_TOKEN must be at least ${length} characters`,
+  listening: (host: string, port: number) => `mcp listening on ${host}:${port}`,
+};
+
 // Written to the api log.
 export const backupLog = {
   written: (file: string, removed: number) => `backup written to ${file}${removed ? `, removed ${removed} old` : ""}`,
