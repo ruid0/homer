@@ -10,6 +10,7 @@ import { mcpReadTools } from "./server";
 import { mcpWriteTools } from "./writes";
 import { startMcp } from "./listen";
 
+const mcpMaintenanceTools = ["list_due", "complete_maintenance", "snooze_maintenance", "add_maintenance"];
 const token = "test-token";
 const today = "2026-11-04";
 
@@ -47,10 +48,12 @@ describe("mcp", () => {
   it("lists the allowlisted tools, with write tools marked as writes", async () => {
     const { connect } = setup();
     const { tools } = await (await connect()).listTools();
-    expect(tools.map((tool) => tool.name).sort()).toEqual([...mcpReadTools, ...mcpWriteTools, "undo"].sort());
+    expect(tools.map((tool) => tool.name).sort()).toEqual(
+      [...mcpReadTools, ...mcpWriteTools, ...mcpMaintenanceTools, "undo"].sort(),
+    );
     for (const tool of tools) {
       expect(tool.inputSchema.type).toBe("object");
-      expect(tool.annotations?.readOnlyHint).toBe((mcpReadTools as readonly string[]).includes(tool.name));
+      expect(tool.annotations?.readOnlyHint).toBe(["list_due", ...mcpReadTools].includes(tool.name as never));
     }
     const markOut = tools.find((tool) => tool.name === "mark_out");
     expect(markOut?.inputSchema.required).toContain("said");
@@ -138,6 +141,165 @@ describe("mcp", () => {
       const listed = await client.callTool({ name: "list_tasks", arguments: { from: "2026-11-04", to: "2026-11-10" } });
       expect(JSON.stringify(listed.structuredContent)).toContain("Call the plumber");
       expect(JSON.stringify(listed.structuredContent)).toContain("Dentist");
+    });
+  });
+
+  describe("due and maintenance", () => {
+    const job = (api: ReturnType<typeof createCaller>, name: string, lastDoneOn: string | null = null) =>
+      api.maintenance.add({ name, every: 1, unit: "weeks", lastDoneOn, today });
+
+    it("lists what is due: overdue jobs, open routine rows and tasks", async () => {
+      const { db, connect } = setup();
+      const api = createCaller({ db });
+      await job(api, "Softener salt", "2026-10-01");
+      await job(api, "Water filter", "2026-11-03");
+      const person = await api.people.add({ name: "Ana" });
+      await api.routines.addItem({ personId: person.id, name: "Vitamins", targetPerDay: 1 });
+      const got = await (await connect()).callTool({ name: "list_due", arguments: { days: 7 } });
+      const due = got.structuredContent as { maintenance: { name: string; status: string }[]; routines: unknown[] };
+      expect(due.maintenance.map((entry) => [entry.name, entry.status])).toEqual([
+        ["Softener salt", "overdue"],
+        ["Water filter", "soon"],
+      ]);
+      expect(due.routines).toEqual([{ person: "Ana", open: [{ name: "Vitamins", left: 1 }] }]);
+    });
+
+    it("completes a job by name and undo removes the done date", async () => {
+      const { db, connect } = setup();
+      const api = createCaller({ db });
+      await job(api, "Softener salt", "2026-10-01");
+      const client = await connect();
+      const done = await client.callTool({
+        name: "complete_maintenance",
+        arguments: { name: "softener salt", said: "I refilled the softener salt" },
+      });
+      const { actionId } = done.structuredContent as { actionId: number };
+      expect(actionId).toBeGreaterThan(0);
+      expect((await api.maintenance.list({ today }))[0]?.lastDoneOn).toBe(today);
+      await client.callTool({ name: "undo", arguments: { actionId } });
+      expect((await api.maintenance.list({ today }))[0]?.lastDoneOn).toBe("2026-10-01");
+    });
+
+    it("says so when the job was already done today, and journals nothing", async () => {
+      const { db, connect } = setup();
+      const api = createCaller({ db });
+      await job(api, "Softener salt", today);
+      const got = await (
+        await connect()
+      ).callTool({
+        name: "complete_maintenance",
+        arguments: { name: "Softener salt", said: "softener salt is done" },
+      });
+      expect(got.structuredContent).toMatchObject({ status: "error", actionId: null });
+    });
+
+    it("asks when the name is unknown or matches more than one", async () => {
+      const { db, connect } = setup();
+      const api = createCaller({ db });
+      await job(api, "Water filter");
+      await job(api, "Furnace filter");
+      const client = await connect();
+      const many = await client.callTool({
+        name: "snooze_maintenance",
+        arguments: { name: "filter", said: "skip the filter" },
+      });
+      expect(many.structuredContent).toMatchObject({ status: "ambiguous" });
+      const none = await client.callTool({
+        name: "snooze_maintenance",
+        arguments: { name: "gutters", said: "skip gutters" },
+      });
+      expect(none.structuredContent).toMatchObject({ status: "not_found" });
+    });
+
+    it("snoozes until tomorrow and hides the job from list_due", async () => {
+      const { db, connect } = setup();
+      const api = createCaller({ db });
+      await job(api, "Softener salt", "2026-10-01");
+      const client = await connect();
+      const got = await client.callTool({
+        name: "snooze_maintenance",
+        arguments: { name: "Softener salt", said: "not today for the softener salt" },
+      });
+      expect(got.structuredContent).toMatchObject({ status: "snoozed", until: "2026-11-05" });
+      const due = (await client.callTool({ name: "list_due", arguments: {} })).structuredContent as {
+        maintenance: unknown[];
+      };
+      expect(due.maintenance).toEqual([]);
+    });
+
+    it("does not list a job done today, and a day-one window stops at today", async () => {
+      const { db, connect } = setup();
+      const api = createCaller({ db });
+      await job(api, "Softener salt", today);
+      await job(api, "Water filter", "2026-10-30");
+      const due = (await (await connect()).callTool({ name: "list_due", arguments: { days: 1 } }))
+        .structuredContent as {
+        maintenance: unknown[];
+      };
+      expect(due.maintenance).toEqual([]);
+    });
+
+    it("refuses a job the person did not name when others share a word", async () => {
+      const { db, connect } = setup();
+      const api = createCaller({ db });
+      await job(api, "Water filter");
+      await job(api, "Furnace filter");
+      const got = await (
+        await connect()
+      ).callTool({
+        name: "complete_maintenance",
+        arguments: { name: "Furnace filter", said: "I changed the water filter" },
+      });
+      expect(got.structuredContent).toMatchObject({ status: "not_said" });
+      expect((await api.maintenance.list({ today })).every((entry) => entry.lastDoneOn === null)).toBe(true);
+    });
+
+    it("undoes a snooze and an add", async () => {
+      const { db, connect } = setup();
+      const api = createCaller({ db });
+      await job(api, "Softener salt", "2026-10-01");
+      const client = await connect();
+      const snoozed = await client.callTool({
+        name: "snooze_maintenance",
+        arguments: { name: "Softener salt", said: "not today for the softener salt" },
+      });
+      await client.callTool({
+        name: "undo",
+        arguments: { actionId: (snoozed.structuredContent as { actionId: number }).actionId },
+      });
+      expect((await api.maintenance.list({ today }))[0]?.snoozedUntil).toBeNull();
+      const added = await client.callTool({
+        name: "add_maintenance",
+        arguments: { name: "Gutters", every: 6, unit: "months", said: "gutters every 6 months" },
+      });
+      await client.callTool({
+        name: "undo",
+        arguments: { actionId: (added.structuredContent as { actionId: number }).actionId },
+      });
+      expect((await api.maintenance.list({ today })).map((entry) => entry.name)).toEqual(["Softener salt"]);
+    });
+
+    it("answers a duplicate name without writing", async () => {
+      const { db, connect } = setup();
+      await job(createCaller({ db }), "Gutters");
+      const got = await (
+        await connect()
+      ).callTool({
+        name: "add_maintenance",
+        arguments: { name: "gutters", every: 6, unit: "months", said: "add gutters" },
+      });
+      expect(got.structuredContent).toMatchObject({ status: "error", actionId: null });
+    });
+
+    it("adds a job", async () => {
+      const { db, connect } = setup();
+      await (
+        await connect()
+      ).callTool({
+        name: "add_maintenance",
+        arguments: { name: "Gutters", every: 6, unit: "months", said: "clean the gutters every 6 months" },
+      });
+      expect((await createCaller({ db }).maintenance.list({ today })).map((entry) => entry.name)).toEqual(["Gutters"]);
     });
   });
 });

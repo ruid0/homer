@@ -1,10 +1,27 @@
 import { eq, getTableColumns, sql } from "drizzle-orm";
 import type { SQLiteTable } from "drizzle-orm/sqlite-core";
-import { assistantActions, events, groceryEntries, items, restocks, tasks } from "../db/schema";
+import {
+  assistantActions,
+  events,
+  groceryEntries,
+  items,
+  maintenanceDone,
+  maintenanceItems,
+  restocks,
+  tasks,
+} from "../db/schema";
 import type { Db } from "../db/client";
 
 // The tables a tool can change, parents first. Undo deletes in reverse order, then re-adds and updates in this order.
-const journalledTables = { items, restocks, groceryEntries, tasks, events } as const;
+const journalledTables = {
+  items,
+  restocks,
+  groceryEntries,
+  tasks,
+  events,
+  maintenanceItems,
+  maintenanceDone,
+} as const;
 type TableName = keyof typeof journalledTables;
 const tableNames = Object.keys(journalledTables) as TableName[];
 
@@ -38,9 +55,13 @@ const diffRows = (before: Row[], after: Row[]): TableChanges => {
 export const diffSnapshots = (before: Snapshot, after: Snapshot): Changes =>
   Object.fromEntries(tableNames.map((name) => [name, diffRows(before[name], after[name])])) as Changes;
 
+// An action stored before a table joined the journal has no entry for it.
+const part = (changes: Changes, name: TableName): TableChanges =>
+  changes[name] ?? { added: [], changed: [], removed: [] };
+
 const isEmpty = (changes: Changes) =>
   tableNames.every((name) => {
-    const { added, changed, removed } = changes[name];
+    const { added, changed, removed } = part(changes, name);
     return added.length + changed.length + removed.length === 0;
   });
 
@@ -85,7 +106,7 @@ const findStale = (changes: Changes, now: Snapshot): Row | undefined =>
   tableNames
     .flatMap((name) => {
       const current = new Map(now[name].map((row) => [row.id, row]));
-      const { added, changed, removed } = changes[name];
+      const { added, changed, removed } = part(changes, name);
       const left = (row: Row) => current.has(row.id) && same(current.get(row.id)!, row);
       return [
         ...added.filter((row) => !left(row)),
@@ -101,16 +122,16 @@ type Writer = Parameters<Parameters<Db["transaction"]>[0]>[0];
 // Foreign keys are checked at commit, so a row can point at one that is restored a step later.
 const applyReverse = (tx: Writer, changes: Changes) => {
   for (const name of [...tableNames].reverse()) {
-    for (const row of changes[name].added)
+    for (const row of part(changes, name).added)
       tx.delete(idTable(name))
         .where(eq(idTable(name).id, row.id))
         .run();
   }
   for (const name of tableNames) {
-    for (const row of changes[name].removed) tx.insert(idTable(name)).values(toColumns(name, row)).run();
+    for (const row of part(changes, name).removed) tx.insert(idTable(name)).values(toColumns(name, row)).run();
   }
   for (const name of tableNames) {
-    for (const { before } of changes[name].changed) {
+    for (const { before } of part(changes, name).changed) {
       tx.update(idTable(name))
         .set(toColumns(name, before))
         .where(eq(idTable(name).id, before.id))
@@ -125,7 +146,7 @@ const isForeignKeyError = (error: unknown) =>
 const addedLabel = (db: Db, actionId: number): string => {
   const action = db.select().from(assistantActions).where(eq(assistantActions.id, actionId)).get();
   const changes = action?.changes as Changes | undefined;
-  const added = changes && tableNames.flatMap((name) => changes[name].added).at(0);
+  const added = changes && tableNames.flatMap((name) => part(changes, name).added).at(0);
   return added ? labelOf(added, snapshot(db)) : String(actionId);
 };
 

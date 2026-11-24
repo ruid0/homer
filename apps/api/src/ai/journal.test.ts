@@ -1,7 +1,8 @@
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import { createDb } from "../db/client";
-import { groceryEntries, restocks } from "../db/schema";
+import { eq } from "drizzle-orm";
+import { assistantActions, groceryEntries, restocks } from "../db/schema";
 import { createCaller } from "../routers/index";
 import { diffSnapshots, journalled, snapshot, undoAction } from "./journal";
 
@@ -55,6 +56,19 @@ describe("journalled", () => {
 });
 
 describe("undoAction", () => {
+  it("undoes an action stored before the maintenance tables were journalled", async () => {
+    const { db, api } = setup();
+    const { id } = await api.inventory.create(milk);
+    const done = await journalled(db, "restock_item", {}, () => api.inventory.restock({ itemId: id, quantity: 4 }));
+    const [row] = db.select().from(assistantActions).where(eq(assistantActions.id, done.actionId!)).all();
+    const { maintenanceItems: _a, maintenanceDone: _b, ...old } = row!.changes as Record<string, unknown>;
+    db.update(assistantActions)
+      .set({ changes: old as never })
+      .where(eq(assistantActions.id, done.actionId!))
+      .run();
+    expect(undoAction(db, done.actionId!)).toEqual({ ok: true });
+  });
+
   it("puts back a changed row and removes an added one", async () => {
     const { db, api } = setup();
     const { id } = await api.inventory.create(milk);

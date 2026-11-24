@@ -34,3 +34,15 @@ export const toolErrors = {
     `Invalid arguments for ${name}. ${problems.join(" ")}`,
   problem: (field: string, message: string) => `${field || "arguments"}: ${message}`,
 };
+
+export const mcpToolDescriptions: Record<
+  "list_due" | "complete_maintenance" | "snooze_maintenance" | "add_maintenance",
+  string
+> = {
+  list_due:
+    "What needs doing in the next days (default 7): maintenance that is overdue, due or coming up, routine rows still open today for everyone, and open tasks and events. Changes nothing.",
+  complete_maintenance: "Mark a maintenance job done today, or on doneOn. Use the job's name.",
+  snooze_maintenance: "Hide a maintenance job until tomorrow (the Upkeep page's Not today). Use the job's name.",
+  add_maintenance:
+    "Start a maintenance job that repeats every N weeks, months or years. lastDoneOn is optional; without it the first due date counts from today.",
+};

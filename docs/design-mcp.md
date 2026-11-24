@@ -1,6 +1,6 @@
 # MCP server: HOMER's tools for the owner's local agent. Definition, technical plan and system design
 
-Status: In progress (approved 2026-11-23 with the proposed defaults; PR 1 and 2 built, PR 3 next) · Owner: Igor Bondarenko · Last updated: 2026-11-23 · Source: `docs/v2-plan.md` theme E ("MCP is a way of offering HOMER's tools to other apps… could be useful on its own later"), and `~/PetProjects/local-harness/docs/DESIGN.md` (v1.3) §7.1, §7.2 and milestone M2.
+Status: In progress (approved 2026-11-23 with the proposed defaults; all three PRs built; real use from Pi still to check) · Owner: Igor Bondarenko · Last updated: 2026-11-23 · Source: `docs/v2-plan.md` theme E ("MCP is a way of offering HOMER's tools to other apps… could be useful on its own later"), and `~/PetProjects/local-harness/docs/DESIGN.md` (v1.3) §7.1, §7.2 and milestone M2.
 
 The repo is public. Tokens and the household's real data never go into this repo, its tests or its logs.
 
@@ -99,6 +99,8 @@ Note (PR 2): the in-app loop fills a time the person said ("at 3pm"); MCP does n
 2. Keep the `said` guard for MCP writes (proposed), or trust the agent's own confirmation step?
 3. Should `list_due` include people's routines for everyone, or only the owner's?
 4. Should `add_maintenance` be in v1, or only `complete` and `snooze`?
+
+Resolved in PR 3: `list_due` covers everyone's routines, `add_maintenance` is in, and maintenance joined the journal tables (`ai/journal.ts`), so `undo` works for it the same way. `snooze_maintenance` hides a job until tomorrow, like Not today.
 
 ## 9. VERIFY (per PR)
 - `pnpm typecheck` and `pnpm test`. The `check.sh` hook runs related tests after each edit.

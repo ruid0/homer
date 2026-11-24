@@ -40,7 +40,7 @@ const asksToDelete = (name: string, now: string) => {
 
 // The model chose an item the person did not name in full, while other items share a word they did say.
 // "milk" with oat milk and soy milk on the list is a question, not something to pick for them.
-const chosenFromSeveral = (name: string, recent: string, known: string[]) => {
+export const chosenFromSeveral = (name: string, recent: string, known: string[]) => {
   const said = wordsOf(recent);
   if (wordsOf(name).every((word) => hasWord(said, word))) return false;
   const chosen = name.toLowerCase();
