@@ -3,8 +3,9 @@ import { toolDefinitions, toolSchemas, type ToolCall, type ToolName } from "@hom
 import type { Db } from "../db/client";
 import { runTool } from "../ai/tools";
 import { mcpMessages } from "../messages";
+import { registerWriteTools } from "./writes";
 
-// Only these are offered. A tool joins the list on purpose, never because it exists.
+// Only these and the write tools in writes.ts are offered. A tool joins the list on purpose, never because it exists.
 export const mcpReadTools = ["list_items", "list_groceries", "list_tasks"] as const satisfies readonly ToolName[];
 
 const describe = (name: ToolName) => toolDefinitions.find((tool) => tool.name === name)?.description;
@@ -28,5 +29,6 @@ export const createMcpServer = (db: Db, { today }: Deps) => {
       },
     );
   }
+  registerWriteTools(server, { db, today, describe });
   return server;
 };

@@ -103,9 +103,9 @@ docker compose up -d --build
   `docker compose up -d --build`, and subscribe to the same topic in the ntfy app on each phone. On the public ntfy.sh server the
   topic name is the only secret, so keep it private. Set `NTFY_SERVER` to use your own ntfy server instead. Change the time with
   `END_OF_DAY_TIME` and `MAINTENANCE_TIME` in your shell or a root `.env`.
-- **MCP for a local agent (optional, off by default).** HOMER can offer its read tools (`list_items`, `list_groceries`,
-  `list_tasks`) over [MCP](https://modelcontextprotocol.io) to an agent on this machine. Put `HOMER_MCP_TOKEN=<long random value>`
-  in `.env.local` and run `docker compose up -d --build`. The endpoint is `http://127.0.0.1:3002/mcp` with
+- **MCP for a local agent (optional, off by default).** HOMER can offer its tools to an agent on this machine over [MCP](https://modelcontextprotocol.io): the three list
+  tools, eight write tools (each takes the person's own words as `said`, and returns an `actionId`) and `undo`. Put
+  `HOMER_MCP_TOKEN=<long random value>` in `.env.local` and run `docker compose up -d --build`. The endpoint is `http://127.0.0.1:3002/mcp` with
   `Authorization: Bearer <token>`. It sits on its own port, published on this machine only, so neither the web page nor
   Tailscale reaches it.
 - **Routine reminders.** With notifications on, open People, then a person's Routine, and tap "Turn on reminders". The card shows

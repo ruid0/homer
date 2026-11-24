@@ -6,6 +6,8 @@ import { runTool } from "../ai/tools";
 import { createDb } from "../db/client";
 import { createCaller } from "../routers/index";
 import { createMcpApp } from "./app";
+import { mcpReadTools } from "./server";
+import { mcpWriteTools } from "./writes";
 import { startMcp } from "./listen";
 
 const token = "test-token";
@@ -42,14 +44,16 @@ describe("mcp", () => {
     expect(startMcp(createDb(":memory:"), { HOMER_MCP_TOKEN: "x" })).toBeNull();
   });
 
-  it("lists only the read tools, read-only, with schemas", async () => {
+  it("lists the allowlisted tools, with write tools marked as writes", async () => {
     const { connect } = setup();
     const { tools } = await (await connect()).listTools();
-    expect(tools.map((tool) => tool.name).sort()).toEqual(["list_groceries", "list_items", "list_tasks"]);
+    expect(tools.map((tool) => tool.name).sort()).toEqual([...mcpReadTools, ...mcpWriteTools, "undo"].sort());
     for (const tool of tools) {
-      expect(tool.annotations?.readOnlyHint).toBe(true);
       expect(tool.inputSchema.type).toBe("object");
+      expect(tool.annotations?.readOnlyHint).toBe((mcpReadTools as readonly string[]).includes(tool.name));
     }
+    const markOut = tools.find((tool) => tool.name === "mark_out");
+    expect(markOut?.inputSchema.required).toContain("said");
   });
 
   it("returns what runTool returns for the same call", async () => {
@@ -68,7 +72,72 @@ describe("mcp", () => {
 
   it("rejects a tool that is not offered", async () => {
     const { connect } = setup();
-    const got = await (await connect()).callTool({ name: "mark_out", arguments: { name: "Salt" } }).catch((e) => e);
-    expect(String(got instanceof Error ? got.message : got.content?.[0]?.text)).toMatch(/mark_out/);
+    const got = await (await connect()).callTool({ name: "remove_item", arguments: {} }).catch((e) => e);
+    expect(String(got instanceof Error ? got.message : got.content?.[0]?.text)).toMatch(/remove_item/);
+  });
+
+  describe("writes", () => {
+    const stock = (api: ReturnType<typeof createCaller>, name: string, quantity = 2) =>
+      api.inventory.create({ name, unit: "bag", quantity, daysPerUnit: null, lowThresholdDays: 7 });
+
+    it("changes what the in-app path changes, and undo reverts it", async () => {
+      const { db, connect } = setup();
+      const api = createCaller({ db });
+      await stock(api, "Salt");
+      const client = await connect();
+      const done = await client.callTool({ name: "mark_out", arguments: { name: "Salt", said: "we're out of salt" } });
+      const { actionId } = done.structuredContent as { actionId: number };
+      expect(actionId).toBeGreaterThan(0);
+      expect((await api.inventory.list()).find((item) => item.name === "Salt")?.quantity).toBe(0);
+      expect(await api.groceries.list()).toHaveLength(1);
+
+      const undone = await client.callTool({ name: "undo", arguments: { actionId } });
+      expect(undone.structuredContent).toEqual({ status: "undone" });
+      expect((await api.inventory.list()).find((item) => item.name === "Salt")?.quantity).toBe(2);
+      expect(await api.groceries.list()).toHaveLength(0);
+
+      const again = await client.callTool({ name: "undo", arguments: { actionId } });
+      expect(again.structuredContent).toMatchObject({
+        status: "already_undone",
+        message: expect.stringMatching(/already/),
+      });
+    });
+
+    it("refuses a name the person did not say, and changes nothing", async () => {
+      const { db, connect } = setup();
+      const api = createCaller({ db });
+      await stock(api, "Oat milk");
+      await stock(api, "Soy milk");
+      const got = await (
+        await connect()
+      ).callTool({
+        name: "mark_out",
+        arguments: { name: "Soy milk", said: "we're out of milk" },
+      });
+      expect(got.structuredContent).toMatchObject({ status: "not_said" });
+      expect((await api.inventory.list()).every((item) => item.quantity === 2)).toBe(true);
+    });
+
+    it("needs said, and reports a bad argument without writing", async () => {
+      const { connect } = setup();
+      const client = await connect();
+      const noSaid = await client.callTool({ name: "add_task", arguments: { title: "Call" } }).catch((e) => e);
+      expect(String(noSaid instanceof Error ? noSaid.message : noSaid.content?.[0]?.text)).toMatch(/said/);
+      const listed = await client.callTool({ name: "list_tasks", arguments: {} });
+      expect(JSON.stringify(listed.structuredContent)).not.toContain("Call");
+    });
+
+    it("adds a task and an event", async () => {
+      const { connect } = setup();
+      const client = await connect();
+      await client.callTool({ name: "add_task", arguments: { title: "Call the plumber", said: "remind me" } });
+      await client.callTool({
+        name: "add_event",
+        arguments: { title: "Dentist", date: "2026-11-10", said: "dentist on the 10th" },
+      });
+      const listed = await client.callTool({ name: "list_tasks", arguments: { from: "2026-11-04", to: "2026-11-10" } });
+      expect(JSON.stringify(listed.structuredContent)).toContain("Call the plumber");
+      expect(JSON.stringify(listed.structuredContent)).toContain("Dentist");
+    });
   });
 });
