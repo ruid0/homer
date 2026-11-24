@@ -104,7 +104,7 @@ docker compose up -d --build
   topic name is the only secret, so keep it private. Set `NTFY_SERVER` to use your own ntfy server instead. Change the time with
   `END_OF_DAY_TIME` and `MAINTENANCE_TIME` in your shell or a root `.env`.
 - **MCP for a local agent (optional, off by default).** HOMER can offer its tools to an agent on this machine over [MCP](https://modelcontextprotocol.io): the three list
-  tools, `list_due` (what is due soon: maintenance, open routine rows, tasks), eight write tools (each takes the person's own words as `said`, and returns an `actionId`) maintenance tools (complete, snooze, add) and `undo`. Put
+  tools, `list_due` (what is due soon: maintenance, open routine rows, tasks), eight write tools (each takes the person's own words as `said`, and returns an `actionId`) maintenance tools (complete, snooze, add) and `undo`. Details, the tool list and rules for the agent are in `docs/mcp.md`. Put
   `HOMER_MCP_TOKEN=<long random value>` in `.env.local` and run `docker compose up -d --build`. The endpoint is `http://127.0.0.1:3002/mcp` with
   `Authorization: Bearer <token>`. It sits on its own port, published on this machine only, so neither the web page nor
   Tailscale reaches it.
