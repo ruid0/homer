@@ -24,6 +24,12 @@ export const messages = {
 
 export const mcpMessages = {
   unauthorized: "Missing or wrong token.",
+  saidField: "The person's own message, word for word, never reworded.",
+  saidRule: "Ask the person first, and pass their message unchanged in said.",
+  written: (tool: string, actionId: number | null) =>
+    actionId === null ? `${tool}: nothing changed.` : `${tool}: done. Undo with actionId ${actionId}.`,
+  undoDescription: "Undo a change made by one of these tools, using the actionId it returned.",
+  undone: "Undone.",
   summary: (tool: string, count: number) => `${tool}: ${count} ${count === 1 ? "row" : "rows"}.`,
   // Written to the api log.
   tokenTooShort: (length: number) => `mcp stays off: HOMER_MCP_TOKEN must be at least ${length} characters`,

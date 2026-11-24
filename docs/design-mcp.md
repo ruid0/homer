@@ -1,6 +1,6 @@
 # MCP server: HOMER's tools for the owner's local agent. Definition, technical plan and system design
 
-Status: In progress (approved 2026-11-23 with the proposed defaults; PR 1 built, PR 2 and 3 next) · Owner: Igor Bondarenko · Last updated: 2026-11-23 · Source: `docs/v2-plan.md` theme E ("MCP is a way of offering HOMER's tools to other apps… could be useful on its own later"), and `~/PetProjects/local-harness/docs/DESIGN.md` (v1.3) §7.1, §7.2 and milestone M2.
+Status: In progress (approved 2026-11-23 with the proposed defaults; PR 1 and 2 built, PR 3 next) · Owner: Igor Bondarenko · Last updated: 2026-11-23 · Source: `docs/v2-plan.md` theme E ("MCP is a way of offering HOMER's tools to other apps… could be useful on its own later"), and `~/PetProjects/local-harness/docs/DESIGN.md` (v1.3) §7.1, §7.2 and milestone M2.
 
 The repo is public. Tokens and the household's real data never go into this repo, its tests or its logs.
 
@@ -75,6 +75,8 @@ The owner is building **local-harness**: a private agent (Pi CLI + a local Qwen3
   - A refused write returns the guard's sentence and changes nothing.
   - An accepted write changes the same rows as the in-app path.
   - Undo reverts it, and a second undo reports "already undone".
+
+Note (PR 2): the in-app loop fills a time the person said ("at 3pm"); MCP does not. The agent passes `time` itself.
 
 ## 6. PR 3: "what's due" and maintenance
 
