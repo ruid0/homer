@@ -30,6 +30,7 @@ export const mcpMessages = {
     actionId === null ? `${tool}: nothing changed.` : `${tool}: done. Undo with actionId ${actionId}.`,
   undoDescription: "Undo a change made by one of these tools, using the actionId it returned.",
   undone: "Undone.",
+  dueSummary: (days: number) => `Due in the next ${days} ${days === 1 ? "day" : "days"}.`,
   summary: (tool: string, count: number) => `${tool}: ${count} ${count === 1 ? "row" : "rows"}.`,
   // Written to the api log.
   tokenTooShort: (length: number) => `mcp stays off: HOMER_MCP_TOKEN must be at least ${length} characters`,
