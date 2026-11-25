@@ -44,6 +44,26 @@
   }
 }
 
+/* The TV page is always the dark palette: a bright page glares in a living room. Keep in step with the dark block above. */
+:root.tv {
+  color-scheme: dark;
+  --surface: #1f1d1b;
+  --card: #2d2a28;
+  --ink: #e9e5e0;
+  --primary: #d8d2ca;
+  --on-primary: #1f1d1b;
+  --muted: #aaa59d;
+  --line: #3a3633;
+  --line-strong: #4f4a45;
+  --control: #7f7972;
+  --hover: #332f2c;
+  --warn: #e6b04f;
+  --late: #ef8c80;
+  --ok: #6fcf8a;
+  --spark: #f59e0b;
+  cursor: none;
+}
+
 @theme inline {
   --color-surface: var(--surface);
   --color-card: var(--card);
@@ -73,6 +93,8 @@
   --text-section--line-height: 1.75rem;
   --text-title: 1.125rem;
   --text-title--line-height: 1.5rem;
+  --text-clock: 6rem;
+  --text-clock--line-height: 1;
   --text-day: 2.5rem;
   --text-day--line-height: 3rem;
   --text-answer: 1.25rem;

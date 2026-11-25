@@ -219,3 +219,4 @@ homer/
 
 - For remote access the most streightforward way is to use `Tailscale` installed on both the server and a users devices
 - Notifications are optional and use `ntfy` (see "Notifications" and "Routine reminders" above, and `docs/design-jobs-and-ntfy.md`).
+- **TV display.** `/tv` is a read-only page for a living-room screen: a big clock, today and tomorrow, upkeep and what is running out. Open it at your usual address plus `/tv` (try it in a browser first). It is always dark, scales to any screen size, and refreshes itself. An Android TV app that opens it full screen is planned (`docs/design-tv.md`).
