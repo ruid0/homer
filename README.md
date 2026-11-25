@@ -151,7 +151,7 @@ docker compose up -d --build
 | Pure logic tests | Vitest + fast-check | Property-based tests |
 | Scheduling | node-cron | Daily backup (more jobs in v2) |
 | LLM runtime | Ollama (`127.0.0.1:11434`) | Local only |
-| Vision model | `qwen3-vl:8b` | OCR, labels, receipts |
+| Vision model | `qwen3-vl:8b` | OCR, labels |
 | Chat/tools model | `qwen3.5:9b` or `qwen3.8:27b-mlx` | Tool calling |
 | Deployment | Docker Compose | web + api (Ollama runs natively on the Mac) |```
 

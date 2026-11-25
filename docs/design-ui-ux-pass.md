@@ -1,6 +1,6 @@
 # UI and UX pass over Upkeep and Home, and the visual pass over the app
 
-Status: In progress (PR A, B, B2, C, D1, D2a, D2b and D3 built, E1, E2 and F built) · Owner: Igor Bondarenko · Last updated: 2026-11-20 · Source: three critical `ui-reviewer` passes (UI reassessment, UX ease of use, visual design) run on the merged maintenance work, and the owner's answers of 2026-11-05.
+Status: Built (PR A, B, B2, C, D1, D2a, D2b and D3 built, E1, E2 and F built) · Owner: Igor Bondarenko · Last updated: 2026-11-25 · Source: three critical `ui-reviewer` passes (UI reassessment, UX ease of use, visual design) run on the merged maintenance work, and the owner's answers of 2026-11-05.
 
 ## Decisions (owner, defaults accepted)
 
