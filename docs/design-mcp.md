@@ -1,6 +1,6 @@
 # MCP server: HOMER's tools for the owner's local agent. Definition, technical plan and system design
 
-Status: Built (all three PRs merged; a real run from Pi still to check; the usage guide is `docs/mcp.md`) · Owner: Igor Bondarenko · Last updated: 2026-11-24 · Source: `docs/v2-plan.md` theme E ("MCP is a way of offering HOMER's tools to other apps… could be useful on its own later"), and `~/PetProjects/local-harness/docs/DESIGN.md` (v1.3) §7.1, §7.2 and milestone M2.
+Status: Built (all three PRs merged and checked from Pi by the owner; the usage guide is `docs/mcp.md`) · Owner: Igor Bondarenko · Last updated: 2026-11-25 · Source: `docs/v2-plan.md` theme E ("MCP is a way of offering HOMER's tools to other apps… could be useful on its own later"), and `~/PetProjects/local-harness/docs/DESIGN.md` (v1.3) §7.1, §7.2 and milestone M2.
 
 The repo is public. Tokens and the household's real data never go into this repo, its tests or its logs.
 
@@ -47,7 +47,7 @@ The owner is building **local-harness**: a private agent (Pi CLI + a local Qwen3
 - Changing the in-app assistant, its tool set or its prompt.
 - Remote MCP clients, OAuth, or exposure over Tailscale.
 - HOMER calling the agent. HOMER only answers; it never calls out (PRD §5 stays true: MCP is an inbound, local-only listener).
-- Receipts. These live in the Assistant app; the agent marks items bought in HOMER after a receipt is saved there (v2-plan theme C becomes that flow).
+- Receipts. These live in the Assistant app; the agent marks items bought in HOMER after a receipt is saved there (the receipts theme was dropped from the v2 plan for that reason).
 
 ## 4. PR 1: the MCP listener with the read tools
 

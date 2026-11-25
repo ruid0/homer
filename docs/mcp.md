@@ -1,6 +1,6 @@
 # MCP: using HOMER's tools from a local agent
 
-Status: Built (read, write, due and maintenance tools; a real run from Pi is still to be checked) · Owner: Igor Bondarenko · Last updated: 2026-11-24 · Source: `docs/design-mcp.md` (the plan and the reasons)
+Status: Built (read, write, due and maintenance tools) · Owner: Igor Bondarenko · Last updated: 2026-11-25 · Source: `docs/design-mcp.md` (the plan and the reasons)
 
 HOMER can offer its tools over [MCP](https://modelcontextprotocol.io) to an agent running on the same machine. The agent changes household data only through HOMER's own rules: the same validation, the same journal and the same Undo as the in-app assistant. The repo is public, so tokens and household data never go in docs, tests or logs.
 
@@ -84,4 +84,4 @@ A write returns `structuredContent` with a `status` the agent should read, not g
 - Code: `apps/api/src/mcp/` (`app.ts` auth and transport, `server.ts` read tools, `writes.ts` writes and undo, `maintenance.ts` due and maintenance, `listen.ts` the listener). No SQL there: everything goes through `runTool`, the tRPC callers and the journal.
 - A tool is offered only if it is in an explicit list. Add one on purpose, with a test, and update the table above.
 - Shared schemas: `packages/shared/src/tools.ts` and `due.ts`. The pure due logic is property-tested.
-- Check before a release: from a tailnet device port 3002 must not answer, and `/mcp` under the web must 404.
+- Checked by the owner from Pi and a tailnet device. Repeat after any change to the listener or to Compose ports: from a tailnet device port 3002 must not answer, and `/mcp` under the web must 404.

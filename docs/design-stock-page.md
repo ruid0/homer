@@ -1,6 +1,6 @@
 # Stock page: Items and Groceries as one page. Definition, plan and design
 
-Status: In progress (the page, the redirects and the nav are built in one PR) · Owner: Igor Bondarenko · Last updated: 2026-11-20 · Source: the owner's question "why don't we connect them?", the approved mock (`scratchpad/stock-mock.html`). Replaces the two pages of `design-slice-1-items.md` and `design-slice-2-groceries.md`; their data and rules are unchanged.
+Status: Built (the page, the redirects and the nav; a count on the nav tab stays an open idea) · Owner: Igor Bondarenko · Last updated: 2026-11-25 · Source: the owner's question "why don't we connect them?", the approved mock (`scratchpad/stock-mock.html`). Replaces the two pages of `design-slice-1-items.md` and `design-slice-2-groceries.md`; their data and rules are unchanged.
 
 ## 1. Definition
 
