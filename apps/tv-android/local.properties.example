@@ -1,0 +1,5 @@
+# Copy this file to local.properties (which git ignores) and fill it in.
+# The address of the TV page: your Tailscale address for HOMER, then /tv.
+homer.url=https://your-machine.your-tailnet.ts.net/tv
+# Where the Android SDK is. Homebrew's command-line tools install it here:
+sdk.dir=/opt/homebrew/share/android-commandlinetools

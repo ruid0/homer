@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The tile on the Google TV home screen: a house on the page's dark colour. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="160dp"
+    android:height="90dp"
+    android:viewportWidth="320"
+    android:viewportHeight="180">
+    <path android:fillColor="#1F1D1B" android:pathData="M0,0h320v180h-320z" />
+    <path android:fillColor="#E9E5E0" android:pathData="M160,46 L214,92 L200,92 L200,132 L120,132 L120,92 L106,92 Z" />
+    <path android:fillColor="#1F1D1B" android:pathData="M148,132 L148,104 L172,104 L172,132 Z" />
+    <path android:fillColor="#F59E0B" android:pathData="M160,62 m-5,0 a5,5 0 1,0 10,0 a5,5 0 1,0 -10,0" />
+</vector>

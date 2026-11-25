@@ -1,6 +1,6 @@
 # TV display: a read-only dashboard on the living-room TV. Definition and plan
 
-Status: In progress (approved 2026-11-25 with the proposed Tomorrow list; PR 1, the /tv page, built; PR 2, the Android app, next) · Owner: Igor Bondarenko · Last updated: 2026-11-25 · Source: the owner's request, `docs/design-slice-4-dashboard.md` (Home already targets a wall screen), `docs/mcp.md` (the Tailscale-only rule for new listeners).
+Status: In progress (approved 2026-11-25 with the proposed Tomorrow list; PR 1, the /tv page, merged; PR 2, the Android app, built and awaiting a run on the real TV) · Owner: Igor Bondarenko · Last updated: 2026-11-25 · Source: the owner's request, `docs/design-slice-4-dashboard.md` (Home already targets a wall screen), `docs/mcp.md` (the Tailscale-only rule for new listeners).
 
 The repo is public. The household's Tailscale address and data never go in this repo, its tests or its logs.
 
@@ -96,3 +96,10 @@ Reviewed against the brief: the first plan used a big stat tile per card, which 
 - There is no Now marker: the clock says it.
 - The page is exactly one screen tall and clips rather than scrolls. A test fills every list with long titles and checks each section ends inside the 5% safe margin at 1920 by 1080 and 960 by 540. Only the real TV settles the rest.
 - Test: `apps/e2e/tests/tv.tv.spec.ts`, on its own scratch copy (the lists are cut, so other specs' rows would hide its own).
+
+## 8. As built (PR 2)
+- `apps/tv-android`: a Kotlin app with no AndroidX and no runtime dependencies (`minSdk` 24). One full-screen WebView on the TV launcher, the screen kept on, the system bars hidden, and a dark window so nothing flashes white.
+- The address comes from `local.properties` (git ignores it) as `homer.url`; the build stops with a message when it is missing. A new address needs a new build.
+- A page that can't be loaded shows "Can't reach HOMER. Trying again." and is tried again after 5, 10 and 20 seconds, then every 30. The page is also loaded from scratch every 6 hours. The timing is `LoadPolicy.kt` and the rules for what counts as a failure or a success are `LoadTracker.kt`, both pure and tested. A retry that was waiting when the screen paused is made when it comes back, and a link off HOMER's own address is ignored.
+- A boot receiver asks Android to open the app at start-up. Android may refuse that from the background, so the README says to open it once from the home screen.
+- Checked here: unit tests (10), a debug build, and Android lint with no warnings; the manifest has the leanback launcher entry and the banner. **Not checked: a run on a TV or an emulator.** The owner's check is the real one: after a reboot, after the Wi-Fi drops, and after the Mac sleeps.
