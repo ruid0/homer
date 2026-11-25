@@ -7,6 +7,8 @@ const copies = {
   off: { api: 3993, web: 3994 },
   // Its own copy: the upkeep list is shared by everyone, so these tests run one after another and start by clearing it.
   upkeep: { api: 3995, web: 3996 },
+  // The TV page cuts its lists to fit, so its tests need a copy where only they add rows.
+  tv: { api: 3997, web: 3998 },
 };
 
 const apiServer = (name: keyof typeof copies) => ({
@@ -118,6 +120,12 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"], baseURL: `http://127.0.0.1:${copies.upkeep.web}` },
     },
     {
+      name: "tv",
+      testMatch: /\.tv\.spec\.ts$/,
+      fullyParallel: false,
+      use: { ...devices["Desktop Chrome"], baseURL: `http://127.0.0.1:${copies.tv.web}` },
+    },
+    {
       name: "notifications-off",
       testMatch: /\.off\.spec\.ts$/,
       use: { ...devices["Desktop Chrome"], baseURL: `http://127.0.0.1:${copies.off.web}` },
@@ -130,5 +138,7 @@ export default defineConfig({
     webServer("off"),
     apiServer("upkeep"),
     webServer("upkeep"),
+    apiServer("tv"),
+    webServer("tv"),
   ],
 });

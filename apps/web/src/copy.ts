@@ -58,6 +58,16 @@ export const copy = {
     dismiss: "Dismiss",
   },
 
+  tv: {
+    updated: (time: string) => `Updated ${time}`,
+    stale: "Can't reach HOMER. Showing the last update.",
+    loading: "Loading.",
+    failed: "Can't load this yet. HOMER will try again.",
+    more: (count: number) => `+${count} more`,
+    onGroceryList: (count: number) => `${count} on the grocery list`,
+    nothingTomorrow: "Nothing planned tomorrow.",
+  },
+
   schedule: {
     title: "Schedule",
     loading: "Loading.",

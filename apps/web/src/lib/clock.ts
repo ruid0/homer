@@ -7,18 +7,18 @@ export const timeOfDay = (date: Date): string => `${pad(date.getHours())}:${pad(
 const CHECK_EVERY_MS = 30_000;
 
 // A screen left on a wall must keep the time, and move to the new day, without a reload.
-export const useClock = (): Date => {
+export const useClock = (checkEveryMs = CHECK_EVERY_MS): Date => {
   const [now, setNow] = useState(() => new Date());
 
   useEffect(() => {
     const refresh = () => setNow(new Date());
-    const timer = window.setInterval(refresh, CHECK_EVERY_MS);
+    const timer = window.setInterval(refresh, checkEveryMs);
     document.addEventListener("visibilitychange", refresh);
     return () => {
       window.clearInterval(timer);
       document.removeEventListener("visibilitychange", refresh);
     };
-  }, []);
+  }, [checkEveryMs]);
 
   return now;
 };

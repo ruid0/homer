@@ -8,8 +8,9 @@ import { PeoplePage } from "./pages/PeoplePage";
 import { RoutinePage } from "./pages/RoutinePage";
 import { SchedulePage } from "./pages/SchedulePage";
 import { StockPage } from "./pages/StockPage";
+import { TvPage } from "./pages/TvPage";
 
-export const App = () => (
+const Shell = () => (
   <div className="min-h-dvh md:flex">
     <RailNav header={<Wordmark markOnly />} />
     <div className="min-w-0 flex-1">
@@ -34,4 +35,12 @@ export const App = () => (
     </div>
     <BottomNav />
   </div>
+);
+
+// The TV page is a screen of its own: no nav, and nothing to tap.
+export const App = () => (
+  <Routes>
+    <Route path="/tv" element={<TvPage />} />
+    <Route path="*" element={<Shell />} />
+  </Routes>
 );
