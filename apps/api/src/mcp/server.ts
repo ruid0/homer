@@ -4,6 +4,7 @@ import type { Db } from "../db/client";
 import { runTool } from "../ai/tools";
 import { mcpMessages } from "../messages";
 import { registerMaintenanceTools } from "./maintenance";
+import { registerStockTools } from "./stock";
 import { registerWriteTools } from "./writes";
 
 // Only these and the write tools in writes.ts are offered. A tool joins the list on purpose, never because it exists.
@@ -32,5 +33,6 @@ export const createMcpServer = (db: Db, { today }: Deps) => {
   }
   registerWriteTools(server, { db, today, describe });
   registerMaintenanceTools(server, { db, today });
+  registerStockTools(server, { db });
   return server;
 };

@@ -1,6 +1,6 @@
 # MCP: using HOMER's tools from a local agent
 
-Status: Built (read, write, due and maintenance tools) · Owner: Igor Bondarenko · Last updated: 2026-11-25 · Source: `docs/design-mcp.md` (the plan and the reasons)
+Status: Built (read, write, due and maintenance tools) · Owner: Igor Bondarenko · Last updated: 2026-11-26 · Source: `docs/design-mcp.md` (the plan and the reasons)
 
 HOMER can offer its tools over [MCP](https://modelcontextprotocol.io) to an agent running on the same machine. The agent changes household data only through HOMER's own rules: the same validation, the same journal and the same Undo as the in-app assistant. The repo is public, so tokens and household data never go in docs, tests or logs.
 
@@ -43,9 +43,14 @@ Reads change nothing. Every write needs `said` and returns an `actionId` when it
 | `complete_maintenance` | A maintenance job is done today, or on `doneOn` | `name`, `doneOn?`, `said` |
 | `snooze_maintenance` | Hide a job until tomorrow (Not today) | `name`, `said` |
 | `add_maintenance` | Start a job that repeats every N weeks, months or years | `name`, `every`, `unit`, `lastDoneOn?`, `said` |
+| `update_item` | Change a tracked item: rename it, change its unit, set what is in stock exactly, or change how long a unit lasts. Leave out what stays the same | `name`, `newName?`, `unit?`, `quantity?`, `daysPerUnit?`, `lowThresholdDays?`, `said` |
+| `remove_item` | Stop tracking an item (the app's Archive); it also leaves the grocery list | `name`, `said` |
+| `remove_from_groceries` | Take an entry off the grocery list without buying it | `name`, `said` |
 | `undo` | Revert a change by its `actionId` | `actionId` |
 
-Not offered on purpose: removing items, tasks, routines or maintenance jobs. Those stay in the app.
+Not offered on purpose: removing or editing tasks, events, routines or maintenance jobs. Those stay in the app.
+
+`update_item` sets the quantity exactly (to correct a miscount); to add what was bought, use `restock_item`. Changing `daysPerUnit` makes HOMER learn the item's usage again, as it does in the app; changing anything else keeps what it has learned.
 
 ### Answers a write can give
 
@@ -53,7 +58,8 @@ A write returns `structuredContent` with a `status` the agent should read, not g
 
 | `status` | Meaning | What the agent does |
 | --- | --- | --- |
-| `done`, `snoozed`, `added`, and the in-app statuses | It worked; `actionId` is set | Say what changed; keep the id for Undo |
+| `done`, `snoozed`, `added`, `updated`, `removed`, and the in-app statuses | It worked; `actionId` is set | Say what changed; keep the id for Undo |
+| `nothing_to_change` | `update_item` was given a name and nothing to change | Ask what should change |
 | `not_found` / `not_tracked` | No match; the known names are listed | Ask, or offer to add it |
 | `ambiguous` | Several match; they are listed | Ask which one |
 | `not_said` | The name was not the one the person said while similar ones exist | Ask the person |
