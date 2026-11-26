@@ -1,6 +1,6 @@
 # TV display: a read-only dashboard on the living-room TV. Definition and plan
 
-Status: In progress (approved 2026-11-25 with the proposed Tomorrow list; PR 1, the /tv page, merged; PR 2, the Android app, built and awaiting a run on the real TV) · Owner: Igor Bondarenko · Last updated: 2026-11-25 · Source: the owner's request, `docs/design-slice-4-dashboard.md` (Home already targets a wall screen), `docs/mcp.md` (the Tailscale-only rule for new listeners).
+Status: Built (page and Android app merged and running on the owner's TV; Tailscale must be connected by hand after a restart; Wi-Fi-drop behaviour not yet confirmed) · Owner: Igor Bondarenko · Last updated: 2026-11-25 · Source: the owner's request, `docs/design-slice-4-dashboard.md` (Home already targets a wall screen), `docs/mcp.md` (the Tailscale-only rule for new listeners).
 
 The repo is public. The household's Tailscale address and data never go in this repo, its tests or its logs.
 
@@ -102,7 +102,7 @@ Reviewed against the brief: the first plan used a big stat tile per card, which 
 - The address comes from `local.properties` (git ignores it) as `homer.url`; the build stops with a message when it is missing. A new address needs a new build.
 - A page that can't be loaded shows "Can't reach HOMER. Trying again." and is tried again after 5, 10 and 20 seconds, then every 30. The page is also loaded from scratch every 6 hours. The timing is `LoadPolicy.kt` and the rules for what counts as a failure or a success are `LoadTracker.kt`, both pure and tested. A retry that was waiting when the screen paused is made when it comes back, and a link off HOMER's own address is ignored.
 - A boot receiver asks Android to open the app at start-up. Android may refuse that from the background, so the README says to open it once from the home screen.
-- Checked here: unit tests (10), a debug build, and Android lint with no warnings; the manifest has the leanback launcher entry and the banner. **Not checked: a run on a TV or an emulator.** The owner's check is the real one: after a reboot, after the Wi-Fi drops, and after the Mac sleeps.
+- Checked here: unit tests (10), a debug build, and Android lint with no warnings; the manifest has the leanback launcher entry and the banner. Run on the owner's Hisense over Tailscale (2026-11-25): the page loads, and after a restart the app starts by itself (about two minutes, once the Hisense Device Assistant allows it). **Tailscale does not start by itself on that TV**, so after a restart someone connects it with the remote; until then the page shows the retry screen. Starting the screen on wake from standby is parked: the owner opens HOMER from the Apps row. **Not yet confirmed:** the Wi-Fi drop and the Mac sleeping.
 
 ## 9. The richer screen (2026-11-26)
 After a week on the TV the owner asked for two things: the greys looked washed out, and more should be shown now the real screen is seen.
