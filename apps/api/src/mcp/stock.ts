@@ -4,7 +4,7 @@ import { mcpToolDescriptions, mcpToolSchemas, needsRestock } from "@homer/shared
 import type { Db } from "../db/client";
 import { mcpMessages } from "../messages";
 import { createCaller } from "../routers/index";
-import { reply, said, withNamed, written, type Result } from "./named";
+import { registerWrite, withNamed, written, type Result } from "./named";
 
 type Name = "update_item" | "remove_item" | "remove_from_groceries";
 type Args<N extends Name> = z.infer<(typeof mcpToolSchemas)[N]>;
@@ -12,22 +12,8 @@ type Args<N extends Name> = z.infer<(typeof mcpToolSchemas)[N]>;
 // Items and the grocery list, changed the way the app changes them. The in-app assistant does not get these.
 export const registerStockTools = (server: McpServer, { db }: { db: Db }) => {
   const api = createCaller({ db });
-  const text = (result: Result) =>
-    String(result.message ?? mcpMessages.written("stock", (result.actionId as number | null) ?? null));
-
   const write = <N extends Name>(name: N, run: (args: Args<N>, words: string) => Promise<Result>) =>
-    server.registerTool(
-      name,
-      {
-        description: `${mcpToolDescriptions[name]} ${mcpMessages.saidRule}`,
-        inputSchema: mcpToolSchemas[name].extend({ said }),
-        annotations: { readOnlyHint: false, destructiveHint: false },
-      },
-      async ({ said: words, ...args }: Record<string, unknown> & { said: string }) => {
-        const result = await run(args as Args<N>, words);
-        return reply(result, text(result));
-      },
-    );
+    registerWrite(server, "stock", name, run as never);
 
   write("update_item", async (args, words) => {
     const { newName, unit, quantity, daysPerUnit, lowThresholdDays } = args;

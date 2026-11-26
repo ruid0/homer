@@ -12,7 +12,7 @@ import { runTool } from "../ai/tools";
 import type { Db } from "../db/client";
 import { mcpMessages } from "../messages";
 import { createCaller } from "../routers/index";
-import { reply, said, withNamed, written, type Result } from "./named";
+import { registerWrite, reply, withNamed, written, type Result } from "./named";
 
 type Deps = { db: Db; today: () => string };
 
@@ -60,9 +60,6 @@ const withJob = async (
 
 export const registerMaintenanceTools = (server: McpServer, deps: Deps) => {
   const { db, today } = deps;
-  const text = (result: Result) =>
-    String(result.message ?? mcpMessages.written("maintenance", (result.actionId as number | null) ?? null));
-
   server.registerTool(
     "list_due",
     {
@@ -77,18 +74,7 @@ export const registerMaintenanceTools = (server: McpServer, deps: Deps) => {
   );
 
   const write = (name: Exclude<McpToolName, "list_due">, run: (args: never, words: string) => Promise<Result>) =>
-    server.registerTool(
-      name,
-      {
-        description: `${mcpToolDescriptions[name]} ${mcpMessages.saidRule}`,
-        inputSchema: mcpToolSchemas[name].extend({ said }),
-        annotations: { readOnlyHint: false, destructiveHint: false },
-      },
-      async ({ said: words, ...args }: Record<string, unknown> & { said: string }) => {
-        const result = await run(args as never, words);
-        return reply(result, text(result));
-      },
-    );
+    registerWrite(server, "maintenance", name, run);
 
   write("complete_maintenance", (args: { name: string; doneOn?: string | null }, words) =>
     withJob(deps, args.name, words, (job) =>

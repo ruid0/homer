@@ -1,11 +1,11 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import { eq } from "drizzle-orm";
+import { eq, isNull } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 import { parseToolCall } from "@homer/shared";
 import { runTool } from "../ai/tools";
 import { createDb } from "../db/client";
-import { items } from "../db/schema";
+import { events, items, people, tasks } from "../db/schema";
 import { createCaller } from "../routers/index";
 import { createMcpApp } from "./app";
 import { mcpReadTools } from "./server";
@@ -14,6 +14,7 @@ import { startMcp } from "./listen";
 
 const mcpMaintenanceTools = ["list_due", "complete_maintenance", "snooze_maintenance", "add_maintenance"];
 const mcpStockTools = ["update_item", "remove_item", "remove_from_groceries"];
+const mcpScheduleTools = ["update_task", "remove_task", "update_event", "remove_event"];
 const token = "test-token";
 const today = "2026-11-04";
 
@@ -52,7 +53,7 @@ describe("mcp", () => {
     const { connect } = setup();
     const { tools } = await (await connect()).listTools();
     expect(tools.map((tool) => tool.name).sort()).toEqual(
-      [...mcpReadTools, ...mcpWriteTools, ...mcpMaintenanceTools, ...mcpStockTools, "undo"].sort(),
+      [...mcpReadTools, ...mcpWriteTools, ...mcpMaintenanceTools, ...mcpStockTools, ...mcpScheduleTools, "undo"].sort(),
     );
     for (const tool of tools) {
       expect(tool.inputSchema.type).toBe("object");
@@ -486,6 +487,228 @@ describe("mcp", () => {
       ).callTool({ name: "remove_from_groceries", arguments: { name: "Hand soap", said: "drop the dish soap" } });
       expect(got.structuredContent).toMatchObject({ status: "not_said" });
       expect(await api.groceries.list()).toHaveLength(2);
+    });
+  });
+
+  describe("tasks and events", () => {
+    const tasksOf = async (api: ReturnType<typeof createCaller>) =>
+      (await api.schedule.view({ today, days: 31 })).days.flatMap((day) => day.tasks);
+    const open = (db: ReturnType<typeof setup>["db"]) => db.select().from(tasks).where(isNull(tasks.removedAt)).all();
+
+    it("changes a task's title, day, time and person, and undo puts it back", async () => {
+      const { db, connect } = setup();
+      const api = createCaller({ db });
+      const ana = await api.people.add({ name: "Ana" });
+      await api.tasks.add({ title: "Call the plumber", dueDate: "2026-11-05" });
+      const client = await connect();
+      const got = await client.callTool({
+        name: "update_task",
+        arguments: {
+          title: "plumber",
+          newTitle: "Call the electrician",
+          dueDate: "2026-11-06",
+          dueTime: "09:30",
+          person: "Ana",
+          said: "move the plumber call to the 6th at 9:30 for Ana, and call it the electrician",
+        },
+      });
+      expect(got.structuredContent).toMatchObject({ status: "updated", title: "Call the electrician" });
+      expect(open(db)).toMatchObject([
+        { title: "Call the electrician", dueDate: "2026-11-06", dueTime: "09:30", personId: ana.id },
+      ]);
+
+      const { actionId } = got.structuredContent as { actionId: number };
+      await client.callTool({ name: "undo", arguments: { actionId } });
+      expect(open(db)).toMatchObject([
+        { title: "Call the plumber", dueDate: "2026-11-05", dueTime: null, personId: null },
+      ]);
+    });
+
+    it("clears a field only when asked, and says when a rule refuses the result", async () => {
+      const { db, connect } = setup();
+      const api = createCaller({ db });
+      await api.tasks.add({ title: "Water the plants", dueDate: "2026-11-05", dueTime: "08:00" });
+      const client = await connect();
+      const call = async (args: Record<string, unknown>) =>
+        (await client.callTool({ name: "update_task", arguments: { title: "Water the plants", ...args } }))
+          .structuredContent;
+      expect(await call({ dueTime: null, said: "water the plants again" })).toMatchObject({
+        status: "nothing_to_change",
+      });
+      expect(await call({ clear: ["dueTime"], said: "any time for the plants" })).toMatchObject({ status: "updated" });
+      expect(open(db)).toMatchObject([{ dueDate: "2026-11-05", dueTime: null }]);
+      expect(await call({ dueTime: "10:00", clear: ["dueTime"], said: "10:00 but any time" })).toMatchObject({
+        status: "invalid",
+      });
+      await call({ dueTime: "10:00", said: "plants at 10" });
+      // A time needs a day, so removing the day while it has a time is refused and nothing changes.
+      const refused = await call({ clear: ["dueDate"], said: "no day for the plants" });
+      expect(refused).toMatchObject({ status: "error", message: expect.stringMatching(/due date/i) });
+      // Words for the person, not the validation issue list.
+      expect(String((refused as { message: string }).message)).not.toMatch(/^\[|"code"/);
+      expect(open(db)).toMatchObject([{ dueDate: "2026-11-05", dueTime: "10:00" }]);
+    });
+
+    it("asks which task when two share a title, and onDate picks one", async () => {
+      const { db, connect } = setup();
+      const api = createCaller({ db });
+      await api.tasks.add({ title: "Take out the bins", dueDate: "2026-11-05" });
+      await api.tasks.add({ title: "Take out the bins", dueDate: "2026-11-12" });
+      const client = await connect();
+      const many = await client.callTool({
+        name: "remove_task",
+        arguments: { title: "Take out the bins", said: "drop the bins task" },
+      });
+      expect(many.structuredContent).toMatchObject({
+        status: "ambiguous",
+        matches: ["Take out the bins (2026-11-05)", "Take out the bins (2026-11-12)"],
+      });
+      expect(open(db)).toHaveLength(2);
+
+      const one = await client.callTool({
+        name: "remove_task",
+        arguments: { title: "Take out the bins", onDate: "2026-11-12", said: "drop the bins task on the 12th" },
+      });
+      expect(one.structuredContent).toMatchObject({ status: "removed" });
+      expect(open(db)).toMatchObject([{ dueDate: "2026-11-05" }]);
+
+      const { actionId } = one.structuredContent as { actionId: number };
+      await client.callTool({ name: "undo", arguments: { actionId } });
+      expect(open(db)).toHaveLength(2);
+    });
+
+    it("does not touch a task the person did not name, or one that is not there", async () => {
+      const { db, connect } = setup();
+      const api = createCaller({ db });
+      await api.tasks.add({ title: "Call the plumber", dueDate: "2026-11-05" });
+      await api.tasks.add({ title: "Call the dentist", dueDate: "2026-11-05" });
+      const client = await connect();
+      const wrong = await client.callTool({
+        name: "remove_task",
+        arguments: { title: "Call the dentist", said: "I called the plumber" },
+      });
+      expect(wrong.structuredContent).toMatchObject({ status: "not_said" });
+      const none = await client.callTool({ name: "remove_task", arguments: { title: "Mow", said: "drop the mowing" } });
+      expect(none.structuredContent).toMatchObject({ status: "not_found" });
+      const stranger = await client.callTool({
+        name: "update_task",
+        arguments: { title: "Call the plumber", person: "Zed", said: "give the plumber call to Zed" },
+      });
+      expect(stranger.structuredContent).toMatchObject({ status: "person_not_found" });
+      expect(open(db)).toHaveLength(2);
+    });
+
+    it("moves an event, clears its time and person, and undo puts it back", async () => {
+      const { db, connect } = setup();
+      const api = createCaller({ db });
+      const ana = await api.people.add({ name: "Ana" });
+      await api.events.add({ title: "Dentist", date: "2026-11-10", time: "14:00", personId: ana.id });
+      const client = await connect();
+      const got = await client.callTool({
+        name: "update_event",
+        arguments: {
+          title: "Dentist",
+          date: "2026-11-12",
+          clear: ["time", "person"],
+          said: "dentist moved to the 12th",
+        },
+      });
+      expect(got.structuredContent).toMatchObject({ status: "updated", title: "Dentist", date: "2026-11-12" });
+      expect(db.select().from(events).all()).toMatchObject([{ date: "2026-11-12", time: null, personId: null }]);
+
+      const { actionId } = got.structuredContent as { actionId: number };
+      await client.callTool({ name: "undo", arguments: { actionId } });
+      expect(db.select().from(events).all()).toMatchObject([{ date: "2026-11-10", time: "14:00", personId: ana.id }]);
+    });
+
+    it("looks at upcoming events unless a date is given, and removes one with undo", async () => {
+      const { db, connect } = setup();
+      const api = createCaller({ db });
+      await api.events.add({ title: "Soccer practice", date: "2026-10-28" });
+      await api.events.add({ title: "Soccer practice", date: "2026-11-11" });
+      const client = await connect();
+      const got = await client.callTool({
+        name: "remove_event",
+        arguments: { title: "Soccer practice", said: "cancel soccer practice" },
+      });
+      expect(got.structuredContent).toMatchObject({ status: "removed", date: "2026-11-11" });
+      expect(db.select().from(events).where(isNull(events.removedAt)).all()).toMatchObject([{ date: "2026-10-28" }]);
+
+      const past = await client.callTool({
+        name: "remove_event",
+        arguments: { title: "Soccer practice", onDate: "2026-10-28", said: "that old soccer practice, remove it" },
+      });
+      expect(past.structuredContent).toMatchObject({ status: "removed", date: "2026-10-28" });
+
+      const { actionId } = got.structuredContent as { actionId: number };
+      await client.callTool({ name: "undo", arguments: { actionId } });
+      expect(db.select().from(events).where(isNull(events.removedAt)).all()).toMatchObject([{ date: "2026-11-11" }]);
+    });
+
+    it("removes a repeating task, ending its repeats, and undo brings it back", async () => {
+      const { db, connect } = setup();
+      const api = createCaller({ db });
+      await api.tasks.add({ title: "Take out the bins", dueDate: "2026-11-05", repeat: "weekly" });
+      const client = await connect();
+      const got = await client.callTool({
+        name: "remove_task",
+        arguments: { title: "Take out the bins", said: "stop the bins reminder" },
+      });
+      expect(open(db)).toHaveLength(0);
+      const { actionId } = got.structuredContent as { actionId: number };
+      await client.callTool({ name: "undo", arguments: { actionId } });
+      expect(open(db)).toMatchObject([{ title: "Take out the bins", repeat: "weekly" }]);
+    });
+
+    it("picks the task on onDate when updating, and does not know a person who has left", async () => {
+      const { db, connect } = setup();
+      const api = createCaller({ db });
+      const ana = await api.people.add({ name: "Ana" });
+      db.update(people).set({ archivedAt: "2026-10-01T00:00:00.000Z" }).where(eq(people.id, ana.id)).run();
+      await api.tasks.add({ title: "Practice piano", dueDate: "2026-11-05" });
+      await api.tasks.add({ title: "Practice piano", dueDate: "2026-11-12" });
+      const client = await connect();
+      const left = await client.callTool({
+        name: "update_task",
+        arguments: { title: "Practice piano", onDate: "2026-11-12", person: "Ana", said: "give the 12th piano to Ana" },
+      });
+      expect(left.structuredContent).toMatchObject({ status: "person_not_found" });
+      const moved = await client.callTool({
+        name: "update_task",
+        arguments: {
+          title: "Practice piano",
+          onDate: "2026-11-12",
+          dueTime: "16:00",
+          said: "the 12th piano is at 4pm",
+        },
+      });
+      expect(moved.structuredContent).toMatchObject({ status: "updated", dueDate: "2026-11-12" });
+      expect(open(db).map((task) => [task.dueDate, task.dueTime])).toEqual([
+        ["2026-11-05", null],
+        ["2026-11-12", "16:00"],
+      ]);
+    });
+
+    it("does not change an event the person did not name", async () => {
+      const { db, connect } = setup();
+      const api = createCaller({ db });
+      await api.events.add({ title: "Dentist", date: "2026-11-10" });
+      await api.events.add({ title: "Dance recital", date: "2026-11-11" });
+      const client = await connect();
+      const call = async (name: string, args: Record<string, unknown>) =>
+        (await client.callTool({ name, arguments: args })).structuredContent;
+      expect(await call("remove_event", { title: "Dentist", said: "cancel the recital" })).toMatchObject({
+        status: "not_said",
+      });
+      expect(
+        await call("update_event", { title: "Dentist", time: "09:00", said: "the recital is at nine" }),
+      ).toMatchObject({
+        status: "not_said",
+      });
+      expect(db.select().from(events).where(isNull(events.removedAt)).all()).toMatchObject([
+        { title: "Dentist", time: null },
+        { title: "Dance recital" },
+      ]);
     });
   });
 });

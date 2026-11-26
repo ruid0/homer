@@ -1,5 +1,13 @@
 import { z } from "zod";
-import { MAX_DAYS_PER_UNIT, MAX_QUANTITY, MAX_SCHEDULE_DAYS, dateSchema, maintenanceItemInputSchema } from "./schemas";
+import {
+  MAX_DAYS_PER_UNIT,
+  MAX_QUANTITY,
+  MAX_SCHEDULE_DAYS,
+  dateSchema,
+  maintenanceItemInputSchema,
+  repeatSchema,
+  timeSchema,
+} from "./schemas";
 import type { MaintenanceStatus } from "./maintenance";
 
 // Tools only the MCP listener offers. The in-app assistant keeps its own eleven.
@@ -27,6 +35,29 @@ export const mcpToolSchemas = {
   }),
   remove_item: z.object({ name: text }),
   remove_from_groceries: z.object({ name: text }),
+  // A task or event is found by its title. `onDate` tells apart two that share one. Whatever is left out stays as it is;
+  // `clear` takes a field off.
+  update_task: z.object({
+    title: text,
+    onDate: dateSchema.nullish(),
+    newTitle: text.nullish(),
+    dueDate: dateSchema.nullish(),
+    dueTime: timeSchema.nullish(),
+    repeat: repeatSchema.nullish(),
+    person: text.nullish(),
+    clear: z.array(z.enum(["dueDate", "dueTime", "repeat", "person"])).nullish(),
+  }),
+  remove_task: z.object({ title: text, onDate: dateSchema.nullish() }),
+  update_event: z.object({
+    title: text,
+    onDate: dateSchema.nullish(),
+    newTitle: text.nullish(),
+    date: dateSchema.nullish(),
+    time: timeSchema.nullish(),
+    person: text.nullish(),
+    clear: z.array(z.enum(["time", "person"])).nullish(),
+  }),
+  remove_event: z.object({ title: text, onDate: dateSchema.nullish() }),
 };
 
 export type McpToolName = keyof typeof mcpToolSchemas;
