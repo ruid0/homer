@@ -66,6 +66,10 @@ export const copy = {
     more: (count: number) => `+${count} more`,
     onGroceryList: (count: number) => `${count} on the grocery list`,
     nothingTomorrow: "Nothing planned tomorrow.",
+    upcoming: "Upcoming",
+    nothingUpcoming: "Nothing planned for the coming days.",
+    nothingAnytime: "No tasks without a day.",
+    upcomingDay: (weekday: string, day: number) => `${weekday} ${day}`,
   },
 
   schedule: {

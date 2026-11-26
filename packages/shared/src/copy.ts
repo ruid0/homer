@@ -36,7 +36,13 @@ export const toolErrors = {
 };
 
 export const mcpToolDescriptions: Record<
-  "list_due" | "complete_maintenance" | "snooze_maintenance" | "add_maintenance",
+  | "list_due"
+  | "complete_maintenance"
+  | "snooze_maintenance"
+  | "add_maintenance"
+  | "update_item"
+  | "remove_item"
+  | "remove_from_groceries",
   string
 > = {
   list_due:
@@ -45,4 +51,10 @@ export const mcpToolDescriptions: Record<
   snooze_maintenance: "Hide a maintenance job until tomorrow (the Upkeep page's Not today). Use the job's name.",
   add_maintenance:
     "Start a maintenance job that repeats every N weeks, months or years. lastDoneOn is optional; without it the first due date counts from today.",
+  update_item:
+    "Change a tracked item, found by its current name. Give only what changes: newName, unit, quantity (what is in stock now, set exactly; to add what was bought use restock_item), daysPerUnit (how many days one unit lasts; a new number makes HOMER learn the usage again) or lowThresholdDays.",
+  remove_item:
+    "Stop tracking an item (the app's Archive), found by its name. It also leaves the grocery list. Undo brings it back.",
+  remove_from_groceries:
+    "Take an entry off the grocery list without buying it, found by its name. A tracked item stays tracked, and goes back on the list while it is still low.",
 };

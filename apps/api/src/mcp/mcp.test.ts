@@ -1,9 +1,11 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 import { parseToolCall } from "@homer/shared";
 import { runTool } from "../ai/tools";
 import { createDb } from "../db/client";
+import { items } from "../db/schema";
 import { createCaller } from "../routers/index";
 import { createMcpApp } from "./app";
 import { mcpReadTools } from "./server";
@@ -11,6 +13,7 @@ import { mcpWriteTools } from "./writes";
 import { startMcp } from "./listen";
 
 const mcpMaintenanceTools = ["list_due", "complete_maintenance", "snooze_maintenance", "add_maintenance"];
+const mcpStockTools = ["update_item", "remove_item", "remove_from_groceries"];
 const token = "test-token";
 const today = "2026-11-04";
 
@@ -49,7 +52,7 @@ describe("mcp", () => {
     const { connect } = setup();
     const { tools } = await (await connect()).listTools();
     expect(tools.map((tool) => tool.name).sort()).toEqual(
-      [...mcpReadTools, ...mcpWriteTools, ...mcpMaintenanceTools, "undo"].sort(),
+      [...mcpReadTools, ...mcpWriteTools, ...mcpMaintenanceTools, ...mcpStockTools, "undo"].sort(),
     );
     for (const tool of tools) {
       expect(tool.inputSchema.type).toBe("object");
@@ -300,6 +303,189 @@ describe("mcp", () => {
         arguments: { name: "Gutters", every: 6, unit: "months", said: "clean the gutters every 6 months" },
       });
       expect((await createCaller({ db }).maintenance.list({ today })).map((entry) => entry.name)).toEqual(["Gutters"]);
+    });
+  });
+
+  describe("items and the grocery list", () => {
+    const stock = (
+      api: ReturnType<typeof createCaller>,
+      name: string,
+      quantity = 2,
+      daysPerUnit: number | null = null,
+    ) => api.inventory.create({ name, unit: "bag", quantity, daysPerUnit, lowThresholdDays: 3 });
+    const find = async (api: ReturnType<typeof createCaller>, name: string) =>
+      (await api.inventory.list()).find((item) => item.name === name);
+
+    it("renames an item and corrects its quantity, and undo puts both back", async () => {
+      const { db, connect } = setup();
+      const api = createCaller({ db });
+      await stock(api, "Salt");
+      const client = await connect();
+      const got = await client.callTool({
+        name: "update_item",
+        arguments: { name: "Salt", newName: "Sea salt", quantity: 5, said: "rename the salt to sea salt, we have 5" },
+      });
+      expect(got.structuredContent).toMatchObject({ status: "updated", item: "Sea salt" });
+      expect(await find(api, "Salt")).toBeUndefined();
+      // The threshold was not mentioned, so it is not reset to the default.
+      expect(await find(api, "Sea salt")).toMatchObject({ quantity: 5, unit: "bag", lowThresholdDays: 3 });
+
+      const { actionId } = got.structuredContent as { actionId: number };
+      expect((await client.callTool({ name: "undo", arguments: { actionId } })).structuredContent).toEqual({
+        status: "undone",
+      });
+      expect(await find(api, "Sea salt")).toBeUndefined();
+      expect(await find(api, "Salt")).toMatchObject({ quantity: 2 });
+    });
+
+    it("treats nulls as left out, and a quantity of 0 as a real change", async () => {
+      const { db, connect } = setup();
+      const api = createCaller({ db });
+      await stock(api, "Salt", 4, 10);
+      const client = await connect();
+      await client.callTool({
+        name: "update_item",
+        arguments: {
+          name: "Salt",
+          newName: null,
+          unit: "tin",
+          quantity: null,
+          daysPerUnit: null,
+          lowThresholdDays: null,
+          said: "salt is in tins",
+        },
+      });
+      expect(await find(api, "Salt")).toMatchObject({ unit: "tin", quantity: 4, daysPerUnitEntered: 10 });
+      await client.callTool({ name: "update_item", arguments: { name: "Salt", quantity: 0, said: "no salt left" } });
+      expect(await find(api, "Salt")).toMatchObject({ quantity: 0 });
+    });
+
+    it("keeps what HOMER has learned unless the days per unit change", async () => {
+      const { db, connect } = setup();
+      const api = createCaller({ db });
+      const { id } = await stock(api, "Rice", 3, 10);
+      db.update(items).set({ daysPerUnitLearned: 6 }).where(eq(items.id, id)).run();
+      const client = await connect();
+      await client.callTool({
+        name: "update_item",
+        arguments: { name: "Rice", unit: "kg", said: "rice is in kg now" },
+      });
+      expect(db.select().from(items).where(eq(items.id, id)).get()).toMatchObject({
+        unit: "kg",
+        daysPerUnitEntered: 10,
+        daysPerUnitLearned: 6,
+      });
+      await client.callTool({
+        name: "update_item",
+        arguments: { name: "Rice", daysPerUnit: 4, said: "rice lasts 4 days" },
+      });
+      expect(db.select().from(items).where(eq(items.id, id)).get()).toMatchObject({
+        daysPerUnitEntered: 4,
+        daysPerUnitLearned: null,
+      });
+    });
+
+    it("answers with a status, and changes nothing, for a name that is taken, unknown, unclear or unsaid", async () => {
+      const { db, connect } = setup();
+      const api = createCaller({ db });
+      await stock(api, "Oat milk");
+      await stock(api, "Soy milk");
+      await stock(api, "Salt");
+      const client = await connect();
+      const call = async (args: Record<string, unknown>) =>
+        (await client.callTool({ name: "update_item", arguments: args })).structuredContent;
+      expect(await call({ name: "Salt", newName: "Soy milk", said: "call the salt soy milk" })).toMatchObject({
+        status: "error",
+      });
+      expect(await call({ name: "Pepper", quantity: 1, said: "we have 1 pepper" })).toMatchObject({
+        status: "not_found",
+      });
+      expect(await call({ name: "milk", quantity: 1, said: "1 milk left" })).toMatchObject({ status: "ambiguous" });
+      expect(await call({ name: "Soy milk", quantity: 9, said: "we have 9 milk" })).toMatchObject({
+        status: "not_said",
+      });
+      expect(await call({ name: "Salt", said: "change the salt" })).toMatchObject({ status: "nothing_to_change" });
+      expect((await api.inventory.list()).map((item) => [item.name, item.quantity])).toEqual([
+        ["Oat milk", 2],
+        ["Salt", 2],
+        ["Soy milk", 2],
+      ]);
+    });
+
+    it("stops tracking an item, takes it off the grocery list, and undo brings both back", async () => {
+      const { db, connect } = setup();
+      const api = createCaller({ db });
+      await stock(api, "Salt");
+      const client = await connect();
+      await client.callTool({ name: "mark_out", arguments: { name: "Salt", said: "we're out of salt" } });
+      expect(await api.groceries.list()).toHaveLength(1);
+      const got = await client.callTool({
+        name: "remove_item",
+        arguments: { name: "Salt", said: "stop tracking salt" },
+      });
+      expect(got.structuredContent).toMatchObject({ status: "removed", item: "Salt" });
+      expect(await find(api, "Salt")).toBeUndefined();
+      expect(await api.groceries.list()).toHaveLength(0);
+
+      const { actionId } = got.structuredContent as { actionId: number };
+      await client.callTool({ name: "undo", arguments: { actionId } });
+      expect(await find(api, "Salt")).toBeDefined();
+      expect(await api.groceries.list()).toHaveLength(1);
+    });
+
+    it("takes a free-text entry off the grocery list, and says when it is not there", async () => {
+      const { db, connect } = setup();
+      const api = createCaller({ db });
+      await api.groceries.add({ text: "Birthday candles" });
+      const client = await connect();
+      const missing = await client.callTool({
+        name: "remove_from_groceries",
+        arguments: { name: "Balloons", said: "no balloons" },
+      });
+      expect(missing.structuredContent).toMatchObject({ status: "not_found" });
+      const got = await client.callTool({
+        name: "remove_from_groceries",
+        arguments: { name: "Birthday candles", said: "drop the birthday candles" },
+      });
+      expect(got.structuredContent).toMatchObject({ status: "removed", entry: "Birthday candles" });
+      expect(await api.groceries.list()).toHaveLength(0);
+
+      const { actionId } = got.structuredContent as { actionId: number };
+      await client.callTool({ name: "undo", arguments: { actionId } });
+      expect(await api.groceries.list()).toHaveLength(1);
+    });
+
+    it("says so when an item that is still low will be put back on the list", async () => {
+      const { db, connect } = setup();
+      const api = createCaller({ db });
+      await stock(api, "Salt");
+      await stock(api, "Rice", 5);
+      const client = await connect();
+      await client.callTool({ name: "mark_out", arguments: { name: "Salt", said: "we're out of salt" } });
+      const got = await client.callTool({
+        name: "remove_from_groceries",
+        arguments: { name: "Salt", said: "take salt off the list" },
+      });
+      expect(got.structuredContent).toMatchObject({ status: "removed", note: expect.stringMatching(/again/) });
+
+      await api.groceries.add({ text: "Rice" });
+      const fine = await client.callTool({
+        name: "remove_from_groceries",
+        arguments: { name: "Rice", said: "take rice off the list" },
+      });
+      expect(fine.structuredContent).not.toHaveProperty("note");
+    });
+
+    it("refuses an entry the person did not name when others share a word", async () => {
+      const { db, connect } = setup();
+      const api = createCaller({ db });
+      await api.groceries.add({ text: "Dish soap" });
+      await api.groceries.add({ text: "Hand soap" });
+      const got = await (
+        await connect()
+      ).callTool({ name: "remove_from_groceries", arguments: { name: "Hand soap", said: "drop the dish soap" } });
+      expect(got.structuredContent).toMatchObject({ status: "not_said" });
+      expect(await api.groceries.list()).toHaveLength(2);
     });
   });
 });
