@@ -4,6 +4,8 @@
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+    <!-- Lets the boot receiver open the screen from the background (Android 10 and later). It is switched on once with adb, see the README. -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 
     <!-- A TV has no touch screen, and the app also installs on a TV that is not a leanback one. -->
     <uses-feature android:name="android.hardware.touchscreen" android:required="false" />
