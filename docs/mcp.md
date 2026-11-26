@@ -46,9 +46,15 @@ Reads change nothing. Every write needs `said` and returns an `actionId` when it
 | `update_item` | Change a tracked item: rename it, change its unit, set what is in stock exactly, or change how long a unit lasts. Leave out what stays the same | `name`, `newName?`, `unit?`, `quantity?`, `daysPerUnit?`, `lowThresholdDays?`, `said` |
 | `remove_item` | Stop tracking an item (the app's Archive); it also leaves the grocery list | `name`, `said` |
 | `remove_from_groceries` | Take an entry off the grocery list without buying it | `name`, `said` |
+| `update_task` | Change an open task: title, day, time, repeat or person; `clear` takes one off | `title`, `onDate?`, `newTitle?`, `dueDate?`, `dueTime?`, `repeat?`, `person?`, `clear?`, `said` |
+| `remove_task` | Remove an open task (a repeating one goes with its repeats) | `title`, `onDate?`, `said` |
+| `update_event` | Change an event: title, date, time or person; `clear` takes the time or person off | `title`, `onDate?`, `newTitle?`, `date?`, `time?`, `person?`, `clear?`, `said` |
+| `remove_event` | Remove an event | `title`, `onDate?`, `said` |
 | `undo` | Revert a change by its `actionId` | `actionId` |
 
-Not offered on purpose: removing or editing tasks, events, routines or maintenance jobs. Those stay in the app.
+Not offered on purpose: removing or editing routines and maintenance jobs. Those stay in the app.
+
+Tasks and events are found by title. A task is looked for among all open tasks; an event among those from today on, or on `onDate` when that is given (it may be past). When two share a title the answer is `ambiguous`, with each one's date, and `onDate` (an ISO date) picks one. Leaving a field out keeps it; to remove a due time, a repeat, a person or a day, name it in `clear`. Dates are `YYYY-MM-DD` here, not words like "friday". Two tasks or events with the same title and the same day, or two undated tasks with one title, cannot be told apart: the agent should ask the person to remove the duplicate in the app.
 
 `update_item` sets the quantity exactly (to correct a miscount); to add what was bought, use `restock_item`. Changing `daysPerUnit` makes HOMER learn the item's usage again, as it does in the app; changing anything else keeps what it has learned.
 
@@ -61,6 +67,7 @@ A write returns `structuredContent` with a `status` the agent should read, not g
 | `done`, `snoozed`, `added`, `updated`, `removed`, and the in-app statuses | It worked; `actionId` is set | Say what changed; keep the id for Undo |
 | `nothing_to_change` | `update_item` was given a name and nothing to change | Ask what should change |
 | `not_found` / `not_tracked` | No match; the known names are listed | Ask, or offer to add it |
+| `person_not_found` | The person given is not one of the household; their names are listed | Ask who is meant |
 | `ambiguous` | Several match; they are listed | Ask which one |
 | `not_said` | The name was not the one the person said while similar ones exist | Ask the person |
 | `error` | A rule refused it (already done today, name taken); `message` says why | Tell the person; nothing changed |

@@ -4,6 +4,7 @@ import type { Db } from "../db/client";
 import { runTool } from "../ai/tools";
 import { mcpMessages } from "../messages";
 import { registerMaintenanceTools } from "./maintenance";
+import { registerScheduleTools } from "./schedule";
 import { registerStockTools } from "./stock";
 import { registerWriteTools } from "./writes";
 
@@ -34,5 +35,6 @@ export const createMcpServer = (db: Db, { today }: Deps) => {
   registerWriteTools(server, { db, today, describe });
   registerMaintenanceTools(server, { db, today });
   registerStockTools(server, { db });
+  registerScheduleTools(server, { db, today });
   return server;
 };

@@ -207,7 +207,7 @@ const handlers: Handlers = {
 const readOnly = new Set(toolDefinitions.filter((tool) => !tool.writes).map((tool) => tool.name));
 
 // What went wrong, in words the model can act on.
-const errorMessage = (error: TRPCError): string =>
+export const errorMessage = (error: TRPCError): string =>
   error.cause instanceof ZodError ? issueMessages(error.cause) : error.message;
 
 const execute = async (context: Context, call: ToolCall): Promise<ToolResult> => {

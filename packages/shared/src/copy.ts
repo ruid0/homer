@@ -42,7 +42,11 @@ export const mcpToolDescriptions: Record<
   | "add_maintenance"
   | "update_item"
   | "remove_item"
-  | "remove_from_groceries",
+  | "remove_from_groceries"
+  | "update_task"
+  | "remove_task"
+  | "update_event"
+  | "remove_event",
   string
 > = {
   list_due:
@@ -57,4 +61,12 @@ export const mcpToolDescriptions: Record<
     "Stop tracking an item (the app's Archive), found by its name. It also leaves the grocery list. Undo brings it back.",
   remove_from_groceries:
     "Take an entry off the grocery list without buying it, found by its name. A tracked item stays tracked, and goes back on the list while it is still low.",
+  update_task:
+    "Change an open task, found by its title. Give only what changes: newTitle, dueDate, dueTime, repeat or person. To take one off (any time of day, no repeat, no person, no day) name it in clear. If two tasks share the title, onDate is the due date of the one meant.",
+  remove_task:
+    "Remove an open task, found by its title (onDate is the due date, if two share a title). A repeating task is removed with its repeats. Undo brings it back.",
+  update_event:
+    "Change an event, found by its title (the next one from today, or the one on onDate). Give only what changes: newTitle, date, time or person. To take off the time or the person, name it in clear.",
+  remove_event:
+    "Remove an event, found by its title (the next one from today, or the one on onDate). Undo brings it back.",
 };

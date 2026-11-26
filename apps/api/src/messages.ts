@@ -32,6 +32,7 @@ export const mcpMessages = {
   undone: "Undone.",
   stillLow: (name: string) =>
     `${name} is still low, so HOMER will add it again. Restock it (restock_item) or correct its quantity (update_item) to stop that.`,
+  setAndClear: "A field was both given a new value and listed in clear. Choose one.",
   nothingToChange: "Nothing to change: say what the item should become.",
   dueSummary: (days: number) => `Due in the next ${days} ${days === 1 ? "day" : "days"}.`,
   summary: (tool: string, count: number) => `${tool}: ${count} ${count === 1 ? "row" : "rows"}.`,
