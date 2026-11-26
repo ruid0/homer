@@ -44,22 +44,23 @@
   }
 }
 
-/* The TV page is always the dark palette: a bright page glares in a living room. Keep in step with the dark block above. */
+/* The TV page is always dark, and darker than the app's dark: a television is an LCD that lifts a charcoal into grey, so
+   the background is nearly black and the greys are brighter than the app's. State colours keep their meaning. */
 :root.tv {
   color-scheme: dark;
-  --surface: #1f1d1b;
-  --card: #2d2a28;
-  --ink: #e9e5e0;
-  --primary: #d8d2ca;
-  --on-primary: #1f1d1b;
-  --muted: #aaa59d;
-  --line: #3a3633;
-  --line-strong: #4f4a45;
-  --control: #7f7972;
-  --hover: #332f2c;
-  --warn: #e6b04f;
-  --late: #ef8c80;
-  --ok: #6fcf8a;
+  --surface: #0a0908;
+  --card: #1a1816;
+  --ink: #f6f3ee;
+  --primary: #e8e2da;
+  --on-primary: #0a0908;
+  --muted: #cbc5bc;
+  --line: #48433e;
+  --line-strong: #625c55;
+  --control: #9a948c;
+  --hover: #1f1c1a;
+  --warn: #f5bd52;
+  --late: #ff9a8c;
+  --ok: #7ddc98;
   --spark: #f59e0b;
   cursor: none;
 }
