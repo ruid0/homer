@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { MAX_SCHEDULE_DAYS, dateSchema, maintenanceItemInputSchema } from "./schemas";
+import { MAX_DAYS_PER_UNIT, MAX_QUANTITY, MAX_SCHEDULE_DAYS, dateSchema, maintenanceItemInputSchema } from "./schemas";
 import type { MaintenanceStatus } from "./maintenance";
 
 // Tools only the MCP listener offers. The in-app assistant keeps its own eleven.
@@ -15,6 +15,18 @@ export const mcpToolSchemas = {
     unit: maintenanceItemInputSchema.shape.unit,
     lastDoneOn: dateSchema.nullish(),
   }),
+  // The item or entry is found by its name. Whatever is left out stays as it is.
+  update_item: z.object({
+    name: text,
+    newName: text.nullish(),
+    unit: text.nullish(),
+    quantity: z.number().min(0).max(MAX_QUANTITY).nullish(),
+    daysPerUnit: z.number().positive().max(MAX_DAYS_PER_UNIT).nullish(),
+    // Not the item schema's field: that one has a default, which would fill in a number when none was given.
+    lowThresholdDays: z.number().int().min(0).nullish(),
+  }),
+  remove_item: z.object({ name: text }),
+  remove_from_groceries: z.object({ name: text }),
 };
 
 export type McpToolName = keyof typeof mcpToolSchemas;

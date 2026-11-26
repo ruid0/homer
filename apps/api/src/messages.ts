@@ -30,6 +30,9 @@ export const mcpMessages = {
     actionId === null ? `${tool}: nothing changed.` : `${tool}: done. Undo with actionId ${actionId}.`,
   undoDescription: "Undo a change made by one of these tools, using the actionId it returned.",
   undone: "Undone.",
+  stillLow: (name: string) =>
+    `${name} is still low, so HOMER will add it again. Restock it (restock_item) or correct its quantity (update_item) to stop that.`,
+  nothingToChange: "Nothing to change: say what the item should become.",
   dueSummary: (days: number) => `Due in the next ${days} ${days === 1 ? "day" : "days"}.`,
   summary: (tool: string, count: number) => `${tool}: ${count} ${count === 1 ? "row" : "rows"}.`,
   // Written to the api log.
