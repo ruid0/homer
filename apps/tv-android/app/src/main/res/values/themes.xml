@@ -1,0 +1,8 @@
+<resources>
+    <!-- The page is dark, so the window is too: no white flash while it loads. -->
+    <style name="Theme.HomerTv" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/surface</item>
+        <item name="android:windowFullscreen">true</item>
+    </style>
+    <color name="surface">#1F1D1B</color>
+</resources>

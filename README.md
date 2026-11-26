@@ -166,6 +166,7 @@ homer/
 │   │       ├── components/
 │   │       └── trpc.ts       typed tRPC client
 │   ├── e2e/                  Playwright browser tests (pnpm e2e)
+│   ├── tv-android/           Android TV app that shows /tv full screen (Gradle, outside the pnpm workspace)
 │   └── api/                  Hono + tRPC backend
 │       └── src/
 │           ├── routers/      inventory, groceries, schedule, tasks, maintenance, assistant
@@ -219,4 +220,4 @@ homer/
 
 - For remote access the most streightforward way is to use `Tailscale` installed on both the server and a users devices
 - Notifications are optional and use `ntfy` (see "Notifications" and "Routine reminders" above, and `docs/design-jobs-and-ntfy.md`).
-- **TV display.** `/tv` is a read-only page for a living-room screen: a big clock, today and tomorrow, upkeep and what is running out. Open it at your usual address plus `/tv` (try it in a browser first). It is always dark, scales to any screen size, and refreshes itself. An Android TV app that opens it full screen is planned (`docs/design-tv.md`).
+- **TV display.** `/tv` is a read-only page for a living-room screen: a big clock, today and tomorrow, upkeep and what is running out. Open it at your usual address plus `/tv` (try it in a browser first). It is always dark, scales to any screen size, and refreshes itself. `apps/tv-android` is a small Android app that opens it full screen on a Google TV (see its README for building and installing it, and `docs/design-tv.md`).

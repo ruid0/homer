@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">HOMER</string>
+    <string name="cannot_reach">Can\'t reach HOMER. Trying again.</string>
+</resources>

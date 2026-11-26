@@ -1,0 +1,6 @@
+# The address of the household's HOMER and the SDK path live here, never in the repo.
+local.properties
+.gradle/
+build/
+*.apk
+.idea/

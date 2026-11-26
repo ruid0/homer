@@ -35,8 +35,9 @@ Household copy: `docker compose up -d --build` (see the README). Browser UI test
 
 pnpm-workspace TypeScript monorepo:
 
-- `apps/web`: React + Vite + Tailwind; typed tRPC client (`src/trpc.ts`) with TanStack Query. Pages: Home, Stock (To buy and Everything, the old Items and Groceries), Schedule, Upkeep, People (with a Routine page per person), Assistant. A read-only `/tv` page for the living-room TV, with no nav (`docs/design-tv.md`).
+- `apps/web`: React + Vite + Tailwind; typed tRPC client (`src/trpc.ts`) with TanStack Query. Pages: Home, Stock (To buy and Everything, the old Items and Groceries), Schedule, Upkeep, People (with a Routine page per person), Assistant. A read-only `/tv` page for the living-room TV, with no nav, and `apps/tv-android`, a tiny Kotlin WebView app that opens it on a Google TV (not part of the pnpm workspace; built with Gradle, see its README; `docs/design-tv.md`).
 - `apps/api`: Hono server with the tRPC adapter. `routers/` (inventory, groceries, schedule, tasks, routines, maintenance, assistant), `ai/` (Ollama client + tool-call loop), `mcp/` (the local MCP listener on its own port), `jobs/` (node-cron: daily depletion, backups, notes and per-minute routine reminders; a daily maintenance note, `docs/design-maintenance.md`), `db/` (Drizzle schema + migrations, SQLite via `better-sqlite3`).
+- `apps/tv-android`: the Android TV app that shows `/tv` full screen. Outside the pnpm workspace; needs OpenJDK 17 and the Android SDK (see its README). Its address for HOMER is in an untracked `local.properties`.
 - `apps/e2e`: Playwright browser tests (`pnpm e2e`) against scratch copies of the api and web with in-memory data. The one-time browser download is dev-time only; the tests make no calls beyond 127.0.0.1.
 - `packages/shared`: the spine of the app. `schemas.ts` (Zod schemas shared by DB, tRPC, and LLM tools), `tools.ts` (LLM tool definitions + dispatcher types), `domain.ts` (pure functions such as `daysRemaining`, `nextDueDate`).
 
