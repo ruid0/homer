@@ -55,6 +55,7 @@ Key design constraints:
 - **Subagents**: `reviewer` (`.claude/agents/reviewer.md`), read-only, fresh-context review of the uncommitted diff; `ui-reviewer` (`.claude/agents/ui-reviewer.md`), the strict UI expert for diffs under `apps/web` (runs `pnpm e2e`, blocks on missing tests or states).
 - **Hooks** (`.claude/settings.json`, `.claude/hooks/`):
   - `guard.sh` (before edits and shell commands) blocks touching `.env` files and the SQLite database directly. Change data through the app or a Drizzle migration.
+  - `no-live-data.sh` (before reading files, searching and shell commands) blocks reading live household data: the SQLite database and its backups, `.env` files, `local.properties`, `docker exec`/`cp`/`run`, `docker volume`, and calls to the MCP port. **Claude works with fake data only**: seeds written in tests and in `apps/e2e/tests/scratch.ts`; the shape of a config comes from `.env.example` or `local.properties.example`. A guard rail, not a sandbox (tests in the hook's own cases: a command that only mentions such a path, such as `git commit -m "..."`, is allowed).
   - `check.sh` (after editing `.ts`/`.tsx`) formats the file with Prettier, then runs `pnpm typecheck` and the related tests. If it reports a failure, fix it before moving on.
 
 ## How we work
