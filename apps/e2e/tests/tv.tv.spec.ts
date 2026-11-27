@@ -512,4 +512,54 @@ test.describe("the TV page", () => {
       expect(right, `rows at ${size.width}`).toBeLessThanOrEqual(size.width * 0.95);
     }
   });
+
+  test.describe("a new build", () => {
+    // The page asks for "/" every five minutes; the fake clock skips the wait. A fetch is told apart from the page's own
+    // load by its resource type.
+    const serveFromFetch = (page: Page, html: string | null, status = 200) =>
+      page.route("**/", async (route) => {
+        if (route.request().resourceType() !== "fetch") return route.fallback();
+        if (html === null) return route.abort();
+        return route.fulfill({ status, contentType: "text/html", body: html });
+      });
+    const build = (source: string) =>
+      `<!doctype html><html><body><div id="root"></div><script type="module" src="${source}"></script></body></html>`;
+
+    test("reloads when the page comes from another build", async ({ page }) => {
+      await emptyHome(page);
+      await page.clock.install();
+      await page.goto("/tv");
+      await page.evaluate(() => ((window as unknown as { marker: string }).marker = "before"));
+      await serveFromFetch(page, build("/assets/index-NEW.js"));
+      const reloaded = page.waitForEvent("load");
+      await page.clock.fastForward("05:10");
+      await reloaded;
+      await expect(section(page, "Today")).toBeVisible();
+      expect(await page.evaluate(() => (window as unknown as { marker?: string }).marker)).toBeUndefined();
+    });
+
+    test("stays put when the build is the same, the ask fails, or the answer is an error or not HOMER's page", async ({
+      page,
+    }) => {
+      await emptyHome(page);
+      await page.clock.install();
+      await page.goto("/tv");
+      await page.evaluate(() => ((window as unknown as { marker: string }).marker = "before"));
+      const portal = `<!doctype html><html><body><script type="module" src="/portal.js"></script></body></html>`;
+      // No answer, an error carrying other scripts, another site's page with its own scripts, and the same build.
+      const answers: [string | null, number?][] = [
+        [null],
+        [build("/assets/index-NEW.js"), 502],
+        [portal],
+        [await page.content()],
+      ];
+      for (const [html, status] of answers) {
+        await page.unroute("**/");
+        await serveFromFetch(page, html, status);
+        await page.clock.fastForward("05:10");
+      }
+      await expect(section(page, "Today")).toBeVisible();
+      expect(await page.evaluate(() => (window as unknown as { marker?: string }).marker)).toBe("before");
+    });
+  });
 });

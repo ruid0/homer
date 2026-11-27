@@ -20,6 +20,7 @@ import {
   shortDay,
   upcomingRows,
 } from "../lib/tv";
+import { useReloadOnNewBuild } from "../lib/useReloadOnNewBuild";
 import { useRemHeight } from "../lib/useRemHeight";
 import { useTvScreen } from "../lib/useTvScreen";
 import { trpc, type ScheduleEvent, type ScheduleTask } from "../trpc";
@@ -42,6 +43,7 @@ const refetch = {
 
 export const TvPage = () => {
   useTvScreen();
+  useReloadOnNewBuild();
   const now = useClock(CLOCK_CHECK_MS);
   const today = localDate(now);
   const nowTime = timeOfDay(now);
