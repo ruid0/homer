@@ -1,6 +1,19 @@
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
-import { allocateRows, EMPTY_REM, MORE_REM, ROW_REM, fit, leftToday, shortDay, upcomingRows } from "./tv";
+import {
+  EMPTY_REM,
+  GAP_REM,
+  HEADING_REM,
+  MORE_REM,
+  ROW_REM,
+  allocateRows,
+  dayLines,
+  fit,
+  leftToday,
+  planDays,
+  shortDay,
+  upcomingRows,
+} from "./tv";
 import type { DayItem } from "./dayItems";
 
 type Task = { id: number; dueTime: string | null };
@@ -108,15 +121,17 @@ describe("allocateRows", () => {
     ).toEqual([3, 0, 4]);
   });
 
-  it("gives every section a couple of rows before the first one takes more", () => {
+  it("gives every section one row before the first one takes more, unless its floor is zero", () => {
     const blocks = [
       { count: 10, fixed: 3 },
       { count: 10, fixed: 3 },
       { count: 10, fixed: 3 },
     ];
     const [first = 0, second = 0, third = 0] = allocateRows(34, blocks);
-    expect([second, third].every((rows) => rows >= 2)).toBe(true);
+    expect([second, third].every((rows) => rows >= 1)).toBe(true);
     expect(first).toBeGreaterThanOrEqual(second);
+    const [, , last = 0] = allocateRows(34, [blocks[0]!, blocks[1]!, { ...blocks[2]!, floor: 0 }]);
+    expect(last).toBeLessThan(third);
   });
 
   it("fills the earlier section completely before the later ones grow past that", () => {
@@ -125,7 +140,7 @@ describe("allocateRows", () => {
       { count: 10, fixed: 3 },
     ]);
     expect(first).toBe(4);
-    expect(second).toBeGreaterThan(2);
+    expect(second).toBeGreaterThan(1);
   });
 
   it("gives the room a short section does not need to a longer one", () => {
@@ -153,6 +168,82 @@ describe("allocateRows", () => {
           );
           if (floor <= budget) expect(spent(blocks, shown)).toBeLessThanOrEqual(budget);
           shown.forEach((rows, at) => expect(rows).toBeLessThanOrEqual(blocks[at]?.count ?? 0));
+        },
+      ),
+    );
+  });
+});
+
+describe("dayLines", () => {
+  const row = (date: string, id: number) => ({ date, item: task(id, null) });
+
+  it("is one line a day: its first item and how many items the day holds", () => {
+    const lines = dayLines([row("2026-11-28", 1), row("2026-11-28", 2), row("2026-11-28", 3), row("2026-11-30", 4)]);
+    expect(lines.map((line) => [line.date, line.item.value.id, line.count])).toEqual([
+      ["2026-11-28", 1, 3],
+      ["2026-11-30", 4, 1],
+    ]);
+  });
+
+  it("is empty when nothing is planned", () => {
+    expect(dayLines([])).toEqual([]);
+  });
+});
+
+describe("planDays", () => {
+  const costOfDay = (rows: number, fixed: number) => fixed + rows * ROW_REM;
+  const upcomingFixed = HEADING_REM + GAP_REM;
+
+  it("shows every row of the three sections when there is room", () => {
+    const plan = planDays(100, { today: 3, tomorrow: 3, upcomingRows: 7, upcomingDays: 4 });
+    expect(plan).toEqual({ today: 3, tomorrow: 3, upcoming: 7, view: "rows" });
+  });
+
+  it("shows Today and Tomorrow in full before Upcoming gets anything", () => {
+    // Exactly their room, and nothing over for Upcoming.
+    const budget = costOfDay(6, HEADING_REM) + costOfDay(6, HEADING_REM + GAP_REM);
+    const plan = planDays(budget, { today: 6, tomorrow: 6, upcomingRows: 12, upcomingDays: 5 });
+    expect(plan).toMatchObject({ today: 6, tomorrow: 6, view: "hidden" });
+  });
+
+  it("gives Upcoming what is left: a line a day when its rows do not fit", () => {
+    const budget =
+      costOfDay(3, HEADING_REM) + costOfDay(3, HEADING_REM + GAP_REM) + upcomingFixed + 2 * ROW_REM + MORE_REM;
+    const plan = planDays(budget, { today: 3, tomorrow: 3, upcomingRows: 12, upcomingDays: 5 });
+    expect(plan).toEqual({ today: 3, tomorrow: 3, upcoming: 2, view: "lines" });
+  });
+
+  it("shrinks Upcoming to its heading and a count when there is no room for a line", () => {
+    const budget = costOfDay(3, HEADING_REM) + costOfDay(3, HEADING_REM + GAP_REM) + upcomingFixed;
+    const plan = planDays(budget, { today: 3, tomorrow: 3, upcomingRows: 12, upcomingDays: 5 });
+    expect(plan).toMatchObject({ today: 3, tomorrow: 3, upcoming: 0, view: "count" });
+  });
+
+  it("shows nothing it cannot afford before the grid has been measured (no room, or no number)", () => {
+    for (const budget of [0, -5, Number.NaN]) {
+      expect(planDays(budget, { today: 3, tomorrow: 3, upcomingRows: 5, upcomingDays: 2 })).toEqual({
+        today: 0,
+        tomorrow: 0,
+        upcoming: 0,
+        view: "hidden",
+      });
+      expect(planDays(budget, { today: 0, tomorrow: 0, upcomingRows: 0, upcomingDays: 0 }).view).toBe("hidden");
+    }
+  });
+
+  it("never shows more than exists", () => {
+    fc.assert(
+      fc.property(
+        fc.record({ today: fc.nat(10), tomorrow: fc.nat(10), upcomingRows: fc.nat(20), upcomingDays: fc.nat(5) }),
+        fc.double({ min: 0, max: 90, noNaN: true }),
+        (sizes, budget) => {
+          const days = Math.min(sizes.upcomingDays, sizes.upcomingRows);
+          const plan = planDays(budget, { ...sizes, upcomingDays: days });
+          expect(plan.today).toBeLessThanOrEqual(sizes.today);
+          expect(plan.tomorrow).toBeLessThanOrEqual(sizes.tomorrow);
+          expect(plan.upcoming).toBeLessThanOrEqual(plan.view === "lines" ? days : sizes.upcomingRows);
+          if (plan.view === "lines") expect(plan.upcoming).toBeGreaterThan(0);
+          if (plan.view === "count" || plan.view === "hidden") expect(plan.upcoming).toBe(0);
         },
       ),
     );
