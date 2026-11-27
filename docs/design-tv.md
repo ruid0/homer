@@ -1,6 +1,6 @@
 # TV display: a read-only dashboard on the living-room TV. Definition and plan
 
-Status: In progress (approved 2026-11-25 with the proposed Tomorrow list; PR 1, the /tv page, merged; PR 2, the Android app, built and awaiting a run on the real TV) · Owner: Igor Bondarenko · Last updated: 2026-11-25 · Source: the owner's request, `docs/design-slice-4-dashboard.md` (Home already targets a wall screen), `docs/mcp.md` (the Tailscale-only rule for new listeners).
+Status: In progress (approved 2026-11-25 with the proposed Tomorrow list; PR 1, the /tv page, merged; PR 2, the Android app, built and awaiting a run on the real TV) · Owner: Igor Bondarenko · Last updated: 2026-11-26 · Source: the owner's request, `docs/design-slice-4-dashboard.md` (Home already targets a wall screen), `docs/mcp.md` (the Tailscale-only rule for new listeners).
 
 The repo is public. The household's Tailscale address and data never go in this repo, its tests or its logs.
 
@@ -112,3 +112,11 @@ After a week on the TV the owner asked for two things: the greys looked washed o
 - **Layout.** Left: Today, Tomorrow, Upcoming. Right: Upkeep, Any time, Running out.
 - **Rows by room, not by count.** Fixed row caps either wasted the space or overflowed it, so the page measures its grid (`useRemHeight`) and `allocateRows` (`lib/tv.ts`) shares the rows out: every section first gets two, then the sections fill in order, so Today is complete before Upcoming grows. A section's costs in rem (row, heading, "+N more", empty message) are constants beside it, and the browser test that fills every section at 1920 by 1080 and 960 by 540 fails if they drift from the CSS. A screen that is not 16 by 9 gets the rows its own height allows.
 - **Tests.** `lib/tv.test.ts` (the allocator, `upcomingRows`, `shortDay`) and `tv.tv.spec.ts` (the new palette values, Upcoming and Any time shown, their empty states, and the full-lists margin test for all six sections).
+
+## 10. Three columns and the groceries (2026-11-26)
+The owner's photo of the real screen showed three problems: a blank gutter on every Today row (the status sat at the far right, away from the title), Upcoming starved to one row while the bottom left was empty, and a header that took a quarter of the height. Several layouts were drawn on a design canvas and the owner picked the third, "three columns with groceries".
+- **Layout.** Left: Today, Tomorrow, Upcoming. Middle: Running out, Groceries. Right: Upkeep, Any time. The clock is smaller (4.5rem) and the header gap tighter, so the lists get the height.
+- **First column.** Every row has a fixed first column: the time, a state in words ("5 days overdue" in the late colour, "Due today", "Any time", "All day"), or, in Upcoming, the day, named once on the first row of that day (the time follows the title). The status is no longer at the far right.
+- **Groceries.** The open grocery list: the name, and the amount (with its unit) after it, with "N to buy" beside the heading. Running out holds only the low items that are not on the list yet, so the two never repeat a row.
+- **What gives way.** A section hides rows only when there is no room, and the cut starts at the bottom of the first column: Today and Tomorrow take their rows first (`planDays`), and Upcoming gets what is left. When its rows do not all fit it shows a line a day (the day's first item and "+N more"), so a busy week still reaches every day; with less room, only its heading with the count; with none, nothing. In the other two columns the sections fill in order and each keeps one row (`allocateRows`; the first column's floor for Upcoming is zero).
+- **Tests.** `lib/tv.test.ts` (the allocator's floor, `dayLines`, `planDays` including that Tomorrow is whole before Upcoming gets anything) and `tv.tv.spec.ts` (groceries, the day named once, Upcoming as lines, as a heading with a count, and gone when the first column is full; the safe-margin test covers all seven sections).
